@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Vending Machine</title>
+		<link type="text/css" rel="stylesheet" href="vendingMachine.css" media="screen">
+		<script type="text/javascript" src="jindo.all.js"></script>
+		<script type="text/javascript" src="vendingMachine.js"></script>
+		<script type="text/javascript">
+			$Fn(function(){
+				new VendingMachine();
+			}).attach(document,'domready',false);
+		</script>
+    </head>
+    <body>
+        <h1>Vending Machine</h1>
+		<div id="vendingMachine">
+			<ul id="merchandise">
+				<li>
+					<img src="" width="160" height="120" alt=""/>
+					<p>
+						<span class="name">Sherry</span>
+						(<span class="quantity">0</span>)
+						<span class="price">30</span>
+					</p>
+					<input type="button" value="Buy" />
+				</li>
+				<li>
+					<img src="" width="160" height="120" alt=""/>
+					<p>
+						<span class="name">Irish</span>
+						(<span class="quantity">0</span>)
+						<span class="price">70</span>
+					</p>
+					<input type="button" value="Buy" />
+				</li>
+				<li>
+					<img src="" width="160" height="120" alt=""/>
+					<p>
+						<span class="name">Vodka</span>
+						(<span class="quantity">0</span>)
+						<span class="price">90</span>
+					</p>
+					<input type="button" value="Buy" />
+				</li>
+				<li>
+					<img src="" width="160" height="120" alt=""/>
+					<p>
+						<span class="name">Chianti</span>
+						(<span class="quantity">0</span>)
+						<span class="price">40</span>
+					</p>
+					<input type="button" value="Buy" />
+				</li>
+				<li>
+					<img src="" width="160" height="120" alt=""/>
+					<p>
+						<span class="name">Vermouth</span>
+						(<span class="quantity">0</span>)
+						<span class="price">50</span>
+					</p>
+					<input type="button" value="Buy" />
+				</li>
+				<li>
+					<img src="" width="160" height="120" alt=""/>
+					<p>
+						<span class="name">Gin</span>
+						(<span class="quantity">0</span>)
+						<span class="price">60</span>
+					</p>
+					<input type="button" value="Buy" />
+				</li>
+			</ul>
+			
+			<div id="coinDrop">
+				<p>Added<span id="coinIndicator">0</span>yuan</p>
+				<ul id="coinUnit">
+					<li>5 yuan</li>
+					<li>10 yuan</li>
+					<li>50 yuan</li>
+					<li>100 yuan</li>
+				</ul>				
+				<!-- new feature : user can click the '' button to get back the money -->
+				<input id="returnMoney" class="disable" type="button" value="return money" />
+			</div>
+			
+			<ul id="messageBoard">
+			</ul>
+		</div>
+    </body>
+</html>

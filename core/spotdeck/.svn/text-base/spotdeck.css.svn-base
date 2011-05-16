@@ -1,0 +1,47 @@
+.slideshow {
+    width: 600px;
+    overflow: hidden;
+}
+.slideshow .slide{
+    width: 600px;
+    height: 600px;
+    overflow: hidden;
+    position: relative;
+}
+.slideshow .slide img {
+    width: 600px;
+    height: 600px;
+}
+.slideshow .control {
+    overflow: hidden;
+    position: relative;
+    margin-top: 10px;
+    width: 720px;
+    height: 122px;
+}
+.slideshow .control img {
+    width: 120px;
+    height: 120px;
+    float: left;
+    cursor: pointer;
+}
+.mask {
+    background: rgba(0,0,0,0.8)
+}
+.close {
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    color: red;
+    font-weight: bold;
+    position: absolute;
+    top:0;
+    right:0;
+    background: rgba(0,0,0,0.8);
+    font-size: 30px;
+    text-align: center;
+    cursor: pointer;
+}
+.con {
+    border-bottom: 2px solid #f00;
+}

@@ -1,0 +1,35 @@
+﻿<!DOCTYPE HTML">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Scrollbar</title>
+        <link type="text/css" rel="stylesheet" href="scrollbar.css" />
+    </head>
+    <body>
+        <div id="somescrolllist">
+            <ul>
+                
+            </ul>
+        </div>
+
+        <script type="text/javascript" src="../dom.js"></script>
+        <script type="text/javascript" src="../jquery.js"></script>
+        <script type="text/javascript" src="../class/Class.js"></script>
+        <script type="text/javascript" src="scrollbar.js"></script>
+        <script type="text/javascript">
+            var index=0;
+            function createItems() {
+                var ul = dom.query('#somescrolllist ul');
+                for (var i = 0; i < 50 ; i++) {
+                var li = document.createElement('li');
+                li.innerHTML = ++index;
+                ul.appendChild(li);
+                }
+            }
+createItems();
+            var s = new Scrollbar({
+content: '#somescrolllist'
+});
+        </script>
+        </body>
+    </html>
