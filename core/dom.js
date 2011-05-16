@@ -2,13 +2,14 @@
  * dom.js
  * It's a light library only contains several methods which are used most in the development.
  * @author viclm
- * @version 20110513
+ * @version 20110516.1
  * @license New BSD License
 */
 'use strict';
-var dom = {
+var dom = {};
+dom.query = {
 
-    query: function (query, parent) {
+    $: function (query, parent) {
         parent = parent || document;
         if (parent.querySelector) {
             if (parent === document) {
@@ -27,11 +28,11 @@ var dom = {
             }
         }
         else {
-            return this.queryAll(query, parent)[0];
+            return this.$$(query, parent)[0];
         }
     },
 
-    queryAll: function (query, parent) {
+    $$: function (query, parent) {
         parent = parent || document;
         if (parent.querySelectorAll) {
             if (parent === document) {
@@ -98,7 +99,7 @@ var dom = {
                         result = result.concat(this.toArray(nodeList));
                     }
                 }
-                return this.queryAll(remain, result);
+                return this.$$(remain, result);
             }
             else {
                 var obj = {};
@@ -117,8 +118,10 @@ var dom = {
             }
 
         }
-    },
+    }
+}
 
+dom.tool = {
     proxy: function (fn, obj) {
         return function () {
             return fn.apply(obj, arguments);
@@ -146,8 +149,10 @@ var dom = {
             };
             return this.toArray(obj);
         }
-    },
+    }
+}
 
+dom.event = {
     addEvent: function(node, event, fn) {
         if (node.addEventListener) {
             this.addEvent = function (node, event, fn) {
@@ -187,9 +192,9 @@ var dom = {
         this.addEvent(node, event, node[fname]);
     },
 
-    event: function (evt) {
+    fix: function (evt) {
         if (!window.event) {
-            this.event = function (e) {
+            this.fix = function (e) {
                 return {
                     pageX : e.pageX,
                     pageY : e.pageY,
@@ -204,7 +209,7 @@ var dom = {
             }
         }
         else {
-            this.event = function () {
+            this.fix = function () {
                 return {
                     pageX : window.eventclientX + document.body.scrollLeft,
                     pageY : window.event.clientY + document.body.scrollTop,
@@ -219,13 +224,12 @@ var dom = {
             }
         }
 
-        return this.event(evt);
+        return this.fix(evt);
     }
-}
-dom.tool = {}
-dom.event = {}
+};
+
 dom.ajax = {
-    XMLHttpRequest: function () {
+    createXMLHttpObject: function () {
         var XMLHttpFactories = [
             function () {return new XMLHttpRequest()},
             function () {return new ActiveXObject("Msxml2.XMLHTTP")},
@@ -244,7 +248,7 @@ dom.ajax = {
             break;
         }
 
-        this.XMLHttpRequest = XMLHttpFactories[i];
+        this.createXMLHttpObject = XMLHttpFactories[i];
         return xmlhttp;
     },
 

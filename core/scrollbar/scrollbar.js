@@ -2,7 +2,7 @@
  * Scrollbar
  * This is a highly extensible scrollbar versus regular scrollbar.
  * @author viclm
- * @version 20110513
+ * @version 20110516.1
  * @license New BSD License
 */
 
@@ -13,7 +13,7 @@ Class('Scrollbar', {
     init: function (args) {
         this.mode = args.mode || 'auto';
         this.prop = !args.direction || args.direction === 'vertical' ? 'top' : 'left';
-        this.outline = dom.query(args.content);
+        this.outline = dom.query.$(args.content);
         this.callback = args.callback || function () {};
 
         if (this.prop === 'top') {
@@ -46,11 +46,11 @@ Class('Scrollbar', {
         this.createScrollbar();
         this.adjustHandleSize();
 
-        dom.addEvent(this.handle, 'mousedown', dom.proxy(this.dragInit, this));
+        dom.event.addEvent(this.handle, 'mousedown', dom.tool.proxy(this.dragInit, this));
 
         var self = this, MOUSEWHEEL_OFFSET = 120;
         if (/firefox/i.test(navigator.userAgent)) {
-            this.outline.addEventListener('DOMMouseScroll', dom.proxy(function (e) {
+            this.outline.addEventListener('DOMMouseScroll', dom.tool.proxy(function (e) {
                 var offset;
                 offset = (e.detail > 0 ? 1 : -1) * MOUSEWHEEL_OFFSET;
                 this.actualPos = this.adjustPos(this.actualPos + offset, [0, this.contentSize]);
@@ -61,8 +61,8 @@ Class('Scrollbar', {
             }, this), false);
         }
         else {
-            dom.addEvent(this.outline, 'mousewheel', dom.proxy(function (e) {
-                var event = dom.event(e), offset;
+            dom.event.addEvent(this.outline, 'mousewheel', dom.tool.proxy(function (e) {
+                var event = dom.event.fix(e), offset;
                 offset = (e.wheelDelta > 0 ? -1 : 1) * MOUSEWHEEL_OFFSET;
                 this.actualPos = this.adjustPos(this.actualPos + offset, [0, this.contentSize]);
                 this.isScrollHandle = true;
@@ -82,7 +82,7 @@ Class('Scrollbar', {
         }
         else {
             content = document.createElement('div');
-            children = dom.toArray(this.outline.childNodes);
+            children = dom.tool.toArray(this.outline.childNodes);
             for (i = 0, len = children.length ; i < len ; i += 1) {
                 tmp = children[i];
                 content.appendChild(tmp);
@@ -145,7 +145,7 @@ Class('Scrollbar', {
             return;
         }
         if (!this.timer) {
-            this.timer = setInterval(dom.proxy(function () {
+            this.timer = setInterval(dom.tool.proxy(function () {
                 var targetPos = this.actualPos, pos;
                 pos = targetPos - this.contentPos;
                 if (Math.abs(pos) < 1) {
@@ -172,15 +172,15 @@ Class('Scrollbar', {
 
     dragInit: function (e) {
         this.isScrollHandle = false;
-        dom.addEvent(document, 'mousemove', document['dragOn'] = dom.proxy(this.dragOn, this));
-        dom.one(document, 'mouseup', dom.proxy(this.dragEnd, this));
-        e = dom.event(e);
+        dom.event.addEvent(document, 'mousemove', document['dragOn'] = dom.tool.proxy(this.dragOn, this));
+        dom.event.one(document, 'mouseup', dom.tool.proxy(this.dragEnd, this));
+        e = dom.event.fix(e);
         this.cursorPos = this.prop === 'top' ? e.pageY : e.pageX;
         e.preventDefault();
     },
 
     dragOn: function (e) {
-        e = dom.event(e);
+        e = dom.event.fix(e);
         var self = this, pos = this.prop === 'top' ? e.pageY : e.pageX, offset;
         offset = pos - this.cursorPos;
         this.cursorPos = pos;
@@ -197,7 +197,7 @@ Class('Scrollbar', {
     },
 
     dragEnd: function () {
-        dom.removeEvent(document, 'mousemove', document['dragOn']);
+        dom.event.removeEvent(document, 'mousemove', document['dragOn']);
         document['dragOn'] = undefined;
     }
 });
