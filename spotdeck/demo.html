@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>hg.Spotdeck Demo</title>
+<link rel="stylesheet" href="spotdeck.css" type="text/css" media="screen, projection">
+<script type="text/javascript" src="http://alpha-static.hangame.co.jp/js/fw/jquery/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="http://alpha-static.hangame.co.jp/js/fw/jquery/core.1.0.js"></script>
+<script type="text/javascript" src="../lightbox/hg.Lightbox.js"></script>
+<script type="text/javascript" src="../slideshow/hg.Slideshow.js"></script>
+<script type="text/javascript" src="hg.Spotdeck.js"></script>
+</style>
+</head>
+<body>
+    <div id="gallery">
+        <img src="images/san11-diy81qs_thumb.jpg" />
+        <img src="images/san11-diy82qs_thumb.jpg" />
+        <img src="images/san11-diy83qs_thumb.jpg" />
+        <img src="images/san11-diy84qs_thumb.jpg" />
+        <img src="images/san11-diy85qs_thumb.jpg" />
+        <img src="images/san11-diy86qs_thumb.jpg" />
+    </div>
+<script type="text/javascript">
+    new hg.Spotdeck({
+            list: jQuery('#gallery img')
+    });
+    
+</script>
+</body>
+</html>
