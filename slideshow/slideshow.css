@@ -1,0 +1,26 @@
+#slideshow {
+    width: 300px;
+    overflow: hidden;
+}
+#slideshow .slide{
+    width: 300px;
+    height: 150px;
+    overflow: hidden;
+    position: relative;
+}
+#slideshow .slide div {
+    width: 300px;
+    height: 150px;
+}
+#slideshow .control {
+    overflow: hidden;
+    position: relative;
+    margin-top: 10px;
+    width: 360px;
+    height: 40px;
+}
+#slideshow .control div {
+    width: 60px;
+    height: 40px;
+    float: left;
+}

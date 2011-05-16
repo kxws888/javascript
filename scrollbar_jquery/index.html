@@ -1,0 +1,50 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>NHN UI</title>
+	<link type="text/css" rel="stylesheet" href="scrollbar.css" />
+</head>
+<body>
+	<div id="somescrolllist">
+		<div class="content">
+			<ul>
+				
+			</ul>
+		</div>
+		<div id="scrollbar">
+			<div class="slider_shadow"></div>
+			<div class="slider">
+				<div class="slider_up"></div>
+				<div class="slider_center"></div>
+				<div class="slider_down"></div>
+			</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
+	<script type="text/javascript" src="scrollbar.js"></script>
+	<script type="text/javascript">
+		//the function for loading data dynamically,must apply the callback and object namespace
+		function getData (fn, o) {
+			var counter = ++arguments.callee.$counter;
+			$('<li>').css({background:'url(spinner.gif) 50% 50% no-repeat'}).attr('id','spinner').appendTo('#somescrolllist .content ul');
+			$.getJSON('http://search.twitter.com/search.json?callback=?',{q:'#NBA',page:counter,locale:'en'},function(data){
+				var result = data.results;
+				var ul = $('#somescrolllist .content ul');
+				for (var i = 0, len = result.length ; i < len ; i++) {
+					$('<li>').text(result[i].text).appendTo(ul);
+				}
+				$('#spinner').remove();
+				if (typeof fn !== 'undefined') {
+					fn.call(o);
+				}
+			})
+		}
+		getData.$counter = 0;
+		
+		//for test
+		$('#somescrolllist').scrollbar({dynamicDataInterface:getData,page:5});
+	</script>
+</body>
+</html>
