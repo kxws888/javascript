@@ -138,18 +138,29 @@ Class('Scrollbar', {
     },
 
     scroll: function () {
+        console.log(this.actualPos - this.contentPos, (Math.round(this.actualPos / this.rate) - this.handlePos), this.rate)
+        if (Math.abs(this.actualPos - this.contentPos) < 1) {
+            return;
+        }
         //remove inertance
-        if ((this.actualPos - this.contentPos) * (this.actualPos / this.rate - this.handlePos) < 0) {
+        if ((this.actualPos - this.contentPos) * (Math.round(this.actualPos / this.rate)  - this.handlePos) < 0) {
             this.content.style[this.prop] = -this.actualPos + 'px';
             this.contentPos = this.actualPos;
             return;
         }
         if (!this.timer) {
             this.timer = setInterval(dom.tool.proxy(function () {
-                var targetPos = this.actualPos, pos;
-                pos = targetPos - this.contentPos;
+                var pos = this.actualPos - this.contentPos, handlePos;
                 if (Math.abs(pos) < 1) {
-                    this.callback(this.actualPos);
+                    this.callback(parseInt(this.actualPos / this.contentSize * 100, 10));
+                    this.content.style[this.prop] = -this.actualPos + 'px';
+                    this.contentPos = this.actualPos;
+                    if (this.isScrollHandle) {
+                        handlePos = this.adjustPos(this.actualPos / this.rate, [0, this.pathSize]);
+                        this.handle.style[this.prop] = handlePos + 'px';
+                        this.handlePos = handlePos;
+                    }
+                    //console.log(this.actualPos, 10086)
                     clearInterval(this.timer);
                     this.timer = null;
                     return;
@@ -157,14 +168,12 @@ Class('Scrollbar', {
                 pos = this.contentPos + Math.ceil(Math.abs(pos * 0.1)) * (pos > 0 ? 1 : -1);
                 pos = this.adjustPos(pos, [0, this.contentSize]);
                 this.content.style[this.prop] = -pos + 'px';
-                this.contentPos = pos;
+                this.contentPos = pos;console.log(pos)
 
                 if (this.isScrollHandle) {
-                    var pos = this.adjustPos(pos / this.rate, [0, this.pathSize]);
-                    if (pos !== this.handlePos) {
-                        this.handle.style[this.prop] = pos + 'px';
-                        this.handlePos = pos;
-                    }
+                    handlePos = this.adjustPos(pos / this.rate, [0, this.pathSize]);
+                    this.handle.style[this.prop] = handlePos + 'px';
+                    this.handlePos = handlePos;
                 }
             }, this), 24);
         }
@@ -190,7 +199,7 @@ Class('Scrollbar', {
         this.handle.style[this.prop] = offset + 'px';
         this.handlePos = offset;
 
-        this.actualPos = this.adjustPos(offset * this.rate, [0, this.contentSize]);
+        this.actualPos = this.adjustPos(Math.round(offset * this.rate), [0, this.contentSize]);
 
         this.scroll();
         e.preventDefault();
