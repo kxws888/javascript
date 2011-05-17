@@ -15,8 +15,7 @@ var dom = {};
 * @param {Object} extend parent class
 * @param {Object} obj the content of class
 **/
-var Class, $Class;
-dom['class'] = Class = $Class = (function () {
+dom.Class = (function () {
     'use strict';
     function Class(ns, extend, obj) {
         if (typeof obj === 'undefined') {
@@ -84,7 +83,7 @@ dom['class'] = Class = $Class = (function () {
     return Class;
 })();
 
-dom.query = {
+dom.Query = {
 
     $: function (query, parent) {
         parent = parent || document;
@@ -198,7 +197,7 @@ dom.query = {
     }
 }
 
-dom.tool = {
+dom.Tool = {
     proxy: function (fn, obj) {
         return function () {
             return fn.apply(obj, arguments);
@@ -229,7 +228,7 @@ dom.tool = {
     }
 }
 
-dom.event = {
+dom.Event = {
     addEvent: function(node, event, fn) {
         if (node.addEventListener) {
             this.addEvent = function (node, event, fn) {
@@ -305,7 +304,7 @@ dom.event = {
     }
 };
 
-dom.ajax = {
+dom.Ajax = {
     createXMLHttpObject: function () {
         var XMLHttpFactories = [
             function () {return new XMLHttpRequest()},
