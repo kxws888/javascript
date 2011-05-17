@@ -8,6 +8,40 @@
 'use strict';
 var dom = {};
 /**
+ * tool function
+*/
+dom.Tool = {
+    proxy: function (fn, obj) {
+        return function () {
+            return fn.apply(obj, arguments);
+        }
+    },
+
+    toArray: function (obj) {
+        try {
+            return Array.prototype.slice.call(obj, 0);
+        }
+        catch (e) {
+            this.toArray = function(obj) {
+                var ret = [], i, len;
+                if (typeof obj.length === "number") {
+                    for (i = 0, len = obj.length; i < len; i += 1) {
+                        ret[ret.length] = obj[i];
+                    }
+                } else {
+                    for (i = 0; obj[i]; i += 1) {
+                        ret[ret.length] = obj[i];
+                    }
+                }
+
+                return ret;
+            };
+            return this.toArray(obj);
+        }
+    }
+}
+
+/**
 * Class-style JavaScript statement and inheritance
 * @Author Liuming
 * @version 1.1
@@ -172,7 +206,7 @@ dom.Query = {
                         }
                     }
                     else {
-                        result = result.concat(dom.tool.toArray(nodeList));
+                        result = result.concat(dom.Tool.toArray(nodeList));
                     }
                 }
                 return this.$$(remain, result);
@@ -193,37 +227,6 @@ dom.Query = {
                 return a;
             }
 
-        }
-    }
-}
-
-dom.Tool = {
-    proxy: function (fn, obj) {
-        return function () {
-            return fn.apply(obj, arguments);
-        }
-    },
-
-    toArray: function (obj) {
-        try {
-            return Array.prototype.slice.call(obj, 0);
-        }
-        catch (e) {
-            this.toArray = function(obj) {
-                var ret = [], i, len;
-                if (typeof obj.length === "number") {
-                    for (i = 0, len = obj.length; i < len; i += 1) {
-                        ret[ret.length] = obj[i];
-                    }
-                } else {
-                    for (i = 0; obj[i]; i += 1) {
-                        ret[ret.length] = obj[i];
-                    }
-                }
-
-                return ret;
-            };
-            return this.toArray(obj);
         }
     }
 }

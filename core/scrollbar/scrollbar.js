@@ -72,8 +72,6 @@ dom.Class('Scrollbar', {
                 return false;
             }, this));
         }
-        //ie7 can't get the correct scrollHeight value when overflow property of parent element is set
-        this.outline.style.overflow = 'hidden';
     },
 
     getScrolledContent: function () {
@@ -113,6 +111,7 @@ dom.Class('Scrollbar', {
 
     adjustHandleSize: function () {
         this.dragEnd();
+        this.outline.style.overflow = '';
         this.contentSize = this.prop === 'top' ? this.content.scrollHeight : this.content.scrollWidth;
         this.contentSize -= this.outlineSize;
 
@@ -131,6 +130,8 @@ dom.Class('Scrollbar', {
         //this.actualPos = this.adjustPos(this.actualPos + offset, [0, this.contentSize]);
         //this.isScrollHandle = true;
         //this.scroll();
+        //ie7 can't get the correct scrollHeight value when overflow property of parent element is set
+        this.outline.style.overflow = 'hidden';
     },
 
     adjustPos: function (pos, range) {
@@ -204,8 +205,10 @@ dom.Class('Scrollbar', {
     },
 
     dragEnd: function () {
-        dom.Event.removeEvent(document, 'mousemove', this.dragOnProxy);
-        this.dragOnProxy = null;
+        if (this.dragOnProxy) {
+            dom.Event.removeEvent(document, 'mousemove', this.dragOnProxy);
+            this.dragOnProxy = null;
+        }
     }
 });
 
