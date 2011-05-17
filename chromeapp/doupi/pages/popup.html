@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>popup</title>
+  <link rel="stylesheet" href="style/popup.css">
+  <script type="text/javascript" src="../template.js"></script>
+  <script type="text/javascript" src="../dom.js"></script>
+  <script type="text/javascript" src="../class.js"></script>
+  <script type="text/javascript" src="../scrollbar.js"></script>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li>
+              <a href="">他们说</a>
+            </li>
+            <li>
+              <a href="">@提到我的</a>
+            </li>
+            <li>
+              <a href="">豆邮</a>
+            </li>
+            <li>
+              <a href="">更多</a>
+            </li>
+        </ul>
+    </nav>
+    <div id="main">
+        <div>
+            <section id="timeline">
+                <div class="list">
+                    <input type="search">
+                    <ul></ul>
+                </div>
+                <div class="detail">
+                    <header>
+                        <a class="close" href="#">X</a>
+                    </header>
+                    <article></article>
+                    <form>
+                        <label for="comment_textarea" >添加回复</label>
+                        <textarea id="comment_textarea"></textarea>
+                        <div class="submit_area">
+                            <input type="submit" value="回复" class="submit">
+                            <span class="text_limit">140</span>
+                        </div>
+                    <form>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+<script type="text/html" id="timelineEntry">
+    <article>
+        <div class="avatar">
+            <a href="<%=url%>"><img width="48" height="48" src="<%=ico%>" /></a>
+        </div>
+        <div class="content">
+            <header>
+                <h1>
+                    <a href="<%=url%>"><%=name%></a>
+                </h1>
+                <mark></mark>
+                <time><%=time%></time>
+            </header>
+            <p><%=content%></p>
+            <footer>
+                <a class="rt" href="">转播</a><a class="reply" href="">回复</a>
+            </footer>
+        </div>
+    </article>
+</script>
+</html>
+<script type="text/javascript" src="../src/popup.js"></script>

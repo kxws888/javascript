@@ -1,0 +1,32 @@
+* {margin: 0; padding: 0;}
+body {width: 480px; height: 430px; font: 12px/18px "Lucida Grande", "Lucida Sans Unicode", Helvetica, Arial, Verdana, sans-serif;
+    background-color: transparent; color: #333; -webkit-font-smoothing: antialiased;}
+a { color: #08c; }
+a:link, a:visited, a:active { text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1,h2,h3,h4,h5,h6,strong { color:#000; font-size: 1em;}
+ul { list-style: none outside; }
+
+nav {height: 30px; overflow:hidden; font-size: 1.5em; margin:0 0 10px 0; border: 1px solid #bfbfbf; background: #eeeeee;}
+nav li {float: left;}
+nav a {display: block; padding: 5px 10px; margin-right: 10px;}
+nav a:hover {text-decoration: none; background: #fff;}
+
+#main section{height: 400px; position: relative; overflow: hidden; padding: 0 10px;}
+#main .list {position: relative;height: 400px;}
+#main input[type=search] {width: 80%; padding: 5px 0;}
+#main input[type=search]:hover {}
+#main li {border-bottom: 1px solid #bfbfbf;}
+#main li:hover {}
+#main article {overflow: hidden; margin-top: 10px;}
+#main .avatar, #main .content{float: left;}
+#main .avatar {width: 48px; margin-right: 12px;}
+#main .content{width: 380px}
+#main .content header {position: relative; overflow: hidden;}
+#main .content header h1{float: left;}
+#main .content header time, #main .content header mark{float: right;}
+#main .scrollbar {height: 380px; top: 00px; right: 10px; width: 10px; border-radius: 3px; border: 1px solid #bfbfbf;}
+#main .handle {width: 100%; background-color: #808080}
+#main .detail {position: absolute; top: 400px; height: 400px; width: 458px; background: #eeeeee; padding: 10px; border: 1px solid #bfbfbf;
+    -webkit-transition-property: topy; -webkit-transition-duration: .5s; -webkit-transition-timing-function: ease-out;}
+#main .detail textarea {width: 100%;}

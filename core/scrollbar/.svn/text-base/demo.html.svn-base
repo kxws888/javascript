@@ -13,14 +13,12 @@
         </div>
 
         <script type="text/javascript" src="../dom.js"></script>
-        <script type="text/javascript" src="../jquery.js"></script>
-        <script type="text/javascript" src="../class/Class.js"></script>
         <script type="text/javascript" src="scrollbar.js"></script>
         <script type="text/javascript">
             var index=0;
             function createItems() {
-                var ul = dom.query.$('#somescrolllist ul');
-                for (var i = 0; i < 50 ; i++) {
+                var ul = dom.Query.$('#somescrolllist ul');
+                for (var i = 0; i < 10 ; i++) {
                 var li = document.createElement('li');
                 li.innerHTML = ++index;
                 ul.appendChild(li);
@@ -28,7 +26,13 @@
             }
 createItems();
             var s = new Scrollbar({
-content: '#somescrolllist'
+content: '#somescrolllist',
+callback: function (num) {
+if (num === 100) {
+createItems();
+s.adjustHandleSize();
+}
+}
 });
         </script>
         </body>

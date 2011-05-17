@@ -2,18 +2,18 @@
  * Scrollbar
  * This is a highly extensible scrollbar versus regular scrollbar.
  * @author viclm
- * @version 20110517.2
+ * @version 2.1 20110420
  * @license New BSD License
 */
 
 'use strict';
 
-dom.Class('Scrollbar', {
+Class('Scrollbar', {
 
     init: function (args) {
         this.mode = args.mode || 'auto';
         this.prop = !args.direction || args.direction === 'vertical' ? 'top' : 'left';
-        this.outline = dom.Query.$(args.content);
+        this.outline = dom.query(args.content);
         this.callback = args.callback || function () {};
 
         if (this.prop === 'top') {
@@ -37,37 +37,33 @@ dom.Class('Scrollbar', {
     },
 
     enable: function () {
-        this.actualPos = 0;
         this.cursorPos = 0;
         this.handlePos = 0;
         this.contentPos = 0;
 
+        this.outline.style.overflow = 'hidden';
         this.content = this.getScrolledContent();
         this.createScrollbar();
         this.adjustHandleSize();
 
-        this.MOUSEWHEEL_OFFSET = 120;
+        dom.addEvent(this.handle, 'mousedown', dom.proxy(this.dragInit, this));
 
-        dom.Event.addEvent(this.handle, 'mousedown', dom.Tool.proxy(this.dragInit, this));
-
+        var self = this, offset;
         if (/firefox/i.test(navigator.userAgent)) {
-            this.outline.addEventListener('DOMMouseScroll', dom.Tool.proxy(function (e) {
-                var offset;
-                offset = (e.detail > 0 ? 1 : -1) * this.MOUSEWHEEL_OFFSET;
-                this.actualPos = this.adjustPos(this.actualPos + offset, [0, this.contentSize]);
-                this.isScrollHandle = true;
-                this.scroll();
+            this.content.addEventListener('DOMMouseScroll', dom.proxy(function (e) {
+                offset = Math.abs(Math.floor((this.pathSize + this.handleSize) * 120 / (this.contentSize + this.outlineSize)));
+                offset *= e.detail > 0 ? 1 : -1;
+                this.scroll(offset);
                 e.preventDefault();
                 return false;
             }, this), false);
         }
         else {
-            dom.Event.addEvent(this.outline, 'mousewheel', dom.Tool.proxy(function (e) {
-                var event = dom.Event.fix(e), offset;
-                offset = (e.wheelDelta > 0 ? -1 : 1) * this.MOUSEWHEEL_OFFSET;
-                this.actualPos = this.adjustPos(this.actualPos + offset, [0, this.contentSize]);
-                this.isScrollHandle = true;
-                this.scroll();
+            dom.addEvent(this.content, 'mousewheel', dom.proxy(function (e) {
+                var event = dom.event(e);
+                offset = Math.abs(Math.floor((this.pathSize + this.handleSize) * 120 / (this.contentSize + this.outlineSize)));
+                offset *= e.wheelDelta > 0 ? -1 : 1;
+                this.scroll(offset);
                 event.preventDefault();
                 return false;
             }, this));
@@ -81,7 +77,7 @@ dom.Class('Scrollbar', {
         }
         else {
             content = document.createElement('div');
-            children = dom.Tool.toArray(this.outline.childNodes);
+            children = Array.prototype.slice.call(this.outline.childNodes, 0);
             for (i = 0, len = children.length ; i < len ; i += 1) {
                 tmp = children[i];
                 content.appendChild(tmp);
@@ -110,8 +106,6 @@ dom.Class('Scrollbar', {
     },
 
     adjustHandleSize: function () {
-        this.dragEnd();
-        this.outline.style.overflow = '';
         this.contentSize = this.prop === 'top' ? this.content.scrollHeight : this.content.scrollWidth;
         this.contentSize -= this.outlineSize;
 
@@ -122,93 +116,71 @@ dom.Class('Scrollbar', {
             this.handleSize = 2;
         }
         this.pathSize -= this.handleSize;
-        this.rate = this.contentSize / this.pathSize;
         this.handle.style[this.prop === 'top' ? 'height' : 'width'] = this.handleSize + 'px';
-        this.handlePos = Math.round(this.actualPos / this.rate);
-        this.handle.style[this.prop] = this.handlePos + 'px';
-        //console.log('this.actualPos='+this.actualPos, 'this.contentPos='+this.contentPos, 'this.contentSize='+this.contentSize, 'this.handlePos='+this.handlePos, 'this.handleSize='+this.handleSize)
-        //this.actualPos = this.adjustPos(this.actualPos + offset, [0, this.contentSize]);
-        //this.isScrollHandle = true;
-        //this.scroll();
-        //ie7 can't get the correct scrollHeight value when overflow property of parent element is set
-        this.outline.style.overflow = 'hidden';
     },
 
-    adjustPos: function (pos, range) {
-        var min = range[0] || 0, max = range[1];
-        if (pos < min) {
-            pos = min;
+    scroll: function (offset) {
+        var pos = this.handlePos + offset;
+        if (pos < 0) {
+            pos = 0;
         }
-        else if (pos > max) {
-            pos = max;
+        else if (pos > this.pathSize) {
+            pos = this.pathSize;
         }
-        return pos;
-    },
+        this.handle.style[this.prop] = pos + 'px';
+        this.handlePos = pos;
 
-    scroll: function () {
-        if (Math.abs(this.actualPos - this.contentPos) < 1) {
-            return;
-        }
-        //remove inertance
-        if ((this.actualPos - this.contentPos) * (Math.round(this.actualPos / this.rate)  - this.handlePos) < 0) {
-            this.content.style[this.prop] = -this.actualPos + 'px';
-            this.contentPos = this.actualPos;
-            return;
-        }
         if (!this.timer) {
-            this.timer = setInterval(dom.Tool.proxy(function () {
-                var pos = this.actualPos - this.contentPos, handlePos;
+            this.timer = setInterval(dom.proxy(function () {
+                var targetPos = this.handlePos / this.pathSize * this.contentSize, pos;
+                pos = (targetPos - this.contentPos);
                 if (Math.abs(pos) < 1) {
-                    this.callback(parseInt(this.actualPos / this.contentSize * 100, 10));
                     clearInterval(this.timer);
                     this.timer = null;
-                    return;
                 }
                 pos = this.contentPos + Math.ceil(Math.abs(pos * 0.1)) * (pos > 0 ? 1 : -1);
-                pos = this.adjustPos(pos, [0, this.contentSize]);
+                if (pos < 0) {
+                    pos = 0;
+                }
+                else if (pos > this.contentSize) {
+                    pos = this.contentSize;
+                }
                 this.content.style[this.prop] = -pos + 'px';
                 this.contentPos = pos;
-
-                if (this.isScrollHandle) {
-                    handlePos = this.adjustPos(pos / this.rate, [0, this.pathSize]);
-                    this.handle.style[this.prop] = handlePos + 'px';
-                    this.handlePos = handlePos;
-                }
-            }, this), 4);
+            }, this), 24);
         }
+
+        this.callback(this.pathSize === 0 ? 100 : Math.floor(this.handlePos / this.pathSize * 100));
     },
 
     dragInit: function (e) {
-        this.isScrollHandle = false;
-        dom.Event.addEvent(document, 'mousemove', this.dragOnProxy = dom.Tool.proxy(this.dragOn, this));
-        dom.Event.one(document, 'mouseup', dom.Tool.proxy(this.dragEnd, this));
-        e = dom.Event.fix(e);
+        dom.addEvent(document, 'mousemove', document['dragOn'] = dom.proxy(this.dragOn, this));
+        dom.one(document, 'mouseup', dom.proxy(this.dragEnd, this));
+        e = dom.event(e);
         this.cursorPos = this.prop === 'top' ? e.pageY : e.pageX;
         e.preventDefault();
     },
 
     dragOn: function (e) {
-        e = dom.Event.fix(e);
+        e = dom.event(e);
         var self = this, pos = this.prop === 'top' ? e.pageY : e.pageX, offset;
         offset = pos - this.cursorPos;
         this.cursorPos = pos;
-
-        offset += this.handlePos;
-        offset = this.adjustPos(offset, [0, this.pathSize]);
-        this.handle.style[this.prop] = offset + 'px';
-        this.handlePos = offset;
-
-        this.actualPos = this.adjustPos(Math.round(offset * this.rate), [0, this.contentSize]);
-
-        this.scroll();
+        this.scroll(offset);
         e.preventDefault();
     },
 
     dragEnd: function () {
-        if (this.dragOnProxy) {
-            dom.Event.removeEvent(document, 'mousemove', this.dragOnProxy);
-            this.dragOnProxy = null;
-        }
-    }
+        dom.removeEvent(document, 'mousemove', document['dragOn']);
+        document['dragOn'] = undefined;
+    },
+
+    show: function () {
+        this.path.style.display = '';
+    },
+
+    hide: function () {
+        this.path.style.display = 'none';
+    },
 });
 
