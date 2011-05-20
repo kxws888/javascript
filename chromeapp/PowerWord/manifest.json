@@ -3,8 +3,12 @@
   "version": "1.0",
 
   "description": "金山词霸即划即译完整版",
+  "icons": { "16": "assets/icon16.png",
+           "48": "assets/icon48.png",
+          "128": "assets/icon128.png" },
+  
   "page_action": {
-    "default_icon": "favicon.ico",
+    "default_icon": "assets/icon16.png",
     "default_title": "金山词霸即划即译"
   },
   "background_page": "pages/background.html",

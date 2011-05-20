@@ -1,50 +1,40 @@
 (function () {
-    var icibaUiForm, dictList;
-    //options = ['launch', 'language', 'cstyle', 'searchInputDisplay', 'searchInputWidth', 'isDw', 'defalutDwTop', 'defalutDwLeft'];
-    //options += ['selfDeter', 'oObjWidth', 'oObjHeight', 'isPopIcon', 'isPopStyle', 'isInputCan'];
-    //options += ['iciba[]', 'icibaGo_Dict', 'icibaGo_Love', 'icibaGo_Fy', 'icibaGo_Tf', 'icibaGo_Dj', 'icibaGo_Enen', 'icibaGo_NetDict'];
+    var icibaUiForm, dictList, tab;
     function init() {
         icibaUiForm = document.getElementById('icibaUiForm');
-        dictList = document.getElementById('sdContentW');saveOptions()
-        icibaUiForm.addEventListener('submit', saveOptions, false);
-        //restoreOptions();
+        dictList = document.getElementById('sdContentW');
+        chrome.tabs.getCurrent(function (t) {
+            tab = t;
+        });
+
+        if (localStorage['iciba[]']) {
+            restoreOptions();
+        }
     }
     // Saves options to localStorage.
-    function saveOptions(e) {
-        var i, len, elements, item, status, dicts = [], dict;
+    function saveOptions() {
+        var i, len, elements, item, status, dicts = {};
 
-        elements = icibaUiForm.querySelectorAll('input[type=radio]:not([name^=iciba]), input[type=text]');
+        elements = icibaUiForm.querySelectorAll('input[type=radio]:checked, input[type=text]');
         for (i = 0, len = elements.length ; i < len ; i += 1) {
             item = elements[i];
             localStorage[item.name] = item.value;
         }
 
-        elements = dictList.querySelectorAll('tr');
+        elements = dictList.querySelectorAll('input[type=checkbox]:checked');
         for (i = 0, len = elements.length ; i < len ; i += 1) {
             item = elements[i];
-            dict = [];
-            dict[dict.length] = item.querySelector('input').value;
-            dict[dict.length] = item.querySelector('input[type=radio]:checked').value;
-            dicts[dicts.length] = dict;
+            dicts[item.value] = true;
         }
 
-        localStorage[item.querySelector('input').name.slice(0, -2)] = JSON.stringify(dicts);
-
-        // Update status to let user know options were saved.
-        status = document.getElementById("status");
-        status.innerHTML = "Options Saved.";
-        setTimeout(function() {
-            status.innerHTML = "";
-        }, 750);
-        e.preventDefault();
-        return false;
+        localStorage[item.name] = JSON.stringify(dicts);
     }
 
     // Restores select box state to saved value from localStorage.
     function restoreOptions() {
-        var i, len, elements, status;
+        var i, len, elements, status, dicts;
 
-        elements = icibaUiForm.querySelectorAll('[type=radio], [type=text]');
+        elements = icibaUiForm.querySelectorAll('input[type=radio], input[type=text]');
         for (i = 0, len = elements.length ; i < len ; i += 1) {
             item = elements[i];
             if (item.type === 'text') {
@@ -59,16 +49,25 @@
             }
         }
 
+        elements = dictList.querySelectorAll('input[type=checkbox]');
+        dicts = JSON.parse(localStorage[elements[0].name]);
+        for (i = 0, len = elements.length ; i < len ; i += 1) {
+            item = elements[i];
+            if (item.value in dicts) {
+                item.checked = true;
+            }
+            else {
+                item.checked = false;
+            }
+        }
+
     }
 
-    function handleCheckbox(checkbox, value) {
-        if (value) {
-        
-        }
-        else {
-        
-        }
-    }
 
     document.addEventListener('DOMContentLoaded', init, false);
+    chrome.tabs.onRemoved.addListener(function(tabId) {
+        if (tabId === tab.id) {
+            saveOptions();
+        }
+    });
 })();

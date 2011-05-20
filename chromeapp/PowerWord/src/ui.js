@@ -24,7 +24,7 @@
    | 从新载入 js文件
    *--------------------------------------------------------------------------*/
 var K2 = K2 || {};
-if(typeof(iciba_param)=="undefined") iciba_param=new Array();
+iciba_param = JSON.parse(localStorage['iciba_param']);
 
 function JSLoad(url, container, type, defer, language, title)
 {
@@ -538,4 +538,3 @@ function icibaLog(){
 	}
 }
 JSLoad(jsLib+'K.js');
-
