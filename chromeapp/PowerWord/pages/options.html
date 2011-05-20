@@ -2,193 +2,155 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>样式定制</title>
+    <title>选项</title>
     <link media="all" rel="stylesheet" href="style/options.css" type="text/css" />
     <script type="text/javascript" src="../src/options.js"></script>
 </head>
 
 <body>
-    <h1>样式定制</h1>
-    <form id="icibaUiForm">
-        <table width="100%" border="0" cellspacing="0" cellpadding="0">
-
-            <tbody>
-                <tr>
-                    <td width="120" height="35" align="right" style="font-weight:bold">启动方式：</td>
-                    <td style="padding-left:60px">
-                        <input type="radio" name="launch" value="automatic">自动
-                        <input type="radio" name="launch" value="manual" checked="">手动
-                    </td>
-                </tr>
-
-                <tr>
-                    <td width="120" height="35" align="right" style="font-weight:bold">界面语言：</td>
-                    <td style="padding-left:60px">
-                        <input type="radio" name="language" value="zh" checked="">中文
-                        <input type="radio" name="language" value="en">英文
-                    </td>
-                </tr>
-
-                <tr>
-                    <td height="35" align="right" style="font-weight:bold">默认风格：</td>
-                    <td style="padding-left:60px">
-                        <input type="radio" name="cstyle" value="1" checked="">
-                        蓝色
-                        <input type="radio" name="cstyle" value="2" >
-                        浅蓝色
-                        <input type="radio" name="cstyle" value="3" >
-                        绿色
-                        <input type="radio" name="cstyle" value="4" >
-                        粉色
-                        <input type="radio" name="cstyle" value="5" >
-                        灰色</td>
-
-                </tr>
-
-                <tr>
-                    <td height="35" align="right" style="font-weight:bold">搜索框显示：</td>
-                    <td style="padding-left:60px">
-                        <input type="radio" name="searchInputDisplay" value="block" checked="">
-                        显示
-                        <input type="radio" name="searchInputDisplay" value="none">
-                        隐藏
-                    </td>
-                </tr>
-
-                <tr id="searchHW">
-                    <td height="35" align="right" style="font-weight:bold">搜索输入框宽度：</td>
-                    <td style="padding-left:60px"><input type="text" name="searchInputWidth" value="210" size="4" id="searchInputWidth">px</td>
-                </tr>
-
-                <tr>
-                    <td height="35" align="right" style="font-weight:bold">初始化定位：</td>
-                    <td style="padding-left:60px">
-                        <input type="radio" name="isDw" value="1" checked="">
-                        可拖动
-                        <input type="radio" name="isDw" value="0" >
-                        不可拖动
-                    </td>
-                </tr>
-
-                <tr id="dw" style="display:none">
-                    <td height="35" align="right" style="font-weight:bold;" title="只在初始化定位为不可拖动时起作用！">初始化位置：</td>
-                    <td style="padding-left:60px">
-                        距顶部高度：<input id="defalutDwTop" name="defalutDwTop" type="text" size="4" maxlength="4" value="100">px
-                        距左边长度 ：<input id="defalutDwLeft" name="defalutDwLeft" type="text" size="4" maxlength="4" value="100">px
-                    </td>
-                </tr>
-
-                <tr>
-                    <td height="35" align="right" style="font-weight:bold">框内划词：</td>
-                    <td style="padding-left:60px">
-                        <input type="radio" name="selfDeter" value="1" checked="">
-                        允许
-                        <input type="radio" name="selfDeter" value="0">
-                        禁止
-                    </td>
-                </tr>
-
-                <tr>
-                    <td height="35" align="right" style="font-weight:bold">页面尺寸：</td>
-                    <td style="padding-left:60px">
-                        宽度：
-                        <input name="oObjWidth" type="text" size="4" maxlength="4" value="325">px
-                        高度：
-                        <input name="oObjHeight" type="text" size="4" maxlength="4" value="200">px
-                    </td>
-                </tr>
-
-                <tr>
-                    <td height="35" align="right" style="font-weight:bold">翻译提示图标：</td>
-                    <td style="padding-left:60px">
-                        <input type="radio" name="isPopIcon" value="0" checked="">
-                        禁用
-                        <input type="radio" name="isPopIcon" value="1">
-                        使用
-                    </td>
-                </tr> 
-
-                <tr id="isPop" style="display:none">
-                    <td height="35" align="right" style="font-weight:bold">翻译提示图标样式：</td>
-                    <td style="padding-left:60px" class="pop">
-                        <input type="radio" name="isPopStyle" value="1"><span style=" background-position:-20px -10px;  width:18px;height:24px;" id="span1"></span>
-                        <input type="radio" name="isPopStyle" value="2"><span style=" background-position:-20px -40px;  width:18px;height:18px;" id="span2"></span>
-                        <input type="radio" name="isPopStyle" value="3"><span style=" background-position:-20px -70px;  width:18px;height:18px;" id="span3"></span>
-                        <input type="radio" name="isPopStyle" value="4" checked=""><span style=" background-position:-20px -100px;  width:20px;height:20px;" id="span4"></span>
-                        <input type="radio" name="isPopStyle" value="5"><span style=" background-position:-20px -130px;  width:22px;height:22px;" id="span5"></span>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td height="35" align="right" style="font-weight:bold">文本框区划词：</td>
-                    <td style="padding-left:60px">
-                        <input type="radio" name="isInputCan" value="0" checked="">禁划
-                        <input type="radio" name="isInputCan" value="1" >可划
-                    </td>
-                </tr> 
-
-
-                <tr>
-                    <td align="right" valign="top" style="font-weight:bold;padding-top:30px">词典功能选择：</td>
-                    <td style="padding-left:60px;padding-top:30px">
-                        <table width="325" border="0" cellpadding="0" cellspacing="1" bgcolor="#3390C0">
-                            <tbody><tr><td bgcolor="#FFFFFF">
-
-                                        <div id="sdContent">
-                                            <ul id="sdContentW">
-                                                <li id="Dict"><table><tbody><tr>
-                                                            <td height="32"><input type="checkbox" name="iciba[]" value="Dict" id="" checked="">简明英汉</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Dict" value="" checked="">默认展开</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Dict" value="none">默认收起</td>
-                                                </tr></tbody></table></li>
-                                                <li id="Love" class="select"><table><tbody><tr>
-                                                            <td height="32"><input type="checkbox" name="iciba[]" value="Love" id="" checked="">百科词典</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Love" value="" checked="">默认展开</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Love" value="none">默认收起</td>
-                                                </tr></tbody></table> </li>
-                                                <li id="Fy"><table><tbody> <tr>
-                                                            <td height="32"><input type="checkbox" name="iciba[]" value="Fy" id="" checked="">机器翻译</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Fy" value="" checked="">默认展开</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Fy" value="none">默认收起</td>
-                                                </tr></tbody></table></li>
-                                                <li id="Tf"><table><tbody><tr>
-                                                            <td height="32"><input type="checkbox" name="iciba[]" value="Tf" id="" checked="">同反义词</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Tf" value="" checked="">默认展开</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Tf" value="none">默认收起</td>
-                                                </tr></tbody></table></li>
-                                                <li id="Dj"><table><tbody><tr>
-                                                            <td height="32"><input type="checkbox" name="iciba[]" value="Dj" id="" checked="">相关例句</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Dj" value="" checked="">默认展开</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Dj" value="none">默认收起</td>
-                                                </tr></tbody></table></li>
-                                                <li id="Enen"><table><tbody><tr>
-                                                            <td height="32"><input type="checkbox" name="iciba[]" value="Enen" id="" checked="">英英解释</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Enen" value="" checked="">默认展开</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_Enen" value="none">默认收起</td>
-                                                </tr></tbody></table></li>
-                                                <li id="NetDict"><table><tbody><tr>
-                                                            <td height="32"><input type="checkbox" name="iciba[]" value="NetDict" id="" checked="">网络词典</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_NetDict" value="" checked="">默认展开</td>
-                                                            <td height="32"><input type="radio" name="icibaGo_NetDict" value="none">默认收起</td>
-                                                </tr></tbody></table></li>
-                                            </ul>
-                                        </div>
-                            </td></tr></tbody>
-                        </table>
-                        <table width="325" border="0" cellspacing="0" cellpadding="0">
-                            <tbody><tr>
-                                    <td width="170" height="32" align="center" style="padding-left:80px">
-                                        <input type="image" src="../assets/plugin-button01-2.gif" alt="向上" width="16" height="16" align="absmiddle">
-                                        重新排序 
-                                        <input type="image" src="../assets/plugin-button02-2.gif" alt="向下" width="16" height="16" align="absmiddle">
-                                    </td>
-                            </tr></tbody>
-                        </table>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </form>
+    <div id="navbar-container">
+        <h1>选项</h1>
+        <ul>
+            <li id="browserPageNav" class="selected">基本设置</li>
+            <li id="personalPageNav">关于我们</li>
+        </ul>
+    </div>
+    <div id="mainview">
+        <div id="browserPage">
+            <h1>基本设置</h1>
+            <section id="startupSection">
+                <h3>启动方式：</h3>
+                <div>
+                    <label><input type="radio" name="startup" value="manual">手动</label>
+                    <label><input type="radio" name="startup" value="automatic">自动</label>
+                </div>
+            </section>
+            <section id="languageSection">
+                <h3>界面语言：</h3>
+                <div>
+                    <label><input type="radio" name="language" value="zh">中文</label>
+                    <label><input type="radio" name="language" value="en">英文</label>
+                </div>
+            </section>
+            <section id="cstyleSection">
+                <h3>默认风格：</h3>
+                <div>
+                    <label><input type="radio" name="cstyle" value="1">蓝色</label>
+                    <label><input type="radio" name="cstyle" value="2">浅蓝色</label>
+                    <label><input type="radio" name="cstyle" value="3">绿色</label>
+                    <label><input type="radio" name="cstyle" value="4">粉色</label>
+                    <label><input type="radio" name="cstyle" value="5">灰色</label>
+                </div>
+            </section>
+            <section id="searchInputSection">
+                <h3>搜索框：</h3>
+                <div>
+                    <div>
+                        <label><input type="radio" name="searchInputDisplay" value="block">显示</label>
+                        <label>搜索输入框宽度:<input type="text" name="searchInputWidth" value="210" size="4" id="searchInputWidth">px</label>
+                    </div>
+                    <div>
+                        <label><input type="radio" name="searchInputDisplay" value="none">隐藏</label>
+                    </div>
+                </div>
+            </section>
+            <section id="dwSection">
+                <h3>初始化定位：</h3>
+                <div>
+                    <div>
+                        <label><input type="radio" name="isDw" value="1">可拖动</label>
+                    </div>
+                    <div>
+                        <label><input type="radio" name="isDw" value="0" >不可拖动</label>
+                        <label>距顶部高度:<input id="defalutDwTop" name="defalutDwTop" type="text" size="4" maxlength="4" value="100" disabled>px</label>
+                        <label>距左边长度:<input id="defalutDwLeft" name="defalutDwLeft" type="text" size="4" maxlength="4" value="100">px</label>
+                    </div>
+                </div>
+            </section>
+            <section id="selfDeterSection">
+                <h3>框内划词：</h3>
+                <div>
+                    <label><input type="checkbox" name="selfDeter" value="1">允许</label>
+                </div>
+            </section>
+            <section id="inputCanSection">
+                <h3>文本框内划词：</h3>
+                <div>
+                    <label><input type="checkbox" name="isInputCan" value="1">允许</label>
+                </div>
+            </section>
+            <section id="sizeSection">
+                <h3>尺寸：</h3>
+                <div>
+                    <label>宽度:<input name="oObjWidth" type="text" size="4" maxlength="4" value="325">px</label>
+                    <label>高度:<input name="oObjHeight" type="text" size="4" maxlength="4" value="200">px</label>
+                </div>
+            </section>
+            <section id="popIconSection">
+                <h3>翻译提示图标：</h3>
+                <div>
+                    <div>
+                        <label><input type="radio" name="isPopIcon" value="0">禁用</label>
+                    </div>
+                    <div>
+                        <label><input type="radio" name="isPopIcon" value="1">使用</label>
+                        <label><input type="radio" name="isPopStyle" value="1"><span style=" background-position:-20px -10px;  width:18px;height:24px;"></span></label>
+                        <label><input type="radio" name="isPopStyle" value="2"><span style=" background-position:-20px -40px;  width:18px;height:18px;"></span></label>
+                        <label><input type="radio" name="isPopStyle" value="3"><span style=" background-position:-20px -70px;  width:18px;height:18px;"></span></label>
+                        <label><input type="radio" name="isPopStyle" value="4"><span style=" background-position:-20px -100px;  width:20px;height:20px;"></span></label>
+                        <label><input type="radio" name="isPopStyle" value="5"><span style=" background-position:-20px -130px;  width:22px;height:22px;"></span></label>
+                    </div>
+                </div>
+            </section>
+            <section id="dictSection">
+                <h3>词典功能选择：</h3>
+                <div>
+                    <ul id="sdContentW">
+                        <li id="Dict">
+                        <label><input type="checkbox" name="iciba[]" value="Dict">简明英汉</label>
+                        <label><input type="radio" name="icibaGo_Dict" value="">默认展开</label>
+                        <label><input type="radio" name="icibaGo_Dict" value="none">默认收起</label>
+                        </li>
+                        <li id="Love">
+                        <label><input type="checkbox" name="iciba[]" value="Love">百科词典</label>
+                        <label><input type="radio" name="icibaGo_Love" value="">默认展开</label>
+                        <label><input type="radio" name="icibaGo_Love" value="none">默认收起</label>
+                        </li>
+                        <li id="Fy">
+                        <label><input type="checkbox" name="iciba[]" value="Fy">机器翻译</label>
+                        <label><input type="radio" name="icibaGo_Fy" value="">默认展开</label>
+                        <label><input type="radio" name="icibaGo_Fy" value="none">默认收起</label>
+                        </li>
+                        <li id="Tf">
+                        <label><input type="checkbox" name="iciba[]" value="Tf">同反义词</label>
+                        <label><input type="radio" name="icibaGo_Tf" value="">默认展开</label>
+                        <label><input type="radio" name="icibaGo_Tf" value="none">默认收起</label>
+                        </li>
+                        <li id="Dj">
+                        <label><input type="checkbox" name="iciba[]" value="Dj">相关例句</label>
+                        <label><input type="radio" name="icibaGo_Dj" value="">默认展开</label>
+                        <label><input type="radio" name="icibaGo_Dj" value="none">默认收起</label>
+                        </li>
+                        <li id="Enen">
+                        <label><input type="checkbox" name="iciba[]" value="Enen">英英解释</label>
+                        <label><input type="radio" name="icibaGo_Enen" value="">默认展开</label>
+                        <label><input type="radio" name="icibaGo_Enen" value="none">默认收起</label>
+                        </li>
+                        <li id="NetDict">
+                        <label><input type="checkbox" name="iciba[]" value="NetDict">网络词典</label>
+                        <label><input type="radio" name="icibaGo_NetDict" value="">默认展开</label>
+                        <label><input type="radio" name="icibaGo_NetDict" value="none">默认收起</label>
+                        </li>
+                    </ul>
+                    <div>
+                        <span>重新排序:</span>
+                        <input type="image" src="../assets/plugin-button01-2.gif" alt="向上" width="16" height="16" align="absmiddle">
+                        <input type="image" src="../assets/plugin-button02-2.gif" alt="向下" width="16" height="16" align="absmiddle">
+                        <p class="commit">影响各词典查询结果的显示顺序</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
 </body>
 </html>
-
