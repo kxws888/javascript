@@ -34,6 +34,10 @@ li {
     line-height: 2em;
 }
 
+a {
+    color: #3F6EC2;
+}
+
 .commit {
     color: grey;
 }
@@ -152,4 +156,22 @@ section > div:only-of-type {
 
 section > div:only-of-type label {
     margin-right: 5px;
+}
+
+#dictSection li.selected {
+    background-color: #BBCEE9;
+}
+
+#popIconSection span {
+    background-image: url(/assets/tip.gif);
+    display: inline-block;
+}
+
+#logSection h4 {
+    margin-bottom: 0;
+}
+
+#logSection ul ul {
+    list-style-type: square;
+    margin-left: 24px;
 }
