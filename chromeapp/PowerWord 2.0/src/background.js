@@ -53,44 +53,23 @@
         return iciba_param;
     }
 
-    //switch feature developing
-    var status = false;;
-    function manualExecuteScript(tab) {
-        if (status) {
-            return;
-        }
+    //toggle the of switcher dict by clicking the page button
+    var status = localStorage.startup === 'automatic' ? true : false;
+    chrome.pageAction.onClicked.addListener(function (tab) {
         chrome.pageAction.setIcon({
             tabId: tab.id,
-            path: chrome.extension.getURL('assets/icon16.png')
+            path: chrome.extension.getURL(status ? 'assets/icon16.png' : 'assets/icon16_grey.png');
         });
-        chrome.tabs.executeScript(null, {file: "src/iciba_param.js"});
-        status = true;
-    }
-
-    chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
-        if (!/^chrome/i.test(tab.url) && tab.status === 'complete') {
-            if (!localStorage.startup || localStorage.startup === 'manual') {
-                status = false;
-                chrome.pageAction.onClicked.addListener(manualExecuteScript);
-                chrome.pageAction.setIcon({
-                    tabId: tabID,
-                    path: chrome.extension.getURL('assets/icon16_grey.png')
-                });
-            }
-            else {
-                chrome.pageAction.onClicked.removeListener(manualExecuteScript);
-                chrome.tabs.executeScript(null, {file: "src/iciba_param.js"});
-            }
-            chrome.pageAction.show(tabID);
-        }
+        status = !status;
+        chrome.extension.sendRequest({cmd: status});
     });
 
-    chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-        if (request.action === 'config') {
-            sendResponse(JSON.stringify(config()));
-        }
-        else if (request.action === 'init ui') {
-            chrome.tabs.executeScript(null, {file: "src/contentscript.js"});
+    chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
+        if (!/^chrome/i.test(tab.url) && tab.status !== 'complete') {
+            if (status) {
+                chrome.tabs.executeScript(null, {file: "src/dict.js"});
+            }
+            chrome.pageAction.show(tabID);
         }
     });
 })();

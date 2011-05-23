@@ -1,4 +1,5 @@
 /**
+ * Wordcapture
  * @version 20110523.1
  *
 */
@@ -13,16 +14,16 @@ dom.Class('Wordcapture', {
     },
 
     enable: function () {
-        dom.Event.addEvent(this.scope, 'click', dom.Tool.proxy(this.dblclickHandler, this));
-        dom.Event.addEvent(this.scope, 'mousedown', dom.Tool.proxy(this.dragStart, this));
+        dom.Event.addEvent(this.scope, 'click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this));
+        dom.Event.addEvent(this.scope, 'mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this));
     },
 
     disable: function () {
-        dom.Event.removeEvent(this.scope, 'click', dom.Tool.proxy(this.dblclickHandler, this));
-        dom.Event.removeEvent(this.scope, 'mousedown', dom.Tool.proxy(this.dragStart, this));
+        dom.Event.removeEvent(this.scope, 'click', this.dblclickProxy);
+        dom.Event.removeEvent(this.scope, 'mousedown', this.dragStartProxy);
     },
 
-    dblclickHandler: function (e) {
+    dblclick: function (e) {
         if (e.detail > 1) {
             e.target.dispatchEvent(this.captureEvent);
         }
