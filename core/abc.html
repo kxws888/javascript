@@ -3,6 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <title></title>
+  <script type="text/javascript" src="dom-1.1.1.js"></script>
+  <script type="text/javascript">
+function Bird(name) {
+    this.name = name;
+}
+ 
+Bird.prototype.flighted   = true;  // Default for all Birds
+Bird.prototype.isFlighted = function () { return this.flighted };
+Bird.prototype.getName    = function () { return this.name };
+ 
+function Chicken(name) {
+    // Chain the constructors
+    this.super.constructor(name);
+}
+// Chickens are birds
+dom.Tool.extend(Chicken, Bird);
+ 
+// Define the Chicken prototype methods/members
+Chicken.prototype.flighted = false; 
+  
+  
+  </script>
 </head>
 <body>
   game

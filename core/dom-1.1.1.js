@@ -2,7 +2,7 @@
  * dom.js
  * It's a light library only contains several methods which are used most in the development.
  * @author viclm
- * @version 20110523.1 //fix judge condition in dom.Event.fix
+ * @version 20110524.2
  * @license New BSD License
 */
 'use strict';
@@ -11,6 +11,14 @@ var dom = {};
  * tool function
 */
 dom.Tool = {
+    extend: function (childCtor, parentCtor) {
+        function tempCtor() {};
+        tempCtor.prototype = parentCtor.prototype;
+        childCtor.super = parentCtor.prototype;
+        childCtor.prototype = new tempCtor();
+        childCtor.prototype.constructor = childCtor;
+    },
+
     proxy: function (fn, obj) {
         return function () {
             return fn.apply(obj, arguments);
