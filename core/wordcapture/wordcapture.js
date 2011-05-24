@@ -7,8 +7,9 @@ dom.Class('Wordcapture', {
 
     init: function (args) {
         this.scope = args && args.scope || document.body;
+        this.callback = args && args.callback || function () {};
 
-        this.captureEvent = document.createEvent('Event');
+        this.captureEvent = document.createEvent('MouseEvents');
         this.captureEvent.initEvent('capture', true, true);
         dom.Event.addEvent(this.scope, 'capture', dom.Tool.proxy(this.captureText, this));
     },
@@ -44,6 +45,23 @@ dom.Class('Wordcapture', {
 
     captureText: function (e) {
         var text = window.getSelection().toString();
-        console.log(text);
+        this.callback(text, e);
     }
+});
+
+
+dom.Class('Dict', {
+
+    init: function (args) {
+        this.scope = args && args.scope || document.body;
+
+        var self = this;
+        this.wordcapture = new Wordcapture({
+            scope: self.scope,
+            callback: self.query
+        });
+        this.wordcapture.enable();
+    },
+
+    
 });
