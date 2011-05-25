@@ -437,10 +437,6 @@ dom.Ajax = {
     */
     function Wordcapture (args) {
         this.scope = args && args.scope || document.body;
-
-        this.captureEvent = document.createEvent('MouseEvents');
-        this.captureEvent.initEvent('capture', true, true);
-        dom.Event.addEvent(this.scope, 'capture', dom.Tool.proxy(this.captureText, this));
     }
 
 
@@ -456,7 +452,7 @@ dom.Ajax = {
 
     Wordcapture.prototype.dblclick = function (e) {
         if (e.detail > 1) {
-            e.target.dispatchEvent(this.captureEvent);
+            this.capture(e);
         }
     };
 
@@ -469,11 +465,11 @@ dom.Ajax = {
     Wordcapture.prototype.dragEnd = function (e) {
         var event = dom.Event.fix(e);
         if (this.cursorPos !== event.pageX) {
-            e.target.dispatchEvent(this.captureEvent);
+            this.capture(e);
         }
     };
 
-    Wordcapture.prototype.captureText = function () {
+    Wordcapture.prototype.capture = function () {
         this.text = window.getSelection().toString();
     };
 
@@ -482,38 +478,85 @@ dom.Ajax = {
 
     function Dict(args) {
         this.super.constructor.call(this, args);
-        this.api = 'http://dict-co.iciba.com/api/dictionary.php';
         this.port = chrome.extension.connect({name: "query"});
-        this.ui = this.createUI();
+        this.uiSimple = this.createUISimple();
 
-        this.port.onMessage.addListener(this.show);
+        this.port.onMessage.addListener(dom.Tool.proxy(this.show, this));
 
     }
 
     dom.Tool.extend(Dict, Wordcapture);
 
-    Dict.prototype.captureText = function (e) {
-        this.super.captureText();
-        if (dom.Tool.trim(this.text).length > 0) {
-            var data = {};
-            data['w'] = this.text;
-            this.port.postMessage(data);
+    Wordcapture.prototype.dblclick = function (e) {
+        if (e.detail > 1) {
+            this.capture(e);
+        }
+        else {
+            this.uiSimple.style.display = 'none';
         }
     };
 
-    Dict.prototype.show = function (msg) {
-        console.log(msg)
-        body.innerHTML = msg.result;
+    Dict.prototype.capture = function (e) {
+        this.super.capture();
+        if (dom.Tool.trim(this.text).length > 0) {
+            var data = {}, fontSize;
+            data['w'] = this.text;
+            this.port.postMessage(data);
+
+            this.uiSimple.querySelector('h1').innerHTML = this.text;
+            this.uiSimple.querySelector('header span').innerHTML = '';
+            this.uiSimple.querySelector('ul').innerHTML = '正在翻译中';
+            this.uiSimple.style.display = '';
+
+            fontSize = parseInt(getComputedStyle(e.target, null).getPropertyValue('font-size'), 10);
+            this.uiSimple.style.left = e.pageX - this.uiSimple.offsetWidth / 2 + 'px';
+            this.uiSimple.style.top = e.pageY - this.uiSimple.offsetHeight - 8 - fontSize / 2 + 'px';
+
+            this.x = e.pageX;
+            this.y = e.pageY;
+        }
     };
 
-    Dict.prototype.createUI = function () {
-        var aside = document.createElement('aside'), input;
-        aside.id = 'dict-viclm-jiaojiao';
-        aside.style.cssText = 'position: absolute; border: 1px solid #bfbfb';
+    Dict.prototype.show = function (data) {
+        var i, len, item, ul, li;
 
-        input = document.createElement('input');
-        input.type = 'search';
+        if (data.key !== this.text) {
+            return;
+        }
+
+        if ('tt' in data) {
+            this.uiSimple.querySelector('header span').innerHTML = '[' + data.ps + ']';
+            ul = this.uiSimple.querySelector('ul');
+            ul.innerHTML = '';
+
+            for (i = 0, len = data.tt.length ; i < len ; i += 1) {
+                item = data.tt[i];
+                li = document.createElement('li');
+                li.innerHTML = item.pos + ' ' + item.acceptation;
+                ul.appendChild(li);
+            }
+            fontSize = parseInt(getComputedStyle(e.target, null).getPropertyValue('font-size'), 10);
+            this.uiSimple.style.left = this.x - this.uiSimple.offsetWidth / 2 + 'px';
+            this.uiSimple.style.top = this.y - this.uiSimple.offsetHeight - 8 - fontSize / 2 + 'px';
+        }
+        else {
+            this.uiSimple.querySelector('ul').innerHTML = '没有翻译结果';
+        }
+    };
+
+    Dict.prototype.createUISimple = function () {
+        var aside = document.createElement('aside'), header;
+        aside.id = 'dict-viclm-simple';
+
+        header = document.createElement('header');
+        header.appendChild(document.createElement('h1'));
+        header.appendChild(document.createElement('span'));
+        aside.appendChild(header);
+
+        aside.appendChild(document.createElement('ul'));
+
         document.body.appendChild(aside);
+        aside.style.display = 'none';
         return aside;
     };
 

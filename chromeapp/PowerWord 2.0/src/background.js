@@ -56,6 +56,12 @@
     //toggle the of switcher dict by clicking the page button
     var status = localStorage.startup !== 'automatic' ? true : false, tab;
 
+    function xml2json(xml) {
+        var json = {}, root;
+        xml.childNodes
+        return json;
+    }
+
     function dictSwitch() {
         if (!status) {
             chrome.tabs.executeScript(null, {file: "src/dict.js"});
@@ -93,8 +99,25 @@
             port.onMessage.addListener(function(msg) {
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', 'http://dict-co.iciba.com/api/dictionary.php?w=' + msg.w, true);
-                xhr.onload = function () {
-                    port.postMessage({result: xhr.responseXML});
+                xhr.onload = function (e) {
+                    var xml = xhr.responseXML, json = {}, tt, i, len, item;
+                    if (xml && xml.getElementsByTagName('key').length > 0) {
+                        json.key = xml.getElementsByTagName('key')[0].firstChild.nodeValue;
+                        json.ps = xml.getElementsByTagName('ps')[0].firstChild.nodeValue;
+                        json.tt = [];
+                        tt = xml.getElementsByTagName('pos');
+                        for (i = 0, len = tt.length ; i < len ; i += 1) {
+                            item = tt[i];
+                            json.tt.push({
+                                pos: item.firstChild.nodeValue,
+                                acceptation: item.nextSibling.firstChild.nodeValue
+                            });
+                        }
+                    }
+                    else {
+                        json.key = msg.w;
+                    }
+                    port.postMessage(json);
                 };
                 xhr.send(null);
             });

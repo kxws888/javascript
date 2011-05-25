@@ -1,27 +1,45 @@
-#dict-viclm-jiaojiao {
-   position: absolute;
-   left: 500px;
-   top: 300px;
-   padding: 7px;
-   margin:1em 0 3em;
-   color:#000;
-   background:#f3961c;
-   width: 270px;
-   height: 75px;
+#dict-viclm-simple {
+    font-family: Arial, 'Microsoft Yahei', Simsun, sans-serif;
+    font-size: 12px;
+    position: absolute;
+    display: inline-block;
+    padding: 5px;
+    color:#000;
+    background:#f3961c;
 
-   border-radius:10px;
-   background:-moz-linear-gradient(top, #f9d835, #f3961c);
-   background:linear-gradient(top, #f9d835, #f3961c);
+    border-radius:5px;
+    background:-moz-linear-gradient(top, #f9d835, #f3961c);
+    background:linear-gradient(top, #f9d835, #f3961c);
+}
+
+#dict-viclm-simple header {
+    display: -webkit-box;
+}
+
+#dict-viclm-simple h1 {
+    margin: 0 0 5px 0;
+    font-size: 1em;
+}
+
+#dict-viclm-simple header span{
+    color: #333;
+    margin-left: 5px;
+}
+
+#dict-viclm-simple ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
 }
 
 /* creates triangle */
-#dict-viclm-jiaojiao:after {
+#dict-viclm-simple:after {
    content:"";
    position:absolute;
-   bottom:-15px;
-   left:120px;
+   bottom:-8px;
+   left:38%;
    width:0;
-   border-width:15px 15px 0;
+   border-width:8px 8px 0;
    border-style:solid;
    border-color:#f3961c transparent;
 }

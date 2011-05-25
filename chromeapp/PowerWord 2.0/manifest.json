@@ -1,15 +1,15 @@
 {
-  "name": "金山词霸即划即译 2.0",
+  "name": "Chrome Dict",
   "version": "1.0",
 
-  "description": "金山词霸即划即译完整版",
+  "description": "整合多个词典接口，最好用的chrome字典",
   "icons": { "16": "assets/icon16.png",
            "48": "assets/icon48.png",
           "128": "assets/icon128.png" },
   
   "page_action": {
     "default_icon": "assets/icon16.png",
-    "default_title": "金山词霸即划即译"
+    "default_title": "Chrome Dict"
   },
   "background_page": "pages/background.html",
   
