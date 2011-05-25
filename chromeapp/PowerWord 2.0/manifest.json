@@ -22,7 +22,8 @@
 
   "permissions": [
     "tabs",
-    "*://*/*"
+    "*://*/*",
+    "http://dict-co.iciba.com/"
   ],
 
   "options_page": "pages/options.html"

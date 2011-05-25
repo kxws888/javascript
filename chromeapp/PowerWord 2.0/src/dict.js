@@ -2,7 +2,7 @@
  * dom.js
  * It's a light library only contains several methods which are used most in the development.
  * @author viclm
- * @version 20110523.1 //fix judge condition in dom.Event.fix
+ * @version 20110525.3
  * @license New BSD License
 */
 'use strict';
@@ -11,9 +11,26 @@ var dom = {};
  * tool function
 */
 dom.Tool = {
+    extend: function (childCtor, parentCtor) {
+        function tempCtor() {};
+        tempCtor.prototype = parentCtor.prototype;
+        childCtor.prototype = new tempCtor();
+        childCtor.prototype.super = parentCtor.prototype;
+        childCtor.prototype.constructor = childCtor;
+    },
+
     proxy: function (fn, obj) {
         return function () {
             return fn.apply(obj, arguments);
+        }
+    },
+
+    trim: function (str) {
+        if (str.trim) {
+            return str.trim();
+        }
+        else {
+            return str.replace(/^\s+|\s+$/, '');
         }
     },
 
@@ -411,86 +428,101 @@ dom.Ajax = {
     }
 }
 
+//(function () {
 
-(function () {
     /**
- * Wordcapture
- * @version 20110523.1
- *
-*/
-    dom.Class('Wordcapture', {
+    * Wordcapture
+    * @version 20110525.3
+    *
+    */
+    function Wordcapture (args) {
+        this.scope = args && args.scope || document.body;
 
-        init: function (args) {
-            this.scope = args && args.scope || document.body;
-            this.callback = args && args.callback || function () {};
+        this.captureEvent = document.createEvent('MouseEvents');
+        this.captureEvent.initEvent('capture', true, true);
+        dom.Event.addEvent(this.scope, 'capture', dom.Tool.proxy(this.captureText, this));
+    }
 
-            this.captureEvent = document.createEvent('Event');
-            this.captureEvent.initEvent('capture', true, true);
-            dom.Event.addEvent(this.scope, 'capture', dom.Tool.proxy(this.captureText, this));
-        },
 
-        enable: function () {
-            dom.Event.addEvent(this.scope, 'click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this));
-            dom.Event.addEvent(this.scope, 'mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this));
-        },
+    Wordcapture.prototype.enable = function () {
+        dom.Event.addEvent(this.scope, 'click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this));
+        dom.Event.addEvent(this.scope, 'mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this));
+    };
 
-        disable: function () {
-            dom.Event.removeEvent(this.scope, 'click', this.dblclickProxy);
-            dom.Event.removeEvent(this.scope, 'mousedown', this.dragStartProxy);
-        },
+    Wordcapture.prototype.disable = function () {
+        dom.Event.removeEvent(this.scope, 'click', this.dblclickProxy);
+        dom.Event.removeEvent(this.scope, 'mousedown', this.dragStartProxy);
+    };
 
-        dblclick: function (e) {
-            if (e.detail > 1) {
-                e.target.dispatchEvent(this.captureEvent);
-            }
-        },
-
-        dragStart: function (e) {
-            var event = dom.Event.fix(e);
-            dom.Event.one(document, 'mouseup', dom.Tool.proxy(this.dragEnd, this));
-            this.cursorPos = event.pageX;
-        },
-
-        dragEnd: function (e) {
-            var event = dom.Event.fix(e);
-            if (this.cursorPos !== event.pageX) {
-                e.target.dispatchEvent(this.captureEvent);
-            }
-        },
-
-        captureText: function (e) {
-            var text = window.getSelection().toString();
-            this.callback(e, text);
+    Wordcapture.prototype.dblclick = function (e) {
+        if (e.detail > 1) {
+            e.target.dispatchEvent(this.captureEvent);
         }
-    });
+    };
 
-    var wordcapture;
+    Wordcapture.prototype.dragStart = function (e) {
+        var event = dom.Event.fix(e);
+        dom.Event.one(document, 'mouseup', dom.Tool.proxy(this.dragEnd, this));
+        this.cursorPos = event.pageX;
+    };
 
-    function createUI() {
-        var body = document.createElement('aside');
-        body.id = 'dict-viclm-jiaojiao';
-        body.innerHTML = '123'
+    Wordcapture.prototype.dragEnd = function (e) {
+        var event = dom.Event.fix(e);
+        if (this.cursorPos !== event.pageX) {
+            e.target.dispatchEvent(this.captureEvent);
+        }
+    };
+
+    Wordcapture.prototype.captureText = function () {
+        this.text = window.getSelection().toString();
+    };
+
+
+
+
+    function Dict(args) {
+        this.super.constructor.call(this, args);
+        this.api = 'http://dict-co.iciba.com/api/dictionary.php';
+        this.port = chrome.extension.connect({name: "query"});
+        this.ui = this.createUI();
+
+        this.port.onMessage.addListener(this.show);
+
     }
 
-    function fetch(e, text) {
-        
-    }
+    dom.Tool.extend(Dict, Wordcapture);
 
-    function assemble() {
-    
-    }
+    Dict.prototype.captureText = function (e) {
+        this.super.captureText();
+        if (dom.Tool.trim(this.text).length > 0) {
+            var data = {};
+            data['w'] = this.text;
+            this.port.postMessage(data);
+        }
+    };
 
-    function initDict() {
-        wordcapture = new Wordcapture({
-            callback: fetch
-        });
-        wordcapture.enable();
-    }
+    Dict.prototype.show = function (msg) {
+        console.log(msg)
+        body.innerHTML = msg.result;
+    };
 
+    Dict.prototype.createUI = function () {
+        var aside = document.createElement('aside'), input;
+        aside.id = 'dict-viclm-jiaojiao';
+        aside.style.cssText = 'position: absolute; border: 1px solid #bfbfb';
 
-    document.addEventListener('DOMContentLoaded', initDict, false);
+        input = document.createElement('input');
+        input.type = 'search';
+        document.body.appendChild(aside);
+        return aside;
+    };
+
+    var dict = new Dict();
+    dict.enable();
+    //document.addEventListener('DOMContentLoaded', initDict, false);
 
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-        request.cmd ? wordcapture.enable() : wordcapture.disable();
+        request.cmd ? dict.enable() : dict.disable();
     });
-})();
+
+//})();

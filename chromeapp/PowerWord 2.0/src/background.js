@@ -54,23 +54,52 @@
     }
 
     //toggle the of switcher dict by clicking the page button
-    var status = localStorage.startup === 'automatic' ? true : false;
-    chrome.pageAction.onClicked.addListener(function (tab) {
-        chrome.pageAction.setIcon({
-            tabId: tab.id,
-            path: chrome.extension.getURL(status ? 'assets/icon16.png' : 'assets/icon16_grey.png');
-        });
-        status = !status;
-        chrome.extension.sendRequest({cmd: status});
-    });
+    var status = localStorage.startup !== 'automatic' ? true : false, tab;
+
+    function dictSwitch() {
+        if (!status) {
+            chrome.tabs.executeScript(null, {file: "src/dict.js"});
+            chrome.pageAction.onClicked.removeListener(dictSwitch);
+            chrome.pageAction.onClicked.addListener(function (tab) {
+                status = !status;
+                chrome.pageAction.setIcon({
+                    tabId: tab.id,
+                    path: chrome.extension.getURL(status ? 'assets/icon16.png' : 'assets/icon16_grey.png')
+                });
+                chrome.extension.sendRequest({cmd: status});
+            });
+        }
+    }
+
+    chrome.pageAction.onClicked.addListener(dictSwitch);
 
     chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
         if (!/^chrome/i.test(tab.url) && tab.status !== 'complete') {
             if (status) {
                 chrome.tabs.executeScript(null, {file: "src/dict.js"});
             }
+            else {
+                chrome.pageAction.setIcon({
+                    tabId: tab.id,
+                    path: chrome.extension.getURL('assets/icon16_grey.png')
+                });
+            }
             chrome.pageAction.show(tabID);
         }
     });
+
+    chrome.extension.onConnect.addListener(function(port) {
+        if (port.name === 'query') {
+            port.onMessage.addListener(function(msg) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'http://dict-co.iciba.com/api/dictionary.php?w=' + msg.w, true);
+                xhr.onload = function () {
+                    port.postMessage({result: xhr.responseXML});
+                };
+                xhr.send(null);
+            });
+        }
+    });
+
 })();
 
