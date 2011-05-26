@@ -517,9 +517,7 @@ dom.Ajax = {
             this.uiSimple.querySelector('ul').innerHTML = '正在翻译中';
             this.uiSimple.style.display = '';
 
-            this.uiSimple.style.left = this.x - this.uiSimple.offsetWidth / 2 + 'px';
-            this.uiSimple.style.top = this.y - this.uiSimple.offsetHeight - 8 - this.fontSize / 2 + 'px';
-            this.uiSimple.querySelector('div.triangle').style.left = this.uiSimple.offsetWidth / 2 - 6 + 'px';
+            this.position();
         }
     };
 
@@ -546,13 +544,32 @@ dom.Ajax = {
                 ul.appendChild(li);
             }
 
-            this.uiSimple.style.left = this.x - this.uiSimple.offsetWidth / 2 + 'px';
-            this.uiSimple.style.top = this.y - this.uiSimple.offsetHeight - 8 - this.fontSize / 2 + 'px';
-            this.uiSimple.querySelector('div.triangle').style.left = this.uiSimple.offsetWidth / 2 - 6 + 'px';
+            this.position();
         }
         else {
             this.uiSimple.querySelector('ul').innerHTML = '没有翻译结果';
         }
+    };
+
+    Dict.prototype.position = function () {
+        var left, top;
+        left = this.x - this.uiSimple.offsetWidth / 2;
+        top = this.y - this.uiSimple.offsetHeight - 8 - this.fontSize / 2;
+        if (left < 0) {
+            left = this.x;
+        }
+
+        if (top < 0) {
+            top = this.y + this.fontSize / 2;
+            this.uiSimple.className = 'up';
+            this.uiSimple.querySelector('div[class]').style.left = '20%';
+        }
+        else {
+            this.uiSimple.className = 'dowm';
+            this.uiSimple.querySelector('div[class]').style.left = this.uiSimple.offsetWidth / 2 - 6 + 'px';
+        }
+        this.uiSimple.style.left = left + 'px';
+        this.uiSimple.style.top = top + 'px';
     };
 
     Dict.prototype.createUISimple = function () {
@@ -567,7 +584,7 @@ dom.Ajax = {
         aside.appendChild(document.createElement('ul'));
 
         triangle = document.createElement('div');
-        triangle.className = 'triangle';
+        triangle.className = 'down';
         aside.appendChild(triangle);
 
         document.body.appendChild(aside);
