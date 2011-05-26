@@ -6,6 +6,7 @@
     padding: 5px;
     color:#000;
     background:#f3961c;
+    z-index: 19860208;
 
     border-radius:5px;
     background:-moz-linear-gradient(top, #f9d835, #f3961c);
@@ -33,14 +34,17 @@
 }
 
 /* creates triangle */
-#dict-viclm-simple:after {
-   content:"";
+#dict-viclm-simple .triangle {
    position:absolute;
-   bottom:-8px;
-   left:38%;
+   bottom:-6px;
+   left:50%;
    width:0;
-   border-width:8px 8px 0;
+   border-width:6px 6px 0;
    border-style:solid;
    border-color:#f3961c transparent;
 }
 
+
+
+
+.orange {}

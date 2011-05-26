@@ -437,6 +437,7 @@ dom.Ajax = {
     */
     function Wordcapture (args) {
         this.scope = args && args.scope || document.body;
+        //this.direct add feature verticle direct word
     }
 
 
@@ -459,18 +460,26 @@ dom.Ajax = {
     Wordcapture.prototype.dragStart = function (e) {
         var event = dom.Event.fix(e);
         dom.Event.one(document, 'mouseup', dom.Tool.proxy(this.dragEnd, this));
-        this.cursorPos = event.pageX;
+        this.startPos = event.pageX;
+        this.endPos = null;
     };
 
     Wordcapture.prototype.dragEnd = function (e) {
         var event = dom.Event.fix(e);
-        if (this.cursorPos !== event.pageX) {
+        if (this.startPos !== event.pageX) {
+            this.endPos = event.pageX;
             this.capture(e);
         }
     };
 
-    Wordcapture.prototype.capture = function () {
-        this.text = window.getSelection().toString();
+    Wordcapture.prototype.capture = function (e) {
+        this.text = dom.Tool.trim(window.getSelection().toString());
+        this.text = this.text.replace(/^\W$/, '');
+        if (this.text.length > 0) {
+            this.x = e.pageX - (this.endPos === null ? 0 : (this.endPos - this.startPos) / 2);
+            this.y = e.pageY;
+            this.fontSize = parseInt(getComputedStyle(e.target, null).getPropertyValue('font-size'), 10);
+        }
     };
 
 
@@ -487,19 +496,19 @@ dom.Ajax = {
 
     dom.Tool.extend(Dict, Wordcapture);
 
-    Wordcapture.prototype.dblclick = function (e) {
-        if (e.detail > 1) {
-            this.capture(e);
+    Dict.prototype.dblclick = function (e) {
+        if (e.detail <= 1 && this.endPos === null) {
+            this.uiSimple.style.display = 'none';
         }
         else {
-            this.uiSimple.style.display = 'none';
+            this.super.dblclick.call(this, e);
         }
     };
 
     Dict.prototype.capture = function (e) {
-        this.super.capture();
-        if (dom.Tool.trim(this.text).length > 0) {
-            var data = {}, fontSize;
+        var data = {};
+        this.super.capture.call(this, e);
+        if (this.text.length > 0) {
             data['w'] = this.text;
             this.port.postMessage(data);
 
@@ -508,12 +517,9 @@ dom.Ajax = {
             this.uiSimple.querySelector('ul').innerHTML = '正在翻译中';
             this.uiSimple.style.display = '';
 
-            fontSize = parseInt(getComputedStyle(e.target, null).getPropertyValue('font-size'), 10);
-            this.uiSimple.style.left = e.pageX - this.uiSimple.offsetWidth / 2 + 'px';
-            this.uiSimple.style.top = e.pageY - this.uiSimple.offsetHeight - 8 - fontSize / 2 + 'px';
-
-            this.x = e.pageX;
-            this.y = e.pageY;
+            this.uiSimple.style.left = this.x - this.uiSimple.offsetWidth / 2 + 'px';
+            this.uiSimple.style.top = this.y - this.uiSimple.offsetHeight - 8 - this.fontSize / 2 + 'px';
+            this.uiSimple.querySelector('div.triangle').style.left = this.uiSimple.offsetWidth / 2 - 6 + 'px';
         }
     };
 
@@ -524,8 +530,12 @@ dom.Ajax = {
             return;
         }
 
+        if (!data.result) {
+            this.uiSimple.querySelector('ul').innerHTML = '翻译出错';
+        }
+
         if ('tt' in data) {
-            this.uiSimple.querySelector('header span').innerHTML = '[' + data.ps + ']';
+            this.uiSimple.querySelector('header span').innerHTML = data.ps === '' ? '' : '[' + data.ps + ']';
             ul = this.uiSimple.querySelector('ul');
             ul.innerHTML = '';
 
@@ -535,9 +545,10 @@ dom.Ajax = {
                 li.innerHTML = item.pos + ' ' + item.acceptation;
                 ul.appendChild(li);
             }
-            fontSize = parseInt(getComputedStyle(e.target, null).getPropertyValue('font-size'), 10);
+
             this.uiSimple.style.left = this.x - this.uiSimple.offsetWidth / 2 + 'px';
-            this.uiSimple.style.top = this.y - this.uiSimple.offsetHeight - 8 - fontSize / 2 + 'px';
+            this.uiSimple.style.top = this.y - this.uiSimple.offsetHeight - 8 - this.fontSize / 2 + 'px';
+            this.uiSimple.querySelector('div.triangle').style.left = this.uiSimple.offsetWidth / 2 - 6 + 'px';
         }
         else {
             this.uiSimple.querySelector('ul').innerHTML = '没有翻译结果';
@@ -545,7 +556,7 @@ dom.Ajax = {
     };
 
     Dict.prototype.createUISimple = function () {
-        var aside = document.createElement('aside'), header;
+        var aside = document.createElement('aside'), header, triangle;
         aside.id = 'dict-viclm-simple';
 
         header = document.createElement('header');
@@ -554,6 +565,10 @@ dom.Ajax = {
         aside.appendChild(header);
 
         aside.appendChild(document.createElement('ul'));
+
+        triangle = document.createElement('div');
+        triangle.className = 'triangle';
+        aside.appendChild(triangle);
 
         document.body.appendChild(aside);
         aside.style.display = 'none';

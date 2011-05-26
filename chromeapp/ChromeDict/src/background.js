@@ -100,25 +100,39 @@
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', 'http://dict-co.iciba.com/api/dictionary.php?w=' + msg.w, true);
                 xhr.onload = function (e) {
-                    var xml = xhr.responseXML, json = {}, tt, i, len, item;
-                    if (xml && xml.getElementsByTagName('key').length > 0) {
-                        json.key = xml.getElementsByTagName('key')[0].firstChild.nodeValue;
-                        json.ps = xml.getElementsByTagName('ps')[0].firstChild.nodeValue;
+                    var xml = xhr.responseXML, json = {}, elems, elem, i, len, item;console.log(xml)
+                    if (xml) {
+                        elems = xml.getElementsByTagName('ps')[0];
+                        json.ps = elems ? elems.firstChild.nodeValue : '';
+
                         json.tt = [];
-                        tt = xml.getElementsByTagName('pos');
-                        for (i = 0, len = tt.length ; i < len ; i += 1) {
-                            item = tt[i];
+                        elems = xml.getElementsByTagName('acceptation');
+                        for (i = 0, len = elems.length ; i < len ; i += 1) {
+                            item = elems[i];
+                            elem = item.previousSibling;
                             json.tt.push({
-                                pos: item.firstChild.nodeValue,
-                                acceptation: item.nextSibling.firstChild.nodeValue
+                                pos: (elem.tagName.toLowerCase() === 'pos' || elem.tagName.toLowerCase() === 'fe') ? elem.firstChild.nodeValue : '',
+                                acceptation: item.firstChild.nodeValue
+                            });
+                        }
+
+                        json.sent = [];
+                        elems = xml.getElementsByTagName('sent');
+                        for (i = 0, len = elems.length ; i < len ; i += 1) {
+                            item = elems[i];
+                            json.sent.push({
+                                orig: item.getElementsByTagName('orig')[0].firstChild.nodeValue,
+                                trans: item.getElementsByTagName('trans')[0].firstChild.nodeValue
                             });
                         }
                     }
-                    else {
-                        json.key = msg.w;
-                    }
+                    json.key = msg.w;
+                    json.result = true;
                     port.postMessage(json);
                 };
+                xhr.onerror = function () {
+                    port.postMessage({key: msg.w, result: false});
+                }
                 xhr.send(null);
             });
         }
