@@ -2,7 +2,7 @@
  * dom.js
  * It's a light library only contains several methods which are used most in the development.
  * @author viclm
- * @version 20110525.3
+ * @version 20110527.5
  * @license New BSD License
 */
 'use strict';
@@ -172,7 +172,7 @@ dom.Class = (function () {
 
 dom.Query = {
 
-    $: function (query, parent) {
+    one: function (query, parent) {
         parent = parent || document;
         if (parent.querySelector) {
             if (parent === document) {
@@ -195,7 +195,7 @@ dom.Query = {
         }
     },
 
-    $$: function (query, parent) {
+    all: function (query, parent) {
         parent = parent || document;
         if (parent.querySelectorAll) {
             if (parent === document) {
@@ -303,43 +303,43 @@ dom.Query = {
 }
 
 dom.Event = {
-    addEvent: function(node, event, fn) {
+    add: function(node, event, fn) {
         if (node.addEventListener) {
-            this.addEvent = function (node, event, fn) {
+            this.add = function (node, event, fn) {
                 node.addEventListener(event, fn, false);
             }
         }
         else if (node.attachEvent) {
-            this.addEvent = function (node, event, fn) {
+            this.add = function (node, event, fn) {
                 node.attachEvent('on' + event, fn);
             }
         }
 
-        this.addEvent(node, event, fn);
+        this.add(node, event, fn);
     },
 
-    removeEvent: function(node, event, fn) {
+    remove: function(node, event, fn) {
         if (node.removeEventListener) {
-            this.removeEvent = function (node, event, fn) {
+            this.remove = function (node, event, fn) {
                 node.removeEventListener(event, fn, false);
             }
         }
         else if (node.detachEvent) {
-            this.removeEvent = function (node, event, fn) {
+            this.remove = function (node, event, fn) {
                 node.detachEvent('on' + event, fn);
             }
         }
-        this.removeEvent(node, event, fn);
+        this.remove(node, event, fn);
     },
 
     one: function (node, event, fn) {
         var self = this, fname = event + (+new Date());
         node[fname] = function () {
-            self.removeEvent(node, event, node[fname]);
+            self.remove(node, event, node[fname]);
             node[fname] = null;
             fn.apply(this, arguments);
         };
-        this.addEvent(node, event, node[fname]);
+        this.add(node, event, node[fname]);
     },
 
     fix: function (e) {
@@ -437,18 +437,25 @@ dom.Ajax = {
     */
     function Wordcapture (args) {
         this.scope = args && args.scope || document.body;
+        this.hoverCapture  = args && args.hoverCapture || true;
         //this.direct add feature verticle direct word
+
+        this.hoverEvent = document.createEvent('MouseEvents');
     }
 
 
     Wordcapture.prototype.enable = function () {
-        dom.Event.addEvent(this.scope, 'click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this));
-        dom.Event.addEvent(this.scope, 'mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this));
+        dom.Event.add(this.scope, 'click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this));
+        dom.Event.add(this.scope, 'mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this));
+        if (this.hoverCapture) {
+            dom.Event.add(this.scope, 'mouseover', this.hoverProxy = dom.Tool.proxy(this.hover, this));
+            this.time = +new Date();
+        }
     };
 
     Wordcapture.prototype.disable = function () {
-        dom.Event.removeEvent(this.scope, 'click', this.dblclickProxy);
-        dom.Event.removeEvent(this.scope, 'mousedown', this.dragStartProxy);
+        dom.Event.remove(this.scope, 'click', this.dblclickProxy);
+        dom.Event.remove(this.scope, 'mousedown', this.dragStartProxy);
     };
 
     Wordcapture.prototype.dblclick = function (e) {
@@ -472,13 +479,65 @@ dom.Ajax = {
         }
     };
 
+    Wordcapture.prototype.hover = function (e) {
+        var x = e.pageX, y = e.pageY;
+        this.x = x;
+        this.y = y;
+        if (this.timer) {
+            clearTimeout(this.timer);
+        }
+        this.timer = setTimeout(dom.Tool.proxy(function () {
+            if (x === this.x && y === this.y) {
+                var parent = e.target, elems, wraper, i, len, elem, next;
+                elems = parent.childNodes;
+                if (elems.length === 1) {
+                    elem = elems[0];
+                    if (elem.nodeType === 3) {
+                        var text = elem.nodeValue.split(/\s+/);//fixed
+                    }
+                }
+                elems = dom.Tool.toArray(elems);
+                for (i = 0, len = elems.length ; i < len ; i += 1) {
+                    elem = elems[i];
+                    if (elem.nodeType === 3) {
+                        wraper = document.createElement('span');
+                        parent.insertBefore(wraper, elem);
+                        wraper.appendChild(elem);
+                    }
+                    else {
+                        wraper = elem;
+                    }
+
+                    if (wraper.offsetLeft < e.clientX) {
+                        next = wraper;
+                    }
+                }
+                this.hoverEvent.initMouseEvent('mouseover', true, false,
+                    e.view, e.detail, e.screenX, e.screenY, e.clientX, e.clientY,
+                    e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, e.button, e.relatedTarget);
+                next.dispatchEvent(this.hoverEvent);
+            }
+            this.timer = null;
+        }, this), 1000);
+    };
+
+    Wordcapture.prototype.hoverPos = function (e) {
+    
+    }
+
     Wordcapture.prototype.capture = function (e) {
+        var css = getComputedStyle(e.target, null), lineHeight;
         this.text = dom.Tool.trim(window.getSelection().toString());
         this.text = this.text.replace(/^\W$/, '');
         if (this.text.length > 0) {
             this.x = e.pageX - (this.endPos === null ? 0 : (this.endPos - this.startPos) / 2);
             this.y = e.pageY;
-            this.fontSize = parseInt(getComputedStyle(e.target, null).getPropertyValue('font-size'), 10);
+            lineHeight = parseInt(css.getPropertyValue('line-height'));
+            if (isNaN(lineHeight)) {
+                lineHeight = parseInt(css.getPropertyValue('font-size'), 10) * 1.2;
+            }
+
+            this.fontSize = lineHeight;
         }
     };
 
@@ -552,21 +611,24 @@ dom.Ajax = {
     };
 
     Dict.prototype.position = function () {
-        var left, top;
+        var left, top, triangle;
         left = this.x - this.uiSimple.offsetWidth / 2;
         top = this.y - this.uiSimple.offsetHeight - 8 - this.fontSize / 2;
-        if (left < 0) {
+        triangle = this.uiSimple.querySelector('div:last-of-type');
+        if (left - document.body.scrollLeft < 0) {
             left = this.x;
-        }
-
-        if (top < 0) {
-            top = this.y + this.fontSize / 2;
-            this.uiSimple.className = 'up';
-            this.uiSimple.querySelector('div[class]').style.left = '20%';
+            triangle.style.left = '6px';
         }
         else {
-            this.uiSimple.className = 'dowm';
-            this.uiSimple.querySelector('div[class]').style.left = this.uiSimple.offsetWidth / 2 - 6 + 'px';
+            triangle.style.left = this.uiSimple.offsetWidth / 2 - 6 + 'px';
+        }
+
+        if (top - document.body.scrollTop < 0) {
+            top = this.y + this.fontSize / 2;
+            triangle.className = 'up';
+        }
+        else {
+            triangle.className = 'down';
         }
         this.uiSimple.style.left = left + 'px';
         this.uiSimple.style.top = top + 'px';

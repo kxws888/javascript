@@ -34,7 +34,7 @@
 }
 
 /* creates triangle */
-#dict-viclm-simple > div {
+#dict-viclm-simple  div:last-of-type {
    position:absolute;
    left:50%;
    width:0;
@@ -42,12 +42,12 @@
    border-color:#f3961c transparent;
 }
 
-#dict-viclm-simple .up {
+#dict-viclm-simple div.up:last-of-type {
    top:-6px;
    border-width:0 6px 6px;
 }
 
-#dict-viclm-simple .down {
+#dict-viclm-simple div.down:last-of-type {
    bottom:-6px;
    border-width:6px 6px 0;
 }
