@@ -47,13 +47,13 @@
                 <h3>辅助键：</h3>
                 <div>
                     <div>
-                        <label><input type="radio" name="assistKeySwitch" value="on">启用</label>
-                        <label>CTRL:<input type="radio" name="assistKey" value="ctrl"></label>
-                        <label>ALT:<input type="radio" name="assistKey" value="alt"></label>
-                        <label>SHIFT:<input type="radio" name="assistKey" value="shift"></label>
+                        <label><input type="radio" name="assistKeySwitch" value="1">启用</label>
+                        <label><input type="radio" name="assistKey" value="ctrl">CTRL</label>
+                        <label><input type="radio" name="assistKey" value="alt">ALT</label>
+                        <label><input type="radio" name="assistKey" value="shift">SHIFT</label>
                     </div>
                     <div>
-                        <label><input type="radio" name="assistKeySwitch" value="off">关闭</label>
+                        <label><input type="radio" name="assistKeySwitch" value="0">关闭</label>
                     </div>
                 </div>
             </section>
@@ -61,14 +61,14 @@
                 <h3>词典功能选择：</h3>
                 <div>
                     <ul>
-                        <li id="Dict"><label><input type="checkbox" name="dict[]" value="powerword">金山词霸</label></li>
-                        <li id="Love"><label><input type="checkbox" name="dict[]" value="google">Google词典</label></li>
-                        <li id="Fy"><label><input type="checkbox" name="dict[]" value="youdao   ">有道词典</label></li>
+                        <li id="powerword"><label><input type="checkbox" name="dict[]" value="powerword">金山词霸</label></li>
+                        <li id="google"><label><input type="checkbox" name="dict[]" value="google">Google词典</label></li>
+                        <li id="youdao"><label><input type="checkbox" name="dict[]" value="youdao">有道词典</label></li>
                     </ul>
                     <div>
                         <span>重新排序:</span>
-                        <input type="image" src="../assets/plugin-button01-2.gif" alt="向上" width="16" height="16" align="absmiddle">
-                        <input type="image" src="../assets/plugin-button02-2.gif" alt="向下" width="16" height="16" align="absmiddle">
+                        <input type="image" name="dictRerange" src="../assets/plugin-button01-2.gif" alt="up" width="16" height="16" align="absmiddle">
+                        <input type="image" name="dictRerange" src="../assets/plugin-button02-2.gif" alt="down" width="16" height="16" align="absmiddle">
                         <p class="commit">影响各词典查询结果在完整版中的显示顺序, 在简洁版中影响查询的优先级，但只会显示一种词典。</p>
                     </div>
                 </div>
@@ -76,7 +76,7 @@
             <section id="hotCaptrueSection">
                 <h3>鼠标取词：</h3>
                 <div>
-                    <label><input type="checkbox" name="hotCaptrue" value="on">开启</label>
+                    <label><input type="checkbox" name="hoverCapture" value="1">开启</label>
                     <p class="commit">此功能在某些情况下会占用比较高的系统资源，可能破坏网页布局。</p>
                 </div>
             </section>

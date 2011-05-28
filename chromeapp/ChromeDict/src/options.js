@@ -77,17 +77,19 @@
 
     //rerange dicts list by clicking arrow
     function dictsRerange() {
-        var highlight = document.getElementById(dictsHighlight.last), parent = highlight.parentNode, relate;
-        if (this.alt === '向上') {
-            relate = dom.Query.prev(highlight);
-            if (relate) {
-                parent.insertBefore(highlight, relate);
+        if (dictsHighlight.last) {
+            var highlight = document.getElementById(dictsHighlight.last), parent = highlight.parentNode, relate;
+            if (this.alt === '向上') {
+                relate = dom.Query.prev(highlight);
+                if (relate) {
+                    parent.insertBefore(highlight, relate);
+                }
             }
-        }
-        else {
-            relate = dom.Query.next(highlight);
-            if (relate) {
-                parent.insertBefore(relate, highlight);
+            else {
+                relate = dom.Query.next(highlight);
+                if (relate) {
+                    parent.insertBefore(relate, highlight);
+                }
             }
         }
     }
@@ -104,11 +106,8 @@
     navTab.last = 'browserPageNav';
 
     function uiEnhance() {
-        var checkSwitchElements, dictsList, dictsArrow, nav, i, len, item;
-        checkSwitchElements = mainview.querySelectorAll('#searchInputSection label:first-child, '
-            + '#dwSection label:first-child, '
-            + '#popIconSection label:first-child, '
-            + '#dictSection label:first-child');
+        var checkSwitchElements, dictsList, dictsArrow, nav, i, len, item, elements;
+        checkSwitchElements = mainview.querySelectorAll('#assistKeySection label:first-child');
         for (i = 0, len = checkSwitchElements.length ; i < len ; i += 1) {
             item = checkSwitchElements[i];
             item.addEventListener('click', checkSwitchClickHanlder, false);
@@ -129,36 +128,56 @@
         for (i = 0, len = nav.length ; i < len ; i += 1) {
             nav[i].addEventListener('click', navTab, false);
         }
+
+        elements = mainview.querySelectorAll('label, input[type=image]');
+        for (i = 0, len = elements.length ; i < len ; i += 1) {
+            elements[i].addEventListener('click', saveOptions, false);
+        }
     }
 
     // Saves options to localStorage.
-    function saveOptions() {
-        var i, len, elements, item, dictsOrder = [], dictsAvailable = {};
+    function saveOptions(e) {
+        var input = e.target, i, len, elements, item, dictsOrder = [], dictsAvailable = {};
 
-        elements = mainview.querySelectorAll('input[type=radio]:checked, input[type=text], #selfDeterSection input, #inputCanSection input');
-        for (i = 0, len = elements.length ; i < len ; i += 1) {
-            item = elements[i];
-            localStorage[item.name] = item.value;
-        }
+        if (input.tagName.toLowerCase() === 'input') {
+            if (input.name === 'dict[]') {
+                elements = dicts.querySelectorAll('input[type=checkbox]');
+                for (i = 0, len = elements.length ; i < len ; i += 1) {
+                    item = elements[i];
+                    if (item.checked) {
+                        dictsAvailable[item.value] = true;
+                    }
+                }
+                localStorage['dictsAvailable'] = JSON.stringify(dictsAvailable);
+            }
+            else if (input.name === 'dictsRerange') {
+                elements = dicts.querySelectorAll('input[type=checkbox]');
+                for (i = 0, len = elements.length ; i < len ; i += 1) {
+                    item = elements[i];
+                    dictsOrder[dictsOrder.length] = item.value;
+                }
+                localStorage['dictsOrder'] = JSON.stringify(dictsOrder);
+            }
+            else {
+                localStorage[input.name] = input.value;
+            }
 
-        elements = dicts.querySelectorAll('input[type=checkbox]');
-        for (i = 0, len = elements.length ; i < len ; i += 1) {
-            item = elements[i];
-            dictsOrder[dictsOrder.length] = item.value;
-            if (item.checked) {
-                dictsAvailable[item.value] = true;
+            elements = dicts.querySelectorAll('input[type=checkbox]');
+            for (i = 0, len = elements.length ; i < len ; i += 1) {
+                item = elements[i];
+                dictsOrder[dictsOrder.length] = item.value;
+                if (item.checked) {
+                    dictsAvailable[item.value] = true;
+                }
             }
         }
-
-        localStorage['dictsOrder'] = JSON.stringify(dictsOrder);
-        localStorage['dictsAvailable'] = JSON.stringify(dictsAvailable);
     }
 
     // Restores select box state to saved value from localStorage.
     function restoreOptions() {
         var i, len, elements, dictsOrder = [], dictsAvailable = {}, ul;
 
-        elements = mainview.querySelectorAll('input[type=radio], #selfDeterSection input, #inputCanSection input');
+        elements = mainview.querySelectorAll('input[type=radio], #hotCaptrueSection input');
         for (i = 0, len = elements.length ; i < len ; i += 1) {
             item = elements[i];
             if (item.value === localStorage[item.name]) {
@@ -168,12 +187,6 @@
             else {
                 item.checked = false;
             }
-        }
-
-        elements = mainview.querySelectorAll('input[type=text]');
-        for (i = 0, len = elements.length ; i < len ; i += 1) {
-            item = elements[i];
-            item.value = localStorage[item.name];
         }
 
         elements = dicts.querySelectorAll('input[type=checkbox]');
@@ -194,15 +207,8 @@
         for (i = 0, len = dictsOrder.length ; i < len ; i += 1) {
             ul.appendChild(document.getElementById(dictsOrder[i]));
         }
-
-
     }
 
 
     document.addEventListener('DOMContentLoaded', init, false);
-    chrome.tabs.onRemoved.addListener(function(tabId) {
-        if (tabId === tab.id) {
-            saveOptions();
-        }
-    });
 })();

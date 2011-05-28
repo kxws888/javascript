@@ -635,9 +635,21 @@ dom.Event = {
     
     }
 
-    var dict = new DictSimple();
-    dict.enable();
+    var dict;
     //document.addEventListener('DOMContentLoaded', initDict, false);
+
+    chrome.extension.sendRequest({cmd: 'config'}, function(response) {
+        if (response.ui === 'simple') {
+            dict = new DictSimple({
+                hoverCapture: response.hoverCapture,
+                assistKey: response.assistKeySwitch === '1' ? response.assistKey : 'none'
+            });
+        }
+        else {
+            dict = new DictFull();
+        }
+        dict.enable();
+    });
 
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
         request.cmd ? dict.enable() : dict.disable();

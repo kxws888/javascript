@@ -1,50 +1,37 @@
 (function () {
-    if (!localStorage['startup']) {
+    if (!localStorage.startup) {
         localStorage.startup = 'manual';// the startup mode of program [manual, automatic]
         localStorage.ui = 'simple';// the style of UI [simple, all]
         localStorage.skin = 'orange';// the skin of UI [orange]
-        localStorage.dict = JSON.stringify(['powerword']);// a list of available dictionary [powerword]
-        localStorage.assistKey = 'none';//assisted key [none, ctrl, alt, shift]
-        localStorage.hoverCapture = 'on';//if enable captrue word by mouse hover [on, off]
+        localStorage.assistKeySwitch = '0';//assisted key [1, 0]
+        localStorage.assistKey = 'ctrl';//assisted key [none, ctrl, alt, shift]
+        localStorage.hoverCapture = '1';//if enable captrue word by mouse hover [1, 0]
+        localStorage.dictsOrder = JSON.stringify(['powerword']);// dictionary order
+        localStorage.dictsAvailable = JSON.stringify({'powerword': true});// a list of available dictionary
     }
 
-    function config() {
-        var iciba_param = {}, dictsAvailable, dictsOrder, context = [], i, len;
-        iciba_param['skin'] = localStorage.skin;
-        iciba_param['searchInputDisplay'] = localStorage.searchInputDisplay;
-        iciba_param['searchInputWidth'] = localStorage.searchInputWidth;
-        iciba_param['isCanDraw'] = localStorage.isCanDraw;
-        iciba_param['defalutDwTop'] = localStorage.defalutDwTop;
-        iciba_param['defalutDwLeft'] = localStorage.defalutDwLeft;
-        iciba_param['selfDeter'] = localStorage.selfDeter;
-        iciba_param['width'] = localStorage.width;
-        iciba_param['height'] = localStorage.height;
-        iciba_param['isPopIcon'] = localStorage.isPopIcon;
-        iciba_param['isPopStyle'] = localStorage.isPopStyle;
-        iciba_param['isInputCan'] = localStorage.isInputCan;
-        iciba_param['context'] = [];//词典功能
+    function getConfig() {
+        var params = {}, dictsAvailable, dictsOrder, dicts = [], i, len;
+        params.ui = localStorage.ui;
+        params.skin = localStorage.skin;
+        params.assistKeySwitch = localStorage.assistKeySwitch;
+        params.assistKey = localStorage.assistKey;
+        params.hoverCapture = localStorage.hoverCapture;
 
-        dictsOrder = localStorage['dictsOrder'];
-        dictsAvailable = localStorage['dictsAvailable'];
-        if (dictsOrder && dictsAvailable) {
-            dictsOrder = JSON.parse(dictsOrder);
-            dictsAvailable = JSON.parse(dictsAvailable);
-            for (i = 0, len = dictsOrder.length ; i < len ; i += 1) {
-                if (dictsOrder[i] in dictsAvailable) {
-                    context[context.length] = [dictsOrder[i], localStorage['icibaGo_' + key]];
-                }
+        dictsOrder = JSON.parse(localStorage['dictsOrder']);
+        dictsAvailable = JSON.parse(localStorage['dictsAvailable']);
+        for (i = 0, len = dictsOrder.length ; i < len ; i += 1) {
+            if (dictsOrder[i] in dictsAvailable) {
+                dicts[dicts.length] = dictsOrder[i];
             }
         }
-        else {
-            dictsOrder = [['Dict',''],['Love',''],['Fy',''],['Tf',''],['Dj',''],['Enen','']];
-        }
-        iciba_param['context'] = context;
+        params.dicts = dicts;
 
-        return iciba_param;
+        return params;
     }
 
     //toggle the of switcher dict by clicking the page button
-    var status = localStorage.startup === 'automatic' ? true : false, tab;
+    var status = localStorage.startup !== 'automatic' ? true : false, tab;
 
     function xml2json(xml) {
         var json = {}, root;
@@ -81,6 +68,12 @@
                 });
             }
             chrome.pageAction.show(tabID);
+        }
+    });
+
+    chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+        if (request.cmd === 'config') {
+            sendResponse(getConfig());
         }
     });
 
