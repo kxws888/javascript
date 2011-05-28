@@ -16,7 +16,8 @@
   "content_scripts": [
     {
       "matches": ["*://*/*"],
-      "css": ["pages/style/ui.css"]
+      "css": ["pages/style/ui.css"],
+      "js": ["src/dict.js"]
     }
   ],
 

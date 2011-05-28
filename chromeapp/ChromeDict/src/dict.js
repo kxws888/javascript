@@ -426,52 +426,56 @@ dom.Ajax = {
         // If checking the status failed, then assume that the request failed too
         return false;
     }
-}
+};
 
-//(function () {
+(function () {
 
     /**
-    * Wordcapture
-    * @version 20110525.3
+    * Dict
+    * @version 20110528.6
     *
     */
-    function Wordcapture (args) {
+    function Dict (args) {
         this.scope = args && args.scope || document.body;
         this.hoverCapture  = args && args.hoverCapture || true;
-        //this.direct add feature verticle direct word
-
-        this.hoverEvent = document.createEvent('MouseEvents');
+        this.ui = this.createUI();
     }
 
 
-    Wordcapture.prototype.enable = function () {
+    Dict.prototype.enable = function () {
         dom.Event.add(this.scope, 'click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this));
         dom.Event.add(this.scope, 'mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this));
         if (this.hoverCapture) {
-            dom.Event.add(this.scope, 'mouseover', this.hoverProxy = dom.Tool.proxy(this.hover, this));
-            this.time = +new Date();
+            dom.Event.add(this.scope, 'mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this));
+            dom.Event.add(this.scope, 'mouseout', this.hoverProxy);
         }
     };
 
-    Wordcapture.prototype.disable = function () {
+    Dict.prototype.disable = function () {
         dom.Event.remove(this.scope, 'click', this.dblclickProxy);
         dom.Event.remove(this.scope, 'mousedown', this.dragStartProxy);
+        if (this.hoverCapture) {
+            dom.Event.remove(this.scope, 'mouseover', this.hoverProxy);
+        }
     };
 
-    Wordcapture.prototype.dblclick = function (e) {
+    Dict.prototype.dblclick = function (e) {
         if (e.detail > 1) {
             this.capture(e);
         }
+        else if (this.endPos === null) {
+            this.ui.style.display = 'none';
+        }
     };
 
-    Wordcapture.prototype.dragStart = function (e) {
+    Dict.prototype.dragStart = function (e) {
         var event = dom.Event.fix(e);
         dom.Event.one(document, 'mouseup', dom.Tool.proxy(this.dragEnd, this));
         this.startPos = event.pageX;
         this.endPos = null;
     };
 
-    Wordcapture.prototype.dragEnd = function (e) {
+    Dict.prototype.dragEnd = function (e) {
         var event = dom.Event.fix(e);
         if (this.startPos !== event.pageX) {
             this.endPos = event.pageX;
@@ -479,58 +483,83 @@ dom.Ajax = {
         }
     };
 
-    Wordcapture.prototype.hover = function (e) {
-        var x = e.pageX, y = e.pageY;
-        this.x = x;
-        this.y = y;
-        if (this.timer) {
-            clearTimeout(this.timer);
+    Dict.prototype.hoverTrigger = function (e) {
+        if (e.type === 'mouseout') {
+            this.ui.style.display = 'none';
+            return;
         }
+        if (this.timer === null) {
+            this.hoverHanlder(e);
+            return;
+        }
+        this.hoverX = e.pageX;
+        this.hoverY = e.pageY;
+        clearTimeout(this.timer);
         this.timer = setTimeout(dom.Tool.proxy(function () {
-            if (x === this.x && y === this.y) {
-                var parent = e.target, elems, wraper, i, len, elem, next;
-                elems = parent.childNodes;
-                if (elems.length === 1) {
-                    elem = elems[0];
-                    if (elem.nodeType === 3) {
-                        var text = elem.nodeValue.split(/\s+/);//fixed
-                    }
-                }
-                elems = dom.Tool.toArray(elems);
-                for (i = 0, len = elems.length ; i < len ; i += 1) {
-                    elem = elems[i];
-                    if (elem.nodeType === 3) {
-                        wraper = document.createElement('span');
-                        parent.insertBefore(wraper, elem);
-                        wraper.appendChild(elem);
-                    }
-                    else {
-                        wraper = elem;
-                    }
-
-                    if (wraper.offsetLeft < e.clientX) {
-                        next = wraper;
-                    }
-                }
-                this.hoverEvent.initMouseEvent('mouseover', true, false,
-                    e.view, e.detail, e.screenX, e.screenY, e.clientX, e.clientY,
-                    e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, e.button, e.relatedTarget);
-                next.dispatchEvent(this.hoverEvent);
+            if (this.hoverX === e.pageX && this.hoverY === e.pageY) {
+                this.timer = null;
+                this.hoverHanlder(e);
             }
-            this.timer = null;
         }, this), 1000);
     };
 
-    Wordcapture.prototype.hoverPos = function (e) {
-    
+    Dict.prototype.hoverHanlder = function (e) {
+        var parent = e.target, elems, wraper, i, len, elem, next;
+        elems = parent.childNodes;
+        if (elems.length === 1) {
+            elem = elems[0];
+            if (elem.nodeType === 3) {
+                var text = elem.nodeValue;
+                if (/^\w+$/.test(text) && !/^h\d$/i.test(parent.tagName)) {
+                    this.text = elem.nodeValue;
+                    this.handle(e);
+                    this.timer = undefined;
+                    return;
+                }
+                else if (/\w+/.test(text)) {
+                    text = text.replace(/\w+/g, function (str) {
+                        return '<span>' + str + '</span>';
+                    });
+                    parent.innerHTML = text;
+                    elems = parent.childNodes;
+                    for (i = 0, len = elems.length ; i < len ; i += 1) {
+                        if ((next && next.offsetLeft < elems[i].offsetLeft) && elems[i].offsetLeft < e.pageX ) {
+                            next = elems[i];
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            elems = dom.Tool.toArray(elems);
+            for (i = 0, len = elems.length ; i < len ; i += 1) {
+                elem = elems[i];
+                if (elem.nodeType === 3) {
+                    wraper = document.createElement('span');
+                    parent.insertBefore(wraper, elem);
+                    wraper.appendChild(elem);
+                }
+                else {
+                    wraper = elem;
+                }
+                if ((next && next.offsetLeft < wraper.offsetLeft) && wraper.offsetLeft < e.pageX ) {
+                    next = wraper;
+                }
+            }
+        }
     }
 
-    Wordcapture.prototype.capture = function (e) {
+    Dict.prototype.capture = function (e) {
+        this.text = window.getSelection().toString().trim();
+        this.handle(e);
+    };
+
+    Dict.prototype.handle = function (e) {
         var css = getComputedStyle(e.target, null), lineHeight;
-        this.text = dom.Tool.trim(window.getSelection().toString());
-        this.text = this.text.replace(/^\W$/, '');
+        this.text = this.text.replace(/^\W+$/, '')
+                    .replace(/^\d+$/, '');
         if (this.text.length > 0) {
-            this.x = e.pageX - (this.endPos === null ? 0 : (this.endPos - this.startPos) / 2);
+            this.x = e.pageX - (!this.endPos ? 0 : (this.endPos - this.startPos) / 2);
             this.y = e.pageY;
             lineHeight = parseInt(css.getPropertyValue('line-height'));
             if (isNaN(lineHeight)) {
@@ -541,86 +570,81 @@ dom.Ajax = {
         }
     };
 
+    Dict.prototype.createUI = function () {};
 
 
 
-    function Dict(args) {
+
+
+    function DictSimple(args) {
         this.super.constructor.call(this, args);
         this.port = chrome.extension.connect({name: "query"});
-        this.uiSimple = this.createUISimple();
 
         this.port.onMessage.addListener(dom.Tool.proxy(this.show, this));
 
+        this.uiKey = this.ui.querySelector('h1');
+        this.uiPs = this.ui.querySelector('header span');
+        this.uiTrans = this.ui.querySelector('ul');
     }
 
-    dom.Tool.extend(Dict, Wordcapture);
+    dom.Tool.extend(DictSimple, Dict);
 
-    Dict.prototype.dblclick = function (e) {
-        if (e.detail <= 1 && this.endPos === null) {
-            this.uiSimple.style.display = 'none';
-        }
-        else {
-            this.super.dblclick.call(this, e);
-        }
-    };
-
-    Dict.prototype.capture = function (e) {
+    DictSimple.prototype.handle = function (e) {
         var data = {};
-        this.super.capture.call(this, e);
+        this.super.handle.call(this, e);
         if (this.text.length > 0) {
             data['w'] = this.text;
             this.port.postMessage(data);
 
-            this.uiSimple.querySelector('h1').innerHTML = this.text;
-            this.uiSimple.querySelector('header span').innerHTML = '';
-            this.uiSimple.querySelector('ul').innerHTML = '正在翻译中';
-            this.uiSimple.style.display = '';
+            this.uiKey.innerHTML = this.text;
+            this.uiPs.innerHTML = '';
+            this.uiTrans.innerHTML = '正在翻译中';
+            this.ui.style.display = '';
 
             this.position();
         }
     };
 
-    Dict.prototype.show = function (data) {
+    DictSimple.prototype.show = function (data) {
         var i, len, item, ul, li;
 
-        if (data.key !== this.text) {
+        if (data.key !== this.text || this.ui.style.display === 'none') {
             return;
         }
 
         if (!data.result) {
-            this.uiSimple.querySelector('ul').innerHTML = '翻译出错';
+            this.ui.querySelector('ul').innerHTML = '翻译出错';
         }
 
         if ('tt' in data) {
-            this.uiSimple.querySelector('header span').innerHTML = data.ps === '' ? '' : '[' + data.ps + ']';
-            ul = this.uiSimple.querySelector('ul');
-            ul.innerHTML = '';
+            this.uiPs.innerHTML = data.ps === '' ? '' : '[' + data.ps + ']';
+            this.uiTrans.innerHTML = '';
 
             for (i = 0, len = data.tt.length ; i < len ; i += 1) {
                 item = data.tt[i];
                 li = document.createElement('li');
                 li.innerHTML = item.pos + ' ' + item.acceptation;
-                ul.appendChild(li);
+                this.uiTrans.appendChild(li);
             }
 
             this.position();
         }
         else {
-            this.uiSimple.querySelector('ul').innerHTML = '没有翻译结果';
+            this.uiTrans.innerHTML = '没有翻译结果';
         }
     };
 
-    Dict.prototype.position = function () {
+    DictSimple.prototype.position = function () {
         var left, top, triangle;
-        left = this.x - this.uiSimple.offsetWidth / 2;
-        top = this.y - this.uiSimple.offsetHeight - 8 - this.fontSize / 2;
-        triangle = this.uiSimple.querySelector('div:last-of-type');
+        left = this.x - this.ui.offsetWidth / 2;
+        top = this.y - this.ui.offsetHeight - 8 - this.fontSize / 2;
+        triangle = this.ui.querySelector('div:last-of-type');
         if (left - document.body.scrollLeft < 0) {
             left = this.x;
             triangle.style.left = '6px';
         }
         else {
-            triangle.style.left = this.uiSimple.offsetWidth / 2 - 6 + 'px';
+            triangle.style.left = this.ui.offsetWidth / 2 - 6 + 'px';
         }
 
         if (top - document.body.scrollTop < 0) {
@@ -630,11 +654,11 @@ dom.Ajax = {
         else {
             triangle.className = 'down';
         }
-        this.uiSimple.style.left = left + 'px';
-        this.uiSimple.style.top = top + 'px';
+        this.ui.style.left = left + 'px';
+        this.ui.style.top = top + 'px';
     };
 
-    Dict.prototype.createUISimple = function () {
+    DictSimple.prototype.createUI = function () {
         var aside = document.createElement('aside'), header, triangle;
         aside.id = 'dict-viclm-simple';
 
@@ -654,7 +678,7 @@ dom.Ajax = {
         return aside;
     };
 
-    var dict = new Dict();
+    var dict = new DictSimple();
     dict.enable();
     //document.addEventListener('DOMContentLoaded', initDict, false);
 
@@ -662,4 +686,4 @@ dom.Ajax = {
         request.cmd ? dict.enable() : dict.disable();
     });
 
-//})();
+})();

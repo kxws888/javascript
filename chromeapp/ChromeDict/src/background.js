@@ -54,7 +54,7 @@
     }
 
     //toggle the of switcher dict by clicking the page button
-    var status = localStorage.startup !== 'automatic' ? true : false, tab;
+    var status = localStorage.startup === 'automatic' ? true : false, tab;
 
     function xml2json(xml) {
         var json = {}, root;
