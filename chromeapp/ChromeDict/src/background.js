@@ -1,21 +1,11 @@
 (function () {
     if (!localStorage['startup']) {
-        localStorage.startup = 'manual';//启动方式
-        localStorage.language = 'zh';//temporary cannot achieve
-        localStorage.skin = '1';// 皮肤
-        localStorage.searchInputDisplay = 'block';// 搜寻框是否显示 默认是'' 当为 'none'的时候不显示
-        localStorage.searchInputWidth = '210';//输入框长度 当iciba_param['searchInputDisplay'] !='none'的时候起作用
-        localStorage.isCanDraw = '1';//是否能拖动 0表示不可以拖动 默认为1可拖动
-        localStorage.defalutDwTop = '100';//默认定位的距离顶部的高度
-        localStorage.defalutDwLeft ='100';//默认定位的距离左变的长度
-        localStorage.selfDeter = '1';//是否自己划词自己 0 表示不可以
-        localStorage.width = '325';// 宽度
-        localStorage.height = '200';// 内容高度
-        localStorage.isPopIcon = '0';//是否需要 小icon 需要为1 不需要为0
-        localStorage.isPopStyle = '1';//小icon的 图标
-        localStorage.isInputCan = '0';//是否能在文本域输入框内划词 默认不可以 只有'1'的时候才能起作用
-        localStorage.dictsOrder = JSON.stringify(["Dict","Love","Fy","Tf","Dj","Enen","NetDict"]);//词典顺序
-        localStorage.dictsAvailable = JSON.stringify({"Dict":true,"Love":true,"Fy":true,"Tf":true,"Dj":true,"Enen":true,"NetDict":true});//可用的词典
+        localStorage.startup = 'manual';// the startup mode of program [manual, automatic]
+        localStorage.ui = 'simple';// the style of UI [simple, all]
+        localStorage.skin = 'orange';// the skin of UI [orange]
+        localStorage.dict = JSON.stringify(['powerword']);// a list of available dictionary [powerword]
+        localStorage.assistKey = 'none';//assisted key [none, ctrl, alt, shift]
+        localStorage.hoverCapture = 'on';//if enable captrue word by mouse hover [on, off]
     }
 
     function config() {
