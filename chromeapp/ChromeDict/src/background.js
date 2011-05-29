@@ -3,20 +3,30 @@
         localStorage.startup = 'manual';// the startup mode of program [manual, automatic]
         localStorage.ui = 'simple';// the style of UI [simple, all]
         localStorage.skin = 'orange';// the skin of UI [orange]
-        localStorage.assistKeySwitch = '0';//assisted key [1, 0]
-        localStorage.assistKey = 'ctrlKey';//assisted key [none, ctrl, alt, shift]
+        localStorage.hotKeySwitch = '0';//hotKey [1, 0]
+        localStorage.hoverHotKey = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":112}';
+        localStorage.dragHotKey = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":113}';
         localStorage.hoverCapture = '1';//if enable captrue word by mouse hover [1, 0]
         localStorage.dictsOrder = JSON.stringify(['powerword']);// dictionary order
         localStorage.dictsAvailable = JSON.stringify({'powerword': true});// a list of available dictionary
     }
 
     function getConfig() {
-        var params = {}, dictsAvailable, dictsOrder, dicts = [], i, len;
+        var params = {}, hotKeys = {}, dictsAvailable, dictsOrder, dicts = [], i, len;
         params.ui = localStorage.ui;
         params.skin = localStorage.skin;
-        params.assistKeySwitch = localStorage.assistKeySwitch;
-        params.assistKey = localStorage.assistKey;
         params.hoverCapture = localStorage.hoverCapture;
+
+        if (localStorage.hotKeySwitch === '0') {
+            hotKeys = null;
+        }
+        else {
+            hotKeys = {
+                hover: JSON.parse(localStorage.hoverHotKey),
+                drag: JSON.parse(localStorage.dragHotKey)
+            };
+        }
+        params.hotKey = hotKeys;
 
         dictsOrder = JSON.parse(localStorage['dictsOrder']);
         dictsAvailable = JSON.parse(localStorage['dictsAvailable']);
