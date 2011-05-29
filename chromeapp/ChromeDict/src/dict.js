@@ -371,7 +371,7 @@ dom.Event = {
     }
 };
 
-
+/***********************************************************************************************************************************************/
 
 (function () {
 
@@ -383,11 +383,30 @@ dom.Event = {
     function Dict (args) {
         this.scope = args && args.scope || document.body;
         this.hoverCapture  = args && args.hoverCapture || true;
+        this.assistKey = args && args.assistKey || [];
         this.ui = this.createUI();
 
         this.rHasWord = /\b[a-z]+([-'][a-z]+)*\b/i;
         this.rAllWord = /\b[a-z]+([-'][a-z]+)*\b/gmi;
         this.rSingleWord = /^[a-z]+([-'][a-z]+)*$/i;
+
+        if (this.assistKey.length > 1) {
+            var keyCode;
+            switch (args.assistKey) {
+                case 'ctrlKey':
+                    keyCode = 17;
+                break;
+                case 'altKey':
+                    keyCode = 17;
+                break;
+                case 'ctrlKey':
+                    keyCode = 17;
+                break;
+            }
+            this.scope.addEventListener('keydown', function (e) {
+                if (e.keycode)
+            }, false);
+        }
     }
 
 
@@ -441,6 +460,7 @@ dom.Event = {
             this.hoverHanlder(e);
             return;
         }
+
         this.hoverX = e.pageX;
         this.hoverY = e.pageY;
         clearTimeout(this.timer);
@@ -463,7 +483,7 @@ dom.Event = {
                 if (this.rSingleWord.test(text) && !/^h\d$/i.test(parent.tagName)) {
                     this.text = elem.nodeValue;
                     this.handle(e);
-                    this.timer = undefined;
+                    //this.timer = undefined;
                     return;
                 }
                 else if (!parent.resolve && this.rHasWord.test(text)) {
@@ -535,78 +555,10 @@ dom.Event = {
         this.uiKey = this.ui.querySelector('h1');
         this.uiPs = this.ui.querySelector('header span');
         this.uiTrans = this.ui.querySelector('ul');
+        this.uiTriangle = this.ui.querySelector('div:last-of-type');
     }
 
     dom.Tool.extend(DictSimple, Dict);
-
-    DictSimple.prototype.handle = function (e) {
-        var data = {};
-        this.super.handle.call(this, e);
-        if (this.text.length > 0) {
-            data['w'] = this.text;
-            this.port.postMessage(data);
-
-            this.uiKey.innerHTML = this.text;
-            this.uiPs.innerHTML = '';
-            this.uiTrans.innerHTML = '正在翻译中';
-            this.ui.style.display = '';
-
-            this.position();
-        }
-    };
-
-    DictSimple.prototype.show = function (data) {
-        var i, len, item, ul, li;
-
-        if (data.key !== this.text || this.ui.style.display === 'none') {
-            return;
-        }
-
-        if (!data.result) {
-            this.ui.querySelector('ul').innerHTML = '翻译出错';
-        }
-
-        if ('tt' in data) {
-            this.uiPs.innerHTML = data.ps === '' ? '' : '[' + data.ps + ']';
-            this.uiTrans.innerHTML = '';
-
-            for (i = 0, len = data.tt.length ; i < len ; i += 1) {
-                item = data.tt[i];
-                li = document.createElement('li');
-                li.innerHTML = item.pos + ' ' + item.acceptation;
-                this.uiTrans.appendChild(li);
-            }
-
-            this.position();
-        }
-        else {
-            this.uiTrans.innerHTML = '没有翻译结果';
-        }
-    };
-
-    DictSimple.prototype.position = function () {
-        var left, top, triangle;
-        left = this.x - this.ui.offsetWidth / 2;
-        top = this.y - this.ui.offsetHeight - 8 - this.fontSize / 2;
-        triangle = this.ui.querySelector('div:last-of-type');
-        if (left - document.body.scrollLeft < 0) {
-            left = this.x;
-            triangle.style.left = '6px';
-        }
-        else {
-            triangle.style.left = this.ui.offsetWidth / 2 - 6 + 'px';
-        }
-
-        if (top - document.body.scrollTop < 0) {
-            top = this.y + this.fontSize / 2;
-            triangle.className = 'up';
-        }
-        else {
-            triangle.className = 'down';
-        }
-        this.ui.style.left = left + 'px';
-        this.ui.style.top = top + 'px';
-    };
 
     DictSimple.prototype.createUI = function () {
         var aside = document.createElement('aside'), header, triangle;
@@ -628,7 +580,67 @@ dom.Event = {
         return aside;
     };
 
-    
+    DictSimple.prototype.handle = function (e) {
+        var data = {};
+        this.super.handle.call(this, e);
+        if (this.text.length > 0) {
+            data['w'] = this.text;
+            this.port.postMessage(data);
+        }
+    };
+
+    DictSimple.prototype.show = function (data) {
+        var i, len, item, ul, li;
+        if (data.key === this.text) {
+            this.uiKey.innerHTML = this.text;
+            this.ui.style.display = '';
+            if (data.result) {
+                if ('tt' in data) {
+                    this.uiPs.innerHTML = data.ps === '' ? '' : '[' + data.ps + ']';
+                    this.uiTrans.innerHTML = '';
+
+                    for (i = 0, len = data.tt.length ; i < len ; i += 1) {
+                        item = data.tt[i];
+                        li = document.createElement('li');
+                        li.innerHTML = item.pos + ' ' + item.acceptation;
+                        this.uiTrans.appendChild(li);
+                    }
+                }
+                else {
+                    this.uiTrans.innerHTML = '没有翻译结果';
+                }
+            }
+            else {
+                this.uiTrans.innerHTML = '翻译出错';
+            }
+            this.position();
+        }
+    };
+
+    DictSimple.prototype.position = function () {
+        var left, top;
+        left = this.x - this.ui.offsetWidth / 2;
+        top = this.y - this.ui.offsetHeight - 8 - this.fontSize / 2;
+
+        if (left - document.body.scrollLeft < 0) {
+            left = this.x;
+            this.uiTriangle.style.left = '6px';
+        }
+        else {
+            this.uiTriangle.style.left = this.ui.offsetWidth / 2 - 6 + 'px';
+        }
+
+        if (top - document.body.scrollTop < 0) {
+            top = this.y + this.fontSize / 2;
+            this.uiTriangle.className = 'up';
+        }
+        else {
+            this.uiTriangle.className = 'down';
+        }
+        this.ui.style.left = left + 'px';
+        this.ui.style.top = top + 'px';
+    };
+
 
 
     function DictFull(args) {
@@ -642,7 +654,7 @@ dom.Event = {
         if (response.ui === 'simple') {
             dict = new DictSimple({
                 hoverCapture: response.hoverCapture,
-                assistKey: response.assistKeySwitch === '1' ? response.assistKey : 'none'
+                assistKey: response.assistKey
             });
         }
         else {

@@ -4,7 +4,7 @@
         localStorage.ui = 'simple';// the style of UI [simple, all]
         localStorage.skin = 'orange';// the skin of UI [orange]
         localStorage.assistKeySwitch = '0';//assisted key [1, 0]
-        localStorage.assistKey = 'ctrl';//assisted key [none, ctrl, alt, shift]
+        localStorage.assistKey = 'ctrlKey';//assisted key [none, ctrl, alt, shift]
         localStorage.hoverCapture = '1';//if enable captrue word by mouse hover [1, 0]
         localStorage.dictsOrder = JSON.stringify(['powerword']);// dictionary order
         localStorage.dictsAvailable = JSON.stringify({'powerword': true});// a list of available dictionary
