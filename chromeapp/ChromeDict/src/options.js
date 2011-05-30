@@ -159,7 +159,7 @@
     function restoreOptions() {
         var i, len, elements, elem, dictsOrder = [], dictsAvailable = {};
 
-        elements = mainview.querySelectorAll('input[type=radio], #hotCaptrueSection input');
+        elements = mainview.querySelectorAll('input[type=radio]');
         for (i = 0, len = elements.length ; i < len ; i += 1) {
             elem = elements[i];
             if (elem.value === localStorage[elem.name]) {

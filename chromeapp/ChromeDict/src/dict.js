@@ -394,45 +394,45 @@ dom.Event = {
         if (this.hotKey) {
             this.scope.addEventListener('keyup', this.hoverHanlderProxy = dom.Tool.proxy(this.hotKeyHandler, this), false);
         }
-        if (this.dragCapture) {
-            this.dragCaptureSwitch();
-        }
-        if (this.hoverCapture) {
-            this.hoverCaptureSwitch();
-        }
+        this.dragCaptureSwitch();
+        this.hoverCaptureSwitch();
     };
 
-    Dict.prototype.dragCaptureSwitch = function () {console.log(2)
+    Dict.prototype.dragCaptureSwitch = function () {
         if (this.dblclickProxy) {
             dom.Event.remove(this.scope, 'click', this.dblclickProxy);
             dom.Event.remove(this.scope, 'mousedown', this.dragStartProxy);
             this.dblclickProxy = null;
             this.dragStartProxy = null;
+            this.dragCapture = false;
         }
         else {
             dom.Event.add(this.scope, 'click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this));
             dom.Event.add(this.scope, 'mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this));
+            this.dragCapture = true;
         }
     };
 
-    Dict.prototype.hoverCaptureSwitch = function () {console.log(1)
+    Dict.prototype.hoverCaptureSwitch = function () {
         if (this.hoverProxy) {
             dom.Event.remove(this.scope, 'mouseover', this.hoverProxy);
             dom.Event.remove(this.scope, 'mouseout', this.hoverProxy);
             this.hoverProxy = null;
+            this.hoverCapture = false;
         }
         else {
             dom.Event.add(this.scope, 'mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this));
             dom.Event.add(this.scope, 'mouseout', this.hoverProxy);
+            this.hoverCapture = true;
         }
     };
 
     Dict.prototype.hotKeyHandler = function (e) {
-        if (this.hoverCapture && e.keyCode === this.hotKey.hover.keyCode && e.ctrlKey === this.hotKey.hover.ctrlKey
+        if (e.keyCode === this.hotKey.hover.keyCode && e.ctrlKey === this.hotKey.hover.ctrlKey
            && e.altKey === this.hotKey.hover.altKey && e.shiftKey === this.hotKey.hover.shiftKey && e.metaKey === this.hotKey.hover.metaKey) {
             this.hoverCaptureSwitch();
         }
-        else if (this.dragCapture && e.keyCode === this.hotKey.drag.keyCode && e.ctrlKey === this.hotKey.drag.ctrlKey
+        else if (e.keyCode === this.hotKey.drag.keyCode && e.ctrlKey === this.hotKey.drag.ctrlKey
            && e.altKey === this.hotKey.drag.altKey && e.shiftKey === this.hotKey.drag.shiftKey && e.metaKey === this.hotKey.drag.metaKey) {
             this.dragCaptureSwitch();
         }
@@ -593,7 +593,7 @@ dom.Event = {
 
     DictSimple.prototype.handle = function (e) {
         var data = {};
-        this.super.handle.call(this, e);console.log(this.text)
+        this.super.handle.call(this, e);
         if (this.text.length > 0) {
             data['w'] = this.text;
             this.port.postMessage(data);
@@ -671,7 +671,6 @@ dom.Event = {
         else {
             dict = new DictFull();
         }
-        dict.enable();
     });
 
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
