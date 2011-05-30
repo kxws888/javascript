@@ -417,12 +417,15 @@ dom.Event = {
         if (this.hoverProxy) {
             dom.Event.remove(this.scope, 'mouseover', this.hoverProxy);
             dom.Event.remove(this.scope, 'mouseout', this.hoverProxy);
+            dom.Event.remove(this.scope, 'mousemove', this.getMousePosProxy)
             this.hoverProxy = null;
+            this.getMousePosProxy = null;
             this.hoverCapture = false;
         }
         else {
             dom.Event.add(this.scope, 'mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this));
             dom.Event.add(this.scope, 'mouseout', this.hoverProxy);
+            dom.Event.add(this.scope, 'mousemove', this.getMousePosProxy = dom.Tool.proxy(this.getMousePos, this));
             this.hoverCapture = true;
         }
     };
@@ -502,12 +505,6 @@ dom.Event = {
                         return '<span>' + str + '</span>';
                     });
                     parent.innerHTML = text;
-                    /*elems = parent.childNodes;
-                    for (i = 0, len = elems.length ; i < len ; i += 1) {
-                        if ((next && next.offsetLeft < elems[i].offsetLeft) && elems[i].offsetLeft < e.pageX ) {
-                            next = elems[i];
-                        }
-                    }*/
                 }
             }
         }
@@ -519,36 +516,37 @@ dom.Event = {
                     wraper = document.createElement('span');
                     parent.insertBefore(wraper, elem);
                     wraper.appendChild(elem);
-                    //if ((next && next.offsetLeft < wraper.offsetLeft) && wraper.offsetLeft < e.pageX ) {
-                        //next = wraper;
-                    //}
                 }
             }
         }
         parent.resolve = true;
     };
 
+    Dict.prototype.getMousePos = function (e) {
+        this.x = e.pageX;
+        this.y = e.pageY;
+    };
+
     Dict.prototype.capture = function (e) {
         if (this.hoverCapture && this.text === null || !this.hoverCapture) {
-            this.text = window.getSelection().toString().trim();
-            this.handle(e);
+            this.text = window.getSelection().toString();
+            this.text = this.text.trim().replace(/^\W+$/, '').replace(/^\d+$/, '');
+            if (this.text.length > 0) {
+                this.x = e.pageX - (!this.endPos ? 0 : (this.endPos - this.startPos) / 2);
+                this.y = e.pageY;
+                this.handle(e);
+            }
         }
     };
 
     Dict.prototype.handle = function (e) {
         var css = getComputedStyle(e.target, null), lineHeight;
-        this.text = this.text.replace(/^\W+$/, '')
-                    .replace(/^\d+$/, '');
-        if (this.text.length > 0) {
-            this.x = e.pageX - (!this.endPos ? 0 : (this.endPos - this.startPos) / 2);
-            this.y = e.pageY;
-            lineHeight = parseInt(css.getPropertyValue('line-height'));
-            if (isNaN(lineHeight)) {
-                lineHeight = parseInt(css.getPropertyValue('font-size'), 10) * 1.2;
-            }
-
-            this.fontSize = lineHeight;
+        lineHeight = parseInt(css.getPropertyValue('line-height'));
+        if (isNaN(lineHeight)) {
+            lineHeight = parseInt(css.getPropertyValue('font-size'), 10) * 1.2;
         }
+
+        this.fontSize = lineHeight;
     };
 
     Dict.prototype.createUI = function () {};
@@ -631,7 +629,7 @@ dom.Event = {
     DictSimple.prototype.position = function () {
         var left, top;
         left = this.x - this.ui.offsetWidth / 2;
-        top = this.y - this.ui.offsetHeight - 8 - this.fontSize / 2;
+        top = this.y - this.ui.offsetHeight - 8// - this.fontSize / 2;
 
         if (left - document.body.scrollLeft < 0) {
             left = this.x;
@@ -642,7 +640,7 @@ dom.Event = {
         }
 
         if (top - document.body.scrollTop < 0) {
-            top = this.y + this.fontSize / 2;
+            top = this.y// + this.fontSize / 2;
             this.uiTriangle.className = 'up';
         }
         else {
@@ -662,7 +660,7 @@ dom.Event = {
     //document.addEventListener('DOMContentLoaded', initDict, false);
 
     chrome.extension.sendRequest({cmd: 'config'}, function(response) {
-        if (response.ui === 'simple') {console.log(response)
+        if (response.ui === 'simple') {
             dict = new DictSimple({
                 hoverCapture: response.hoverCapture,
                 hotKey: response.hotKey

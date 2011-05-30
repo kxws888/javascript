@@ -14,9 +14,52 @@
 }
 
 #dict-viclm-simple * {
-    background-color: inherit;
-    color: inherit;
-    font-family: inherit;
+    position: static;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    z-index: auto;
+
+    float: none;
+    clear: none;
+    display: block;
+
+    margin: 0;
+    padding: 0;
+    border-width: medium;
+    border-color: inherit;
+    border-style: none;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    max-width: none;
+    max-height: none;
+
+    color: #000;
+    background-attachment: scroll;
+    background-color: transparent;
+    background-image: none;
+    background-position: 0% 0%;
+    background-repeat: repeat;
+
+    font-size: 12px;
+    font-family: Arial, 'Microsoft Yahei', Simsun, sans-serif;
+    line-height: normal;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: normal;
+    text-align: left;
+    text-decoration: none;
+    text-indent: 0;
+    text-transform: none;
+    white-space: normal;
+    letter-spacing: normal;
+    word-spacing: normal;
+    vertical-align: baseline;
+    overflow: visible;
+    visibility: visible;
 }
 
 #dict-viclm-simple header {
@@ -24,8 +67,7 @@
 }
 
 #dict-viclm-simple h1 {
-    margin: 0 0 5px 0;
-    font-size: 1em;
+    margin-bottom: 5px;
 }
 
 #dict-viclm-simple header span{
@@ -35,8 +77,6 @@
 
 #dict-viclm-simple ul {
     list-style-type: none;
-    padding: 0;
-    margin: 0;
 }
 
 /* creates triangle */
