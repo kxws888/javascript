@@ -424,7 +424,7 @@ dom.Event = {
         }
         else {
             dom.Event.add(this.scope, 'mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this));
-            dom.Event.add(this.scope, 'mouseout', this.hoverProxy);
+            //dom.Event.add(this.scope, 'mouseout', this.hoverProxy);
             dom.Event.add(this.scope, 'mousemove', this.getMousePosProxy = dom.Tool.proxy(this.getMousePos, this));
             this.hoverCapture = true;
         }
@@ -470,6 +470,7 @@ dom.Event = {
             this.ui.style.display = 'none';
             return;
         }
+
         if (this.timer === null) {
             this.hoverHanlder(e);
             return;
@@ -480,9 +481,9 @@ dom.Event = {
         clearTimeout(this.timer);
         this.timer = setTimeout(dom.Tool.proxy(function () {
             if (this.hoverX === e.pageX && this.hoverY === e.pageY) {
-                this.timer = null;
+                
+            }this.timer = null;
                 this.hoverHanlder(e);
-            }
         }, this), 1000);
     };
 
@@ -497,7 +498,8 @@ dom.Event = {
                 if (this.rSingleWord.test(text) && !/^h\d$/i.test(parent.tagName)) {
                     this.text = elem.nodeValue;
                     this.handle(e);
-                    //this.timer = undefined;
+                    this.node = parent;
+                    this.timer = undefined;
                     return;
                 }
                 else if (!parent.resolve && this.rHasWord.test(text)) {
@@ -519,7 +521,7 @@ dom.Event = {
                 }
             }
         }
-        parent.resolve = true;
+        parent.resolve = true;this.ui.style.display = 'none';
     };
 
     Dict.prototype.getMousePos = function (e) {
@@ -660,7 +662,7 @@ dom.Event = {
     //document.addEventListener('DOMContentLoaded', initDict, false);
 
     chrome.extension.sendRequest({cmd: 'config'}, function(response) {
-        if (response.ui === 'simple') {console.log(1)
+        if (response.ui === 'simple') {
             dict = new DictSimple({
                 hotKey: response.hotKey
             });

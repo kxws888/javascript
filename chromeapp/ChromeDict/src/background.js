@@ -11,7 +11,7 @@
 
     const DICT_API = {
         powerword: 'http://dict-co.iciba.com/api/dictionary.php?w=',
-        googledict: 'http://www.google.com/dictionary/json?callback=googledict&sl=en&tl=zh&restrict=pr%2Cde&client=te&q='
+        googledict: 'http://dict.cn/ws.php?utf8=true&q='
     };
 
     var status;
@@ -155,10 +155,6 @@
         xhr.send(null);
     }
 
-    function jsonp(args) {
-        var script = document
-    }
-
     function powerword(e) {
         var xml = e.target.responseXML, json = {}, elems, elem, i, len, item;
         if (xml) {
@@ -175,20 +171,9 @@
                     acceptation: item.firstChild.nodeValue
                 });
             }
-            /*
-            json.sent = [];
-            elems = xml.getElementsByTagName('sent');
-            for (i = 0, len = elems.length ; i < len ; i += 1) {
-                item = elems[i];
-                json.sent.push({
-                    orig: item.getElementsByTagName('orig')[0].firstChild.nodeValue,
-                    trans: item.getElementsByTagName('trans')[0].firstChild.nodeValue
-                });
-            }
-            */
         }
 
-        if (json.tt.length > 0) {
+        if (xml && json.tt.length > 0) {
             json.result = true;
         }
         else {
@@ -199,16 +184,33 @@
     }
 
     function googledict(e) {
-        var res, json = {}, data = eval('(' + e.target.responseText.slice(11, -10) + ')');
-        console.log(data)
-        data = data.webDefinitions[0].entries;
-        json.tt = [];
-        for (i = 0, len = data.length ; i < len ; i += 1) {
-            json.tt.push({
-                acceptation: data[i].terms[0].text
-            });
+        var xml = e.target.responseXML, json = {}, elems, elem, i, len, item;
+        if (xml) {
+            elem = xml.getElementsByTagName('pron')[0];
+            json.ps = elem ? elem.firstChild.nodeValue : '';
+
+            json.tt = [];
+            elem = xml.getElementsByTagName('def')[0];
+            if (elem) {
+                elems = elem.firstChild.nodeValue.split(' ');
+            }
+            for (i = 0, len = elems.length ; i < len ; i += 1) {
+                item = elems[i];
+                json.tt.push({
+                    pos: '',
+                    acceptation: item
+                });
+            }
         }
-        console.log(json)
+
+        if (xml && json.tt.length > 0) {
+            json.result = true;
+        }
+        else {
+            json.result = false;
+        }
+
+        return json;
     }
 
 })();
