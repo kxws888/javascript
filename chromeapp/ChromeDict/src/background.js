@@ -1,28 +1,25 @@
 (function () {
-    if (!localStorage.startup) {
-        localStorage.startup = 'manual';// the startup mode of program [manual, automatic]
+    if (!localStorage.skin) {
         localStorage.ui = 'simple';// the style of UI [simple, all]
         localStorage.skin = 'orange';// the skin of UI [orange]
         localStorage.hotKeySwitch = '0';//hotKey [1, 0]
-        localStorage.hoverHotKey = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":112}';
-        localStorage.dragHotKey = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":113}';
-        localStorage.hoverCapture = '1';//if enable captrue word by mouse hover [1, 0]
-        localStorage.dictsOrder = JSON.stringify(['powerword']);// dictionary order
-        localStorage.dictsAvailable = JSON.stringify({'powerword': true});// a list of available dictionary
+        localStorage.hotKeyHover = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":112}';
+        localStorage.hotKeyDrag = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":113}';
+        localStorage.mainDict = 'powerword';// dictionary order
+        localStorage.assistDict = 'googledict';// a list of available dictionary
     }
 
-    //toggle the of switcher dict by clicking the page button
-    var status = localStorage.startup !== 'automatic' ? true : false, tab;
-
-    var dictAPI = {
+    const DICT_API = {
         powerword: 'http://dict-co.iciba.com/api/dictionary.php?w=',
-        googledict: 'http://www.google.com/dictionary/json?callback=dict_api.callbacks.id100&sl=zh&tl=en&restrict=pr%2Cde&client=te&q='
-    }
+        googledict: 'http://www.google.com/dictionary/json?callback=googledict&sl=en&tl=zh&restrict=pr%2Cde&client=te&q='
+    };
+
+    var status;
 
     chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
         if (!/^chrome/i.test(tab.url) && tab.status !== 'complete') {
-            if (status) {
-                chrome.tabs.executeScript(null, {file: "src/dict.js"});
+            if (true) {
+                //chrome.tabs.executeScript(null, {file: "src/dict.js"});
             }
             else {
                 chrome.pageAction.setIcon({
@@ -61,18 +58,18 @@
         var params = {}, hotKeys = {}, dictsAvailable, dictsOrder, dicts = [], i, len;
         params.ui = localStorage.ui;
         params.skin = localStorage.skin;
-        params.hoverCapture = localStorage.hoverCapture;
+        //params.hoverCapture = localStorage.hoverCapture;
 
         if (localStorage.hotKeySwitch === '0') {
             hotKeys = null;
         }
         else {
             hotKeys = {
-                hover: JSON.parse(localStorage.hoverHotKey),
-                drag: JSON.parse(localStorage.dragHotKey)
+                hover: JSON.parse(localStorage.hotKeyHover),
+                drag: JSON.parse(localStorage.hotKeyDrag)
             };
         }
-        params.hotKey = hotKeys;
+        params.hotKey = hotKeys;/*
 
         dictsOrder = JSON.parse(localStorage['dictsOrder']);
         dictsAvailable = JSON.parse(localStorage['dictsAvailable']);
@@ -81,7 +78,7 @@
                 dicts[dicts.length] = dictsOrder[i];
             }
         }
-        params.dicts = dicts;
+        params.dicts = dicts;*/
 
         return params;
     }
@@ -93,26 +90,73 @@
     });
 
     function simpleQuery(msg, port) {
-        var xhr = new XMLHttpRequest(), xhr2 = new XMLHttpRequest(), dicts = JSON.parse(localStorage.dictsOrder), dict;
-        dict = dicts.shift();
-        xhr.open('GET', dictAPI[dict] + msg.w, true);
-        xhr.onload = function (e) {
-            var result;
-            switch (dict) {
+        var mainDict = localStorage.mainDict, assistDict = localStorage.assistDict, mainAjax, assistAjax, complete = false;
+        mainAjax = ajax({
+            url: DICT_API[mainDict],
+            word: msg.w,
+            load: function (e) {
+                var res;
+                switch (mainDict) {
                 case 'powerword':
-                    result = powerword(e);
-                break;
+                    res = powerword(e);
+                    break;
                 case 'googledict':
-                    result = googledict(e);
-                break;
+                    res = googledict(e);
+                    break;
+                }
+
+                if (res.result) {
+                    res.key = msg.w;
+                    complete = true;
+                    port.postMessage(res);
+                }
             }
-            result.key = msg.w;
-            port.postMessage(result);
-        };
-        xhr.onerror = function () {
-            port.postMessage({key: msg.w, result: false});
+        });
+        if (assistDict) {
+            assistAjax = ajax({
+                url: DICT_API[assistDict],
+                word: msg.w,
+                load: function (e) {
+                    if (!complete) {
+                        var res;
+                        switch (assistDict) {
+                        case 'powerword':
+                            res = powerword(e);
+                            break;
+                        case 'googledict':
+                            res = googledict(e);
+                            break;
+                        }
+
+                        if (res.result) {
+                            res.key = msg.w;
+                            port.postMessage(res);
+                        }
+                        else {
+                            res.key = msg.w;
+                            port.postMessage(res);
+                        }
+                    }
+                },
+                error: function (e) {
+                    if (!complete) {
+                        port.postMessage({key: msg.w, result:false});
+                    }
+                }
+            });
         }
+    }
+
+    function ajax(args) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', args.url + args.word, true);
+        xhr.onload = args.load;
+        xhr.onerror = args.error;
         xhr.send(null);
+    }
+
+    function jsonp(args) {
+        var script = document
     }
 
     function powerword(e) {
@@ -131,7 +175,7 @@
                     acceptation: item.firstChild.nodeValue
                 });
             }
-
+            /*
             json.sent = [];
             elems = xml.getElementsByTagName('sent');
             for (i = 0, len = elems.length ; i < len ; i += 1) {
@@ -141,17 +185,30 @@
                     trans: item.getElementsByTagName('trans')[0].firstChild.nodeValue
                 });
             }
+            */
+        }
+
+        if (json.tt.length > 0) {
             json.result = true;
         }
         else {
             json.result = false;
         }
+
         return json;
     }
 
-    function googledict() {
-        a
+    function googledict(e) {
+        var res, json = {}, data = eval('(' + e.target.responseText.slice(11, -10) + ')');
+        console.log(data)
+        data = data.webDefinitions[0].entries;
+        json.tt = [];
+        for (i = 0, len = data.length ; i < len ; i += 1) {
+            json.tt.push({
+                acceptation: data[i].terms[0].text
+            });
+        }
+        console.log(json)
     }
 
 })();
-

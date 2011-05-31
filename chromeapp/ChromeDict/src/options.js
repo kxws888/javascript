@@ -1,14 +1,11 @@
 (function () {
-    var tab, mainview, dicts, checkSwitchEvent;
+    var mainview, dicts;
+
     function init() {
         mainview = document.getElementById('mainview');
         dicts = document.getElementById('dictSection');
-        chrome.tabs.getCurrent(function (t) {
-            tab = t;
-        });
 
         uiEnhance();
-
         restoreOptions();
     }
 
@@ -20,16 +17,19 @@
             elements[i].addEventListener('click', navTab, false);
         }
         //save options
-        elements = mainview.querySelectorAll('label, input[type=image]');
+        elements = mainview.querySelectorAll('#skinSection label');
         for (i = 0, len = elements.length ; i < len ; i += 1) {
             elements[i].addEventListener('click', saveOptions, false);
         }
         //check switch
-        elements = mainview.querySelectorAll('#hotKeySection label:first-child');
+        elements = mainview.querySelectorAll('#hotKeySection label:only-child');
         for (i = 0, len = elements.length ; i < len ; i += 1) {
-            elem = elements[i];
-            elem.addEventListener('click', checkSwitchClickHanlder, false);
-            elem.addEventListener('checkSwitch', bindCheckSwitchEvent, false);
+            elements[i].addEventListener('click', checkSwitchClickHanlder, false);
+        }
+        //dict
+        elements = mainview.querySelectorAll('select');
+        for (i = 0, len = elements.length ; i < len ; i += 1) {
+            elements[i].addEventListener('change', setDict, false);
         }
         //hot key
         elements = mainview.querySelectorAll('#hotKeySection input[type=text]');
@@ -39,16 +39,6 @@
             elem.addEventListener('keydown', function (e) {
                 e.preventDefault();
             }, false);
-        }
-        //highlight dict list
-        elements = dicts.querySelectorAll('li');
-        for (i = 0, len = elements.length ; i < len ; i += 1) {
-            elements[i].addEventListener('click', dictsHighlight, false);
-        }
-        //rerange dict list
-        elements = dicts.querySelectorAll('input[type=image]');
-        for (i = 0, len = elements.length ; i < len ; i += 1) {
-            elements[i].addEventListener('click', dictsRerange, false);
         }
     }
 
@@ -63,139 +53,56 @@
     }
     navTab.last = 'browserPageNav';
 
-    checkSwitchEvent = document.createEvent('Event');
-    checkSwitchEvent.initEvent('checkSwitch', true, true);
-
-    function bindCheckSwitchEvent(e) {
-        var target = e.target, next, parent;
-        next = dom.Query.next(target);
-        if (next) {
-            if (target.querySelector('input').type === 'checkbox') {
-                while (next && next.tagName === 'LABEL') {
-                    next.querySelector('input').disabled = !next.querySelector('input').disabled;
-                    next = dom.Query.next(next);
-                }
-
-                return;
-            }
-            else {
-                while (next && next.tagName === 'LABEL') {
-                    next.querySelector('input').disabled = false;
-                    next = dom.Query.next(next);
-                }
-            }
-        }
-
-        parent = dom.Query.next(target.parentNode);
-        if (parent) {
-            while (parent) {
-                next = dom.Query.next(parent.querySelector('label'));
-                while (next && next.tagName === 'LABEL') {
-                    next.querySelector('input').disabled = true;
-                    next = dom.Query.next(next);
-                }
-                parent = dom.Query.next(parent);
+    function checkSwitch(controller, depend) {
+        var i = 0, len = depend.length;
+        if (controller.checked) {
+            for (; i < len ; i += 1) {
+                depend[i].disabled = true;
             }
         }
         else {
-            parent = dom.Query.prev(target.parentNode);
-            while (parent) {
-                next = dom.Query.next(parent.querySelector('label'));
-                while (next && next.tagName === 'LABEL') {
-                    next.querySelector('input').disabled = true;
-                    next = dom.Query.next(next);
-                }
-                parent = dom.Query.prev(parent);
+            for (; i < len ; i += 1) {
+                depend[i].disabled = false;
             }
         }
     }
 
     function checkSwitchClickHanlder(e) {
+        var target = e.target;
         //fix label tansform event to inner input
-        if (e.target.nodeName.toLowerCase() === 'input') {
-            this.dispatchEvent(checkSwitchEvent);
+        if (target.nodeName === 'INPUT') {
+            //this.dispatchEvent(checkSwitchEvent);
+            if (target.name === 'hotKeySwitch') {
+                checkSwitch(target, target.parentNode.parentNode.parentNode.querySelectorAll('input[type=text]'));
+                if (target.checked) {
+                    localStorage[target.name] = '0';
+                }
+                else {
+                    localStorage[target.name] = '1';
+                }
+            }
         }
     }
 
     // Saves options to localStorage.
     function saveOptions(e) {
-        var input = e.target, i, len, elements, item, dictsOrder = [], dictsAvailable = {};
-
-        if (input.tagName.toLowerCase() === 'input') {
-            if (input.name === 'dict[]') {
-                elements = dicts.querySelectorAll('input[type=checkbox]');
-                for (i = 0, len = elements.length ; i < len ; i += 1) {
-                    item = elements[i];
-                    if (item.checked) {
-                        dictsAvailable[item.value] = true;
-                    }
-                }
-                localStorage['dictsAvailable'] = JSON.stringify(dictsAvailable);
-            }
-            else if (input.name === 'dictsRerange') {
-                elements = dicts.querySelectorAll('input[type=checkbox]');
-                for (i = 0, len = elements.length ; i < len ; i += 1) {
-                    item = elements[i];
-                    dictsOrder[dictsOrder.length] = item.value;
-                }
-                localStorage['dictsOrder'] = JSON.stringify(dictsOrder);
-            }
-            else {
-                localStorage[input.name] = input.value;
-            }
-
-            elements = dicts.querySelectorAll('input[type=checkbox]');
-            for (i = 0, len = elements.length ; i < len ; i += 1) {
-                item = elements[i];
-                dictsOrder[dictsOrder.length] = item.value;
-                if (item.checked) {
-                    dictsAvailable[item.value] = true;
-                }
-            }
+        var input = e.target;
+        if (input.nodeName === 'INPUT' && input.checked) {
+            localStorage[input.name] = input.value;
         }
     }
 
-    // Restores select box state to saved value from localStorage.
-    function restoreOptions() {
-        var i, len, elements, elem, dictsOrder = [], dictsAvailable = {};
-
-        elements = mainview.querySelectorAll('input[type=radio]');
-        for (i = 0, len = elements.length ; i < len ; i += 1) {
-            elem = elements[i];
-            if (elem.value === localStorage[elem.name]) {
-                elem.checked = true;
-                elem.parentNode.dispatchEvent(checkSwitchEvent);
+    function setDict(e) {
+        var target = e.target, assistDict, opt;
+        if (target.name === 'mainDict') {
+            assistDict = dicts.querySelector('select:last-of-type');
+            opt = assistDict.querySelector('[style]');
+            if (opt) {
+                opt.style.display = '';
             }
-            else {
-                elem.checked = false;
-            }
+            assistDict.querySelector('[value=' + target.value + ']').style.display = 'none';
         }
-
-        //hot key
-        elements = mainview.querySelectorAll('#hotKeySection input[type=text]');
-        for (i = 0, len = elements.length ; i < len ; i += 1) {
-            elem = elements[i];
-            setHotKey.call(elem, JSON.parse(localStorage[elem.name]));
-        }
-
-        elements = dicts.querySelectorAll('input[type=checkbox]');
-        dictsAvailable = JSON.parse(localStorage['dictsAvailable']);
-        for (i = 0, len = elements.length ; i < len ; i += 1) {
-            elem = elements[i];
-            if (elem.value in dictsAvailable) {
-                elem.checked = true;
-            }
-            else {
-                elem.checked = false;
-                elem.parentNode.dispatchEvent(checkSwitchEvent);
-            }
-        }
-
-        dictsOrder = JSON.parse(localStorage['dictsOrder']);
-        elem = dicts.querySelector('ul');
-        for (i = 0, len = dictsOrder.length ; i < len ; i += 1) {
-            elem.appendChild(document.getElementById(dictsOrder[i]));
-        }
+        localStorage[target.name] = target.value;
     }
 
     function setHotKey(e) {
@@ -246,6 +153,53 @@
         }
     }
 
+    // Restores select box state to saved value from localStorage.
+    function restoreOptions() {
+        var i, len, elements, elem;
+
+        elements = mainview.querySelectorAll('input[type=radio]');
+        for (i = 0, len = elements.length ; i < len ; i += 1) {
+            elem = elements[i];
+            if (elem.value === localStorage[elem.name]) {
+                elem.checked = true;
+            }
+            else {
+                elem.checked = false;
+            }
+        }
+
+        elements = mainview.querySelectorAll('input[type=checkbox]');
+        for (i = 0, len = elements.length ; i < len ; i += 1) {
+            elem = elements[i];
+            if (localStorage[elem.name] === elem.value) {
+                elem.checked = true;
+            }
+            else {
+                elem.checked = false;
+            }
+            checkSwitch(elem, elem.parentNode.parentNode.parentNode.querySelectorAll('input[type=text]'));
+        }
+
+        elements = mainview.querySelectorAll('select');
+        for (i = 0, len = elements.length ; i < len ; i += 1) {
+            elem = elements[i];
+            elem.querySelector('option[value=' + localStorage[elem.name] + ']').selected = true;
+            setDict.call(elem, {target: elem});
+        }
+
+        //hot key
+        elements = mainview.querySelectorAll('#hotKeySection input[type=text]');
+        for (i = 0, len = elements.length ; i < len ; i += 1) {
+            elem = elements[i];
+            setHotKey.call(elem, JSON.parse(localStorage[elem.name]));
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', init, false);
+})();
+
+
+    /*
     //highlight dict <li> when clicked
     function dictsHighlight() {
         if (!dictsHighlight.last || dictsHighlight.last !== this.id) {
@@ -273,6 +227,4 @@
             }
         }
     }
-
-    document.addEventListener('DOMContentLoaded', init, false);
-})();
+    */

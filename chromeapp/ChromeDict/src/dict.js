@@ -660,9 +660,8 @@ dom.Event = {
     //document.addEventListener('DOMContentLoaded', initDict, false);
 
     chrome.extension.sendRequest({cmd: 'config'}, function(response) {
-        if (response.ui === 'simple') {
+        if (response.ui === 'simple') {console.log(1)
             dict = new DictSimple({
-                hoverCapture: response.hoverCapture,
                 hotKey: response.hotKey
             });
         }
