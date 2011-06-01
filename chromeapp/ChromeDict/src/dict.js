@@ -385,6 +385,7 @@ dom.Event = {
         this.hoverCapture = args && args.hoverCapture || true;
         this.dragCapture = args && args.dragCapture || true;
         this.hotKey = args && args.hotKey || null;
+        this.skin = args && args.skin || 'orange';
         this.ui = this.createUI();
 
         this.rHasWord = /\b[a-z]+([-'][a-z]+)*\b/i;
@@ -416,8 +417,8 @@ dom.Event = {
     Dict.prototype.hoverCaptureSwitch = function () {
         if (this.hoverProxy) {
             dom.Event.remove(this.scope, 'mouseover', this.hoverProxy);
-            dom.Event.remove(this.scope, 'mouseout', this.hoverProxy);
-            dom.Event.remove(this.scope, 'mousemove', this.getMousePosProxy)
+            //dom.Event.remove(this.scope, 'mouseout', this.hoverProxy);
+            //dom.Event.remove(this.scope, 'mousemove', this.getMousePosProxy)
             this.hoverProxy = null;
             this.getMousePosProxy = null;
             this.hoverCapture = false;
@@ -425,7 +426,7 @@ dom.Event = {
         else {
             dom.Event.add(this.scope, 'mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this));
             //dom.Event.add(this.scope, 'mouseout', this.hoverProxy);
-            dom.Event.add(this.scope, 'mousemove', this.getMousePosProxy = dom.Tool.proxy(this.getMousePos, this));
+            //dom.Event.add(this.scope, 'mousemove', this.getMousePosProxy = dom.Tool.proxy(this.getMousePos, this));
             this.hoverCapture = true;
         }
     };
@@ -481,9 +482,8 @@ dom.Event = {
         clearTimeout(this.timer);
         this.timer = setTimeout(dom.Tool.proxy(function () {
             if (this.hoverX === e.pageX && this.hoverY === e.pageY) {
-                
-            }this.timer = null;
-                this.hoverHanlder(e);
+            this.timer = null;
+            this.hoverHanlder(e);}
         }, this), 1000);
     };
 
@@ -516,12 +516,14 @@ dom.Event = {
                 elem = elems[i];
                 if (elem.nodeType === 3 && this.rHasWord.test(elem.nodeValue)) {
                     wraper = document.createElement('span');
+                    //wraper.className = 'dict-viclm-clear';
                     parent.insertBefore(wraper, elem);
                     wraper.appendChild(elem);
                 }
             }
         }
-        parent.resolve = true;this.ui.style.display = 'none';
+        parent.resolve = true;
+        this.ui.style.display = 'none';
     };
 
     Dict.prototype.getMousePos = function (e) {
@@ -574,6 +576,7 @@ dom.Event = {
     DictSimple.prototype.createUI = function () {
         var aside = document.createElement('aside'), header, triangle;
         aside.id = 'dict-viclm-simple';
+        aside.className = this.skin;
 
         header = document.createElement('header');
         header.appendChild(document.createElement('h1'));
@@ -633,16 +636,27 @@ dom.Event = {
         left = this.x - this.ui.offsetWidth / 2;
         top = this.y - this.ui.offsetHeight - 8// - this.fontSize / 2;
 
+        if (this.hoverCapture) {
+            this.x = pageX(this.node);
+            this.y = pageY(this.node);
+            left = this.x - (this.ui.offsetWidth - this.node.offsetWidth) / 2;
+            top = this.y - this.ui.offsetHeight;
+        }
+
         if (left - document.body.scrollLeft < 0) {
             left = this.x;
             this.uiTriangle.style.left = '6px';
+        }
+        else if (left + this.ui.offsetWidth > window.innerWidth) {
+            left = this.x - this.ui.offsetWidth + 6;
+            this.uiTriangle.style.right = this.ui.offsetWidth - 6 + 'px';
         }
         else {
             this.uiTriangle.style.left = this.ui.offsetWidth / 2 - 6 + 'px';
         }
 
         if (top - document.body.scrollTop < 0) {
-            top = this.y// + this.fontSize / 2;
+            top = this.hoverCapture ? this.y + this.node.offsetHeight : this.y// + this.fontSize / 2;
             this.uiTriangle.className = 'up';
         }
         else {
@@ -652,11 +666,15 @@ dom.Event = {
         this.ui.style.top = top + 'px';
     };
 
-
-
-    function DictFull(args) {
-    
+    function pageX(elem) {
+        return elem.offsetParent ? elem.offsetLeft + pageX(elem.offsetParent) : elem.offsetLeft;
     }
+    function pageY(elem) {
+        return elem.offsetParent ? elem.offsetTop + pageY(elem.offsetParent) : elem.offsetTop;
+    }
+
+
+    function DictFull(args) {}
 
     var dict;
     //document.addEventListener('DOMContentLoaded', initDict, false);
@@ -664,7 +682,8 @@ dom.Event = {
     chrome.extension.sendRequest({cmd: 'config'}, function(response) {
         if (response.ui === 'simple') {
             dict = new DictSimple({
-                hotKey: response.hotKey
+                hotKey: response.hotKey,
+                skin: response.skin
             });
         }
         else {

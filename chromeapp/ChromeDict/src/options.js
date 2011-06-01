@@ -182,7 +182,7 @@
 
         elements = mainview.querySelectorAll('select');
         for (i = 0, len = elements.length ; i < len ; i += 1) {
-            elem = elements[i];
+            elem = elements[i];console.log(localStorage[elem.name])
             elem.querySelector('option[value=' + localStorage[elem.name] + ']').selected = true;
             setDict.call(elem, {target: elem});
         }

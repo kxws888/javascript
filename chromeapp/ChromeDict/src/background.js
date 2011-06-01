@@ -6,12 +6,12 @@
         localStorage.hotKeyHover = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":112}';
         localStorage.hotKeyDrag = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":113}';
         localStorage.mainDict = 'powerword';// dictionary order
-        localStorage.assistDict = 'googledict';// a list of available dictionary
+        localStorage.assistDict = 'dictcn';// a list of available dictionary
     }
 
     const DICT_API = {
         powerword: 'http://dict-co.iciba.com/api/dictionary.php?w=',
-        googledict: 'http://dict.cn/ws.php?utf8=true&q='
+        dictcn: 'http://dict.cn/ws.php?utf8=true&q='
     };
 
     var status;
@@ -100,8 +100,8 @@
                 case 'powerword':
                     res = powerword(e);
                     break;
-                case 'googledict':
-                    res = googledict(e);
+                case 'dictcn':
+                    res = dictcn(e);
                     break;
                 }
 
@@ -123,8 +123,8 @@
                         case 'powerword':
                             res = powerword(e);
                             break;
-                        case 'googledict':
-                            res = googledict(e);
+                        case 'dictcn':
+                            res = dictcn(e);
                             break;
                         }
 
@@ -183,7 +183,7 @@
         return json;
     }
 
-    function googledict(e) {
+    function dictcn(e) {
         var xml = e.target.responseXML, json = {}, elems, elem, i, len, item;
         if (xml) {
             elem = xml.getElementsByTagName('pron')[0];
