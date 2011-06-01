@@ -504,7 +504,7 @@ dom.Event = {
                 }
                 else if (!parent.resolve && this.rHasWord.test(text)) {
                     text = text.replace(this.rAllWord, function (str) {
-                        return '<span>' + str + '</span>';
+                        return '<bdo>' + str + '</bdo>';
                     });
                     parent.innerHTML = text;
                 }
@@ -515,7 +515,7 @@ dom.Event = {
             for (i = 0, len = elems.length ; i < len ; i += 1) {
                 elem = elems[i];
                 if (elem.nodeType === 3 && this.rHasWord.test(elem.nodeValue)) {
-                    wraper = document.createElement('span');
+                    wraper = document.createElement('bdo');
                     //wraper.className = 'dict-viclm-clear';
                     parent.insertBefore(wraper, elem);
                     wraper.appendChild(elem);
@@ -607,7 +607,6 @@ dom.Event = {
         var i, len, item, ul, li;
         if (data.key === this.text) {
             this.uiKey.innerHTML = this.text;
-            this.ui.style.display = '';
             if (data.result) {
                 if ('tt' in data) {
                     this.uiPs.innerHTML = data.ps === '' ? '' : '[' + data.ps + ']';
@@ -627,51 +626,54 @@ dom.Event = {
             else {
                 this.uiTrans.innerHTML = '翻译出错';
             }
+
+            this.ui.style.display = '';
             this.position();
         }
     };
 
     DictSimple.prototype.position = function () {
-        var left, top;
-        left = this.x - this.ui.offsetWidth / 2;
-        top = this.y - this.ui.offsetHeight - 8// - this.fontSize / 2;
+        this.ui.style.left = 0 + 'px';
+        this.ui.style.top = 0 + 'px';
+        var left, top, triangleLeft, triangleClass, clientRectForUI, clientRectForNode;
+        clientRectForUI = this.ui.getBoundingClientRect();
 
         if (this.hoverCapture) {
-            this.x = pageX(this.node);
-            this.y = pageY(this.node);
-            left = this.x - (this.ui.offsetWidth - this.node.offsetWidth) / 2;
-            top = this.y - this.ui.offsetHeight;
+            clientRectForNode = this.node.getBoundingClientRect();
+            this.x = clientRectForNode.left + document.body.scrollLeft;
+            this.y = clientRectForNode.top + document.body.scrollTop;
+            left = this.x - (clientRectForUI.width  - clientRectForNode.width) / 2;
+            top = this.y - clientRectForUI.height;
+        }
+        else {
+            left = this.x - this.ui.offsetWidth / 2;
+            top = this.y - this.ui.offsetHeight - 8// - this.fontSize / 2;
         }
 
         if (left - document.body.scrollLeft < 0) {
-            left = this.x;
-            this.uiTriangle.style.left = '6px';
+            left = document.body.scrollLeft;
+            triangleLeft = clientRectForNode.right - 18;
         }
-        else if (left + this.ui.offsetWidth > window.innerWidth) {
-            left = this.x - this.ui.offsetWidth + 6;
-            this.uiTriangle.style.right = this.ui.offsetWidth - 6 + 'px';
+        else if (left + clientRectForUI.width > document.body.clientWidth + document.body.scrollLeft) {
+            left = document.body.clientWidth + document.body.scrollLeft - clientRectForUI.width;
+            triangleLeft = this.x - left + 6;
         }
         else {
-            this.uiTriangle.style.left = this.ui.offsetWidth / 2 - 6 + 'px';
+            triangleLeft = clientRectForUI.width / 2 - 6;
         }
 
         if (top - document.body.scrollTop < 0) {
-            top = this.hoverCapture ? this.y + this.node.offsetHeight : this.y// + this.fontSize / 2;
-            this.uiTriangle.className = 'up';
+            top = this.hoverCapture ? this.y + clientRectForNode.height : this.y// + this.fontSize / 2;
+            triangleClass = 'up';
         }
         else {
-            this.uiTriangle.className = 'down';
+            triangleClass = 'down';
         }
         this.ui.style.left = left + 'px';
         this.ui.style.top = top + 'px';
+        this.uiTriangle.style.left = triangleLeft + 'px';
+        this.uiTriangle.className = triangleClass;
     };
-
-    function pageX(elem) {
-        return elem.offsetParent ? elem.offsetLeft + pageX(elem.offsetParent) : elem.offsetLeft;
-    }
-    function pageY(elem) {
-        return elem.offsetParent ? elem.offsetTop + pageY(elem.offsetParent) : elem.offsetTop;
-    }
 
 
     function DictFull(args) {}

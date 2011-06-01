@@ -5,7 +5,6 @@
     display: inline-block;
     padding: 5px;
     z-index: 19860208;
-
     border-radius:5px;
 }
 
@@ -64,10 +63,10 @@
 
 #dict-viclm-simple h1 {
     margin-bottom: 5px;
+    font-weight: bold;
 }
 
 #dict-viclm-simple header span{
-    color: #333;
     margin-left: 5px;
 }
 
@@ -104,6 +103,10 @@
     background:-webkit-gradient(linear, 0 0, 0 100%, from(#F9D835), to(#F3961C));
 }
 
+#dict-viclm-simple.orange header span{
+    color: #333;
+}
+
 #dict-viclm-simple.orange div:last-of-type {
    border-color:#f3961c transparent;
 }
@@ -115,6 +118,10 @@
     color:#fff;
     background:#075698;
     background:-webkit-gradient(linear, 0 0, 0 100%, from(#2E88C4), to(#075698));
+}
+
+#dict-viclm-simple.blue header span{
+    color: #ddd;
 }
 
 #dict-viclm-simple.blue div:last-of-type {
@@ -130,6 +137,11 @@
     background:-webkit-gradient(linear, 0 0, 0 100%, from(#F04349), to(#C81E2B));
 }
 
+
+#dict-viclm-simple.red header span{
+    color: #ddd;
+}
+
 #dict-viclm-simple.red div:last-of-type {
    border-color:#C81E2B transparent;
 }
@@ -143,6 +155,11 @@
     background:-webkit-gradient(linear, 0 0, 0 100%, from(#B8DB29), to(#5A8F00));
 }
 
+
+#dict-viclm-simple.green header span{
+    color: #ddd;
+}
+
 #dict-viclm-simple.green div:last-of-type {
    border-color:#5A8F00 transparent;
 }
@@ -153,6 +170,11 @@
 #dict-viclm-simple.black {
     color:#fff;
     background:#333;
+}
+
+
+#dict-viclm-simple.black header span{
+    color: #ddd;
 }
 
 #dict-viclm-simple.black div:last-of-type {

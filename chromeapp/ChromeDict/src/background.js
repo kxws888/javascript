@@ -19,7 +19,7 @@
     chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
         if (!/^chrome/i.test(tab.url) && tab.status !== 'complete') {
             if (true) {
-                //chrome.tabs.executeScript(null, {file: "src/dict.js"});
+                chrome.tabs.executeScript(null, {file: "src/dict.js"});
             }
             else {
                 chrome.pageAction.setIcon({
