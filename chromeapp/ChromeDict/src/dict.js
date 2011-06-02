@@ -371,13 +371,17 @@ dom.Event = {
     }
 };
 
-/***********************************************************************************************************************************************/
+/******************************************************************************************************************************************************************
+*******************************************************************************************************************************************************************
+*******************************************************************************************************************************************************************
+*******************************************************************************************************************************************************************
+******************************************************************************************************************************************************************/
 
 (function () {
 
     /**
     * Dict
-    * @version 20110528.6
+    * @version 20110602.4
     *
     */
     function Dict (args) {
@@ -401,44 +405,49 @@ dom.Event = {
 
     Dict.prototype.dragCaptureSwitch = function () {
         if (this.dblclickProxy) {
-            dom.Event.remove(this.scope, 'click', this.dblclickProxy);
-            dom.Event.remove(this.scope, 'mousedown', this.dragStartProxy);
+            this.scope.removeEventListener('click', this.dblclickProxy, false);
+            this.scope.removeEventListener('mousedown', this.dragStartProxy, false);
             this.dblclickProxy = null;
             this.dragStartProxy = null;
             this.dragCapture = false;
         }
         else {
-            dom.Event.add(this.scope, 'click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this));
-            dom.Event.add(this.scope, 'mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this));
+            this.scope.addEventListener('click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this), false);
+            this.scope.addEventListener('mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this), false);
             this.dragCapture = true;
         }
     };
 
     Dict.prototype.hoverCaptureSwitch = function () {
         if (this.hoverProxy) {
-            dom.Event.remove(this.scope, 'mouseover', this.hoverProxy);
-            //dom.Event.remove(this.scope, 'mouseout', this.hoverProxy);
-            //dom.Event.remove(this.scope, 'mousemove', this.getMousePosProxy)
+            this.scope.removeEventListener('mouseover', this.hoverProxy, false);
             this.hoverProxy = null;
             this.getMousePosProxy = null;
             this.hoverCapture = false;
         }
         else {
-            dom.Event.add(this.scope, 'mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this));
-            //dom.Event.add(this.scope, 'mouseout', this.hoverProxy);
-            //dom.Event.add(this.scope, 'mousemove', this.getMousePosProxy = dom.Tool.proxy(this.getMousePos, this));
+            this.scope.addEventListener('mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this), false);
             this.hoverCapture = true;
         }
     };
 
     Dict.prototype.hotKeyHandler = function (e) {
+        var self = this;
         if (e.keyCode === this.hotKey.hover.keyCode && e.ctrlKey === this.hotKey.hover.ctrlKey
            && e.altKey === this.hotKey.hover.altKey && e.shiftKey === this.hotKey.hover.shiftKey && e.metaKey === this.hotKey.hover.metaKey) {
             this.hoverCaptureSwitch();
+            chrome.extension.sendRequest({
+                hoverCapture: self.hoverCapture,
+                dragCapture: self.dragCapture
+            });
         }
         else if (e.keyCode === this.hotKey.drag.keyCode && e.ctrlKey === this.hotKey.drag.ctrlKey
            && e.altKey === this.hotKey.drag.altKey && e.shiftKey === this.hotKey.drag.shiftKey && e.metaKey === this.hotKey.drag.metaKey) {
             this.dragCaptureSwitch();
+            chrome.extension.sendRequest({
+                hoverCapture: self.hoverCapture,
+                dragCapture: self.dragCapture
+            });
         }
     };
 
@@ -456,6 +465,7 @@ dom.Event = {
         dom.Event.one(document, 'mouseup', dom.Tool.proxy(this.dragEnd, this));
         this.startPos = event.pageX;
         this.endPos = null;
+        this.onDrag = true;
     };
 
     Dict.prototype.dragEnd = function (e) {
@@ -464,11 +474,12 @@ dom.Event = {
             this.endPos = event.pageX;
             this.capture(e);
         }
+        this.onDrag = false;
     };
 
     Dict.prototype.hoverTrigger = function (e) {
-        if (e.type === 'mouseout') {
-            this.ui.style.display = 'none';
+
+        if (this.onDrag) {
             return;
         }
 
@@ -482,8 +493,9 @@ dom.Event = {
         clearTimeout(this.timer);
         this.timer = setTimeout(dom.Tool.proxy(function () {
             if (this.hoverX === e.pageX && this.hoverY === e.pageY) {
-            this.timer = null;
-            this.hoverHanlder(e);}
+                this.timer = null;
+                this.hoverHanlder(e);
+            }
         }, this), 1000);
     };
 
@@ -516,7 +528,6 @@ dom.Event = {
                 elem = elems[i];
                 if (elem.nodeType === 3 && this.rHasWord.test(elem.nodeValue)) {
                     wraper = document.createElement('bdo');
-                    //wraper.className = 'dict-viclm-clear';
                     parent.insertBefore(wraper, elem);
                     wraper.appendChild(elem);
                 }
@@ -526,31 +537,24 @@ dom.Event = {
         this.ui.style.display = 'none';
     };
 
-    Dict.prototype.getMousePos = function (e) {
-        this.x = e.pageX;
-        this.y = e.pageY;
-    };
-
     Dict.prototype.capture = function (e) {
-        if (this.hoverCapture && this.text === null || !this.hoverCapture) {
-            this.text = window.getSelection().toString();
-            this.text = this.text.trim().replace(/^\W+$/, '').replace(/^\d+$/, '');
-            if (this.text.length > 0) {
-                this.x = e.pageX - (!this.endPos ? 0 : (this.endPos - this.startPos) / 2);
-                this.y = e.pageY;
-                this.handle(e);
-            }
+        this.node = null;
+        this.text = window.getSelection().toString();
+        this.text = this.text.trim().replace(/^\W+$/, '').replace(/^\d+$/, '');
+        if (this.text.length > 0) {
+            this.x = e.pageX - (!this.endPos ? 0 : (this.endPos - this.startPos) / 2);
+            this.y = e.pageY;
+            this.fontSize = parseInt(getComputedStyle(e.target, null).getPropertyValue('font-size'), 10) * 1.2;
+            this.handle(e);
         }
     };
 
-    Dict.prototype.handle = function (e) {
+    Dict.prototype.handle = function (e) {/*
         var css = getComputedStyle(e.target, null), lineHeight;
         lineHeight = parseInt(css.getPropertyValue('line-height'));
         if (isNaN(lineHeight)) {
             lineHeight = parseInt(css.getPropertyValue('font-size'), 10) * 1.2;
-        }
-
-        this.fontSize = lineHeight;
+        }*/
     };
 
     Dict.prototype.createUI = function () {};
@@ -638,7 +642,7 @@ dom.Event = {
         var left, top, triangleLeft, triangleClass, clientRectForUI, clientRectForNode;
         clientRectForUI = this.ui.getBoundingClientRect();
 
-        if (this.hoverCapture) {
+        if (this.node) {
             clientRectForNode = this.node.getBoundingClientRect();
             this.x = clientRectForNode.left + document.body.scrollLeft;
             this.y = clientRectForNode.top + document.body.scrollTop;
@@ -646,13 +650,13 @@ dom.Event = {
             top = this.y - clientRectForUI.height;
         }
         else {
-            left = this.x - this.ui.offsetWidth / 2;
-            top = this.y - this.ui.offsetHeight - 8// - this.fontSize / 2;
+            left = this.x - clientRectForUI.width / 2;
+            top = this.y - clientRectForUI.height - 6 - this.fontSize / 2;
         }
 
         if (left - document.body.scrollLeft < 0) {
             left = document.body.scrollLeft;
-            triangleLeft = clientRectForNode.right - 18;
+            triangleLeft = this.node ? clientRectForNode.right - 18 : this.x - document.body.scrollLeft;
         }
         else if (left + clientRectForUI.width > document.body.clientWidth + document.body.scrollLeft) {
             left = document.body.clientWidth + document.body.scrollLeft - clientRectForUI.width;
@@ -663,7 +667,7 @@ dom.Event = {
         }
 
         if (top - document.body.scrollTop < 0) {
-            top = this.hoverCapture ? this.y + clientRectForNode.height : this.y// + this.fontSize / 2;
+            top = this.node ? this.y + clientRectForNode.height : this.y + this.fontSize / 2;
             triangleClass = 'up';
         }
         else {
@@ -678,10 +682,10 @@ dom.Event = {
 
     function DictFull(args) {}
 
-    var dict;
+    var dict, tab;
     //document.addEventListener('DOMContentLoaded', initDict, false);
 
-    chrome.extension.sendRequest({cmd: 'config'}, function(response) {
+    chrome.extension.sendRequest({cmd: 'config'}, function (response) {
         if (response.ui === 'simple') {
             dict = new DictSimple({
                 hotKey: response.hotKey,
@@ -689,12 +693,29 @@ dom.Event = {
             });
         }
         else {
-            dict = new DictFull();
+            //dict = new DictFull();
         }
     });
 
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-        request.cmd ? dict.enable() : dict.disable();
+        if (dict) {
+            if (request.cmd === 'toggleHoverCapture') {
+                dict.hoverCaptureSwitch();
+            }
+            else if (request.cmd === 'toggleDragCapture'){
+                dict.dragCaptureSwitch();
+            }
+            sendResponse({
+                hoverCapture: dict.hoverCapture,
+                dragCapture: dict.dragCapture
+            });
+        }
+        else {
+            sendResponse({
+                hoverCapture: true,
+                dragCapture: true
+            });
+        }
     });
 
 })();

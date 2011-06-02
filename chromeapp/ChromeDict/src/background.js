@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
     if (!localStorage.skin) {
         localStorage.ui = 'simple';// the style of UI [simple, all]
         localStorage.skin = 'orange';// the skin of UI [orange]
@@ -14,23 +14,87 @@
         dictcn: 'http://dict.cn/ws.php?utf8=true&q='
     };
 
-    var status;
+    var status, menuItemIdHover, menuItemIdDrag;
+
+    menuItemIdHover = chrome.contextMenus.create({
+        title: '关闭取词',
+        onclick: contextMenusHanlder
+    });
+    menuItemIdDrag = chrome.contextMenus.create({
+        title: '关闭划词',
+        onclick: contextMenusHanlder
+    });
 
     chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
         if (!/^chrome/i.test(tab.url) && tab.status !== 'complete') {
-            if (true) {
-                chrome.tabs.executeScript(null, {file: "src/dict.js"});
-            }
-            else {
-                chrome.pageAction.setIcon({
-                    tabId: tab.id,
-                    path: chrome.extension.getURL('assets/icon16_grey.png')
-                });
-            }
+            chrome.tabs.executeScript(null, {file: "src/dict.js"});
+            chrome.pageAction.setIcon({
+                tabId: tab.id,
+                path: chrome.extension.getURL('assets/normal.png')
+            });
             chrome.pageAction.show(tabID);
         }
     });
 
+    chrome.tabs.onSelectionChanged.addListener(function (tabId, selectInfo) {
+        chrome.tabs.sendRequest(tabId, {cmd: 'contextMenus'}, function (response) {
+            toggle(response);
+        });
+    });
+
+    function contextMenusHanlder(info, tab) {
+        var cmd = info.menuItemId === menuItemIdHover ? 'toggleHoverCapture' : 'toggleDragCapture';
+        chrome.tabs.getSelected(null, function(tab) {
+            chrome.tabs.sendRequest(tab.id, {cmd: cmd}, function (response) {
+                toggle(response, tab);
+            });
+        });
+    }
+
+    function toggle(response, tab) {
+        var index = [], ico;
+        if (response.hoverCapture) {
+            chrome.contextMenus.update(menuItemIdHover, {
+                title: '关闭取词'
+            });
+            index[index.length] = 'hover';
+        }
+        else {
+            chrome.contextMenus.update(menuItemIdHover, {
+                title: '开启取词'
+            });
+        }
+
+        if (response.dragCapture) {
+            chrome.contextMenus.update(menuItemIdDrag, {
+                title: '关闭划词'
+            });
+            index[index.length] = 'drag';
+        }
+        else {
+            chrome.contextMenus.update(menuItemIdDrag, {
+                title: '开启划词'
+            });
+        }
+
+        if (tab) {
+            if (index.length === 2) {
+                ico = 'assets/normal.png';
+            }
+            else if (index.length === 1) {
+                ico = 'assets/' + index[0] + '.png';
+            }
+            else {
+                ico = 'assets/off.png';
+            }
+
+            chrome.pageAction.setIcon({
+                tabId: tab.id,
+                path: chrome.extension.getURL(ico)
+            });
+        }
+    }
+/*
     chrome.pageAction.onClicked.addListener(dictSwitch);
 
     function dictSwitch() {
@@ -46,11 +110,15 @@
                 chrome.extension.sendRequest({cmd: status});
             });
         }
-    }
+    }*/
 
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
         if (request.cmd === 'config') {
-            sendResponse(getConfig());
+            var configs = getConfig();
+            sendResponse(configs);
+        }
+        else if ('hoverCapture' in request) {
+            toggle(request, sender.tab);
         }
     });
 
@@ -107,8 +175,8 @@
 
                 if (res.result) {
                     res.key = msg.w;
-                    complete = true;
-                    port.postMessage(res);
+                    //complete = true;
+                    //port.postMessage(res);
                 }
             }
         });
@@ -129,7 +197,7 @@
                         }
 
                         if (res.result) {
-                            res.key = msg.w;
+                            res.key = msg.w;console.log(res)
                             port.postMessage(res);
                         }
                         else {
@@ -184,23 +252,35 @@
     }
 
     function dictcn(e) {
-        var xml = e.target.responseXML, json = {}, elems, elem, i, len, item;
+        var xml = e.target.responseText, json = {}, elems, elem, i, len, item, parser, reg = /[a-z]\..+?(?=[a-z]\.)|$/;
         if (xml) {
+            parser = new DOMParser();
+            xml = parser.parseFromString(xml,"text/xml");
             elem = xml.getElementsByTagName('pron')[0];
             json.ps = elem ? elem.firstChild.nodeValue : '';
 
             json.tt = [];
             elem = xml.getElementsByTagName('def')[0];
             if (elem) {
-                elems = elem.firstChild.nodeValue.split(' ');
+                elems = elem.firstChild.nodeValue;
             }
+            
+            while (item = reg.exec(elems)) {
+                console.log(item)
+                json.tt.push({
+                    pos: '',
+                    acceptation: item[0]
+                });
+                elems = elems.substring(item[0].length + 1)
+            }
+        /*
             for (i = 0, len = elems.length ; i < len ; i += 1) {
                 item = elems[i];
                 json.tt.push({
                     pos: '',
-                    acceptation: item
+                    acceptation: elems
                 });
-            }
+            }*/
         }
 
         if (xml && json.tt.length > 0) {
