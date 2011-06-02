@@ -25,17 +25,21 @@
         onclick: contextMenusHanlder
     });
 
-    chrome.tabs.onUpdated.addListener(function(tabID, changeInfo, tab) {
+    chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
         if (!/^chrome/i.test(tab.url) && tab.status !== 'complete') {
             chrome.tabs.executeScript(null, {file: "src/dict.js"});
             chrome.pageAction.setIcon({
-                tabId: tab.id,
+                tabId: tabId,
                 path: chrome.extension.getURL('assets/normal.png')
             });
-            chrome.pageAction.show(tabID);
+            chrome.pageAction.show(tabId);
+            toggle({
+                hoverCapture: true,
+                dragCapture: true
+            });
         }
     });
-
+//direct
     chrome.tabs.onSelectionChanged.addListener(function (tabId, selectInfo) {
         chrome.tabs.sendRequest(tabId, {cmd: 'contextMenus'}, function (response) {
             toggle(response);
@@ -175,8 +179,8 @@
 
                 if (res.result) {
                     res.key = msg.w;
-                    //complete = true;
-                    //port.postMessage(res);
+                    complete = true;
+                    port.postMessage(res);
                 }
             }
         });
@@ -252,7 +256,7 @@
     }
 
     function dictcn(e) {
-        var xml = e.target.responseText, json = {}, elems, elem, i, len, item, parser, reg = /[a-z]\..+?(?=[a-z]\.)|$/;
+        var xml = e.target.responseText, json = {}, elems, elem, i, len, item, parser, reg = /[a-z]\..+?(?=[a-z]\.|$)/gm;
         if (xml) {
             parser = new DOMParser();
             xml = parser.parseFromString(xml,"text/xml");
@@ -262,25 +266,16 @@
             json.tt = [];
             elem = xml.getElementsByTagName('def')[0];
             if (elem) {
-                elems = elem.firstChild.nodeValue;
+                elem = elem.firstChild.nodeValue;
+                elems = elem.match(reg);
+                for (i = 0, len = elems.length ; i < len ; i += 1) {
+                    item = elems[i];
+                    json.tt.push({
+                        pos: '',
+                        acceptation: elems[i]
+                    });
+                }
             }
-            
-            while (item = reg.exec(elems)) {
-                console.log(item)
-                json.tt.push({
-                    pos: '',
-                    acceptation: item[0]
-                });
-                elems = elems.substring(item[0].length + 1)
-            }
-        /*
-            for (i = 0, len = elems.length ; i < len ; i += 1) {
-                item = elems[i];
-                json.tt.push({
-                    pos: '',
-                    acceptation: elems
-                });
-            }*/
         }
 
         if (xml && json.tt.length > 0) {
@@ -294,3 +289,4 @@
     }
 
 })();
+
