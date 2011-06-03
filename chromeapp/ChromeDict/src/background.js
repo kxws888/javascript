@@ -1,12 +1,14 @@
 ﻿(function () {
     if (!localStorage.skin) {
-        localStorage.ui = 'simple';// the style of UI [simple, all]
-        localStorage.skin = 'orange';// the skin of UI [orange]
-        localStorage.hotKeySwitch = '0';//hotKey [1, 0]
+        localStorage.ui = 'simple';
+        localStorage.skin = 'orange';
+        localStorage.hotKeySwitch = '0';
         localStorage.hotKeyHover = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":112}';
         localStorage.hotKeyDrag = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":113}';
-        localStorage.mainDict = 'powerword';// dictionary order
-        localStorage.assistDict = 'dictcn';// a list of available dictionary
+        localStorage.mainDict = 'powerword';
+        localStorage.assistDict = 'dictcn';
+        localStorage.hoverCapture = '1';
+        localStorage.dragCapture = '1';
     }
 
     const DICT_API = {
@@ -34,9 +36,9 @@
             });
             chrome.pageAction.show(tabId);
             toggle({
-                hoverCapture: true,
-                dragCapture: true
-            });
+                hoverCapture: localStorage.hoverCapture === '1' ? true : false,
+                dragCapture: localStorage.dragCapture === '1' ? true : false
+            }, tab);
         }
     });
 //direct
@@ -130,6 +132,8 @@
         var params = {}, hotKeys = {}, dictsAvailable, dictsOrder, dicts = [], i, len;
         params.ui = localStorage.ui;
         params.skin = localStorage.skin;
+        params.hoverCapture = localStorage.hoverCapture === '1' ? true : false;
+        params.dragCapture = localStorage.dragCapture === '1' ? true : false;
         //params.hoverCapture = localStorage.hoverCapture;
 
         if (localStorage.hotKeySwitch === '0') {
@@ -156,10 +160,23 @@
     }
 
     chrome.extension.onConnect.addListener(function(port) {
-        if (port.name === 'query') {
-            port.onMessage.addListener(simpleQuery);
+        if (port.name === 'dict') {
+            port.onMessage.addListener(function (msg, port) {
+                switch (msg.cmd) {
+                case 'query':
+                    simpleQuery(msg, port);
+                    break;
+                case 'setCaptureMode':
+                    setCaptureMode(msg, port);
+                }
+            });
         }
     });
+
+    function setCaptureMode(msg, port) {
+        localStorage.hoverCapture = msg.hoverCapture ? '1' : '0';
+        localStorage.dragCapture = msg.dragCapture ? '1' : '0';
+    };
 
     function simpleQuery(msg, port) {
         var mainDict = localStorage.mainDict, assistDict = localStorage.assistDict, mainAjax, assistAjax, complete = false;
@@ -268,12 +285,14 @@
             if (elem) {
                 elem = elem.firstChild.nodeValue;
                 elems = elem.match(reg);
-                for (i = 0, len = elems.length ; i < len ; i += 1) {
-                    item = elems[i];
-                    json.tt.push({
-                        pos: '',
-                        acceptation: elems[i]
-                    });
+                if (elems) {
+                    for (i = 0, len = elems.length ; i < len ; i += 1) {
+                        item = elems[i];
+                        json.tt.push({
+                            pos: '',
+                            acceptation: elems[i]
+                        });
+                    }
                 }
             }
         }

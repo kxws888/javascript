@@ -1,6 +1,6 @@
 {
-    "name": "Chrome Dict",
-    "version": "1.0",
+    "name": "Hover Translate",
+    "version": "0.1",
     "description": "整合多个词典接口，最好用的chrome字典",
 
     "icons": {
@@ -11,7 +11,7 @@
 
     "page_action": {
         "default_icon": "assets/normal.png",
-        "default_title": "Chrome Dict"
+        "default_title": "Hover Translate"
     },
     "background_page": "pages/background.html",
 

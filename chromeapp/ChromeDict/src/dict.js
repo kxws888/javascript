@@ -373,7 +373,7 @@ dom.Event = {
 
 /******************************************************************************************************************************************************************
 *******************************************************************************************************************************************************************
-*******************************************************************************************************************************************************************
+***************************************************************************** Dict ********************************************************************************
 *******************************************************************************************************************************************************************
 ******************************************************************************************************************************************************************/
 
@@ -385,22 +385,24 @@ dom.Event = {
     *
     */
     function Dict (args) {
-        this.scope = args && args.scope || document.body;
-        this.hoverCapture = args && args.hoverCapture || true;
-        this.dragCapture = args && args.dragCapture || true;
-        this.hotKey = args && args.hotKey || null;
-        this.skin = args && args.skin || 'orange';
+        args = args || {};
+        this.scope = args.scope || document.body;
+        this.hoverCapture = args.hoverCapture;
+        this.dragCapture = args.dragCapture;
+        this.hotKey = args.hotKey || null;
+        this.skin = args.skin || 'orange';
         this.ui = this.createUI();
+        this.port = chrome.extension.connect({name: 'dict'});
 
         this.rHasWord = /\b[a-z]+([-'][a-z]+)*\b/i;
         this.rAllWord = /\b[a-z]+([-'][a-z]+)*\b/gmi;
         this.rSingleWord = /^[a-z]+([-'][a-z]+)*$/i;
 
-        if (this.hotKey) {
-            this.scope.addEventListener('keyup', this.hoverHanlderProxy = dom.Tool.proxy(this.hotKeyHandler, this), false);
-        }
-        this.dragCaptureSwitch();
-        this.hoverCaptureSwitch();
+        this.port.onMessage.addListener(dom.Tool.proxy(this.show, this));
+
+        this.hotKey && this.scope.addEventListener('keyup', this.hoverHanlderProxy = dom.Tool.proxy(this.hotKeyHandler, this), false);
+        this.dragCapture && this.dragCaptureSwitch();
+        this.hoverCapture && this.hoverCaptureSwitch();
     };
 
     Dict.prototype.dragCaptureSwitch = function () {
@@ -416,6 +418,7 @@ dom.Event = {
             this.scope.addEventListener('mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this), false);
             this.dragCapture = true;
         }
+        this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: this.hoverCapture});
     };
 
     Dict.prototype.hoverCaptureSwitch = function () {
@@ -429,6 +432,7 @@ dom.Event = {
             this.scope.addEventListener('mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this), false);
             this.hoverCapture = true;
         }
+        this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: this.hoverCapture});
     };
 
     Dict.prototype.hotKeyHandler = function (e) {
@@ -565,9 +569,6 @@ dom.Event = {
 
     function DictSimple(args) {
         this.super.constructor.call(this, args);
-        this.port = chrome.extension.connect({name: "query"});
-
-        this.port.onMessage.addListener(dom.Tool.proxy(this.show, this));
 
         this.uiKey = this.ui.querySelector('h1');
         this.uiPs = this.ui.querySelector('header span');
@@ -595,13 +596,22 @@ dom.Event = {
 
         document.body.appendChild(aside);
         aside.style.display = 'none';
+        aside.addEventListener('mousedown', this.eventClear, false);
+        aside.addEventListener('mouseover', this.eventClear, false);
+        aside.addEventListener('mouseup', this.eventClear, false);
+        aside.addEventListener('click', this.eventClear, false);
         return aside;
+    };
+
+    DictSimple.prototype.eventClear = function (e) {
+        e.stopPropagation();
     };
 
     DictSimple.prototype.handle = function (e) {
         var data = {};
         this.super.handle.call(this, e);
         if (this.text.length > 0) {
+            data['cmd'] = 'query';
             data['w'] = this.text;
             this.port.postMessage(data);
         }
@@ -685,11 +695,13 @@ dom.Event = {
     var dict, tab;
     //document.addEventListener('DOMContentLoaded', initDict, false);
 
-    chrome.extension.sendRequest({cmd: 'config'}, function (response) {
+    chrome.extension.sendRequest({cmd: 'config'}, function (response) {console.log(response)
         if (response.ui === 'simple') {
             dict = new DictSimple({
                 hotKey: response.hotKey,
-                skin: response.skin
+                skin: response.skin,
+                hoverCapture: response.hoverCapture,
+                dragCapture: response.dragCapture
             });
         }
         else {
