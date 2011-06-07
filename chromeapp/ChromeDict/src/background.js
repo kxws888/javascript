@@ -2,9 +2,9 @@
     if (!localStorage.skin) {
         localStorage.ui = 'simple';
         localStorage.skin = 'orange';
-        localStorage.hotKeySwitch = '0';
-        localStorage.hotKeyHover = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":112}';
-        localStorage.hotKeyDrag = '{"ctrlKey":true,"altKey":false,"shiftKey":false,"metaKey":false,"keyCode":113}';
+        localStorage.hotKeySwitch = '1';
+        localStorage.hotKeyHover = '{"ctrlKey":false,"altKey":true,"shiftKey":false,"metaKey":false,"keyCode":112}';
+        localStorage.hotKeyDrag = '{"ctrlKey":false,"altKey":true,"shiftKey":false,"metaKey":false,"keyCode":113}';
         localStorage.mainDict = 'powerword';
         localStorage.assistDict = 'dictcn';
         localStorage.hoverCapture = '1';
@@ -54,7 +54,7 @@
     });
 
     chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-        if (!/^chrome/i.test(tab.url) && tab.status !== 'complete') {
+        if (tab.url.indexOf('https://chrome.google.com/webstore') === -1 && tab.status !== 'complete') {
             chrome.tabs.executeScript(null, {file: "src/dict.js"});
             chrome.pageAction.setIcon({
                 tabId: tabId,
@@ -146,8 +146,7 @@
 
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
         if (request.cmd === 'config') {
-            var configs = getConfig();
-            sendResponse(configs);
+            sendResponse(getConfig());
         }
         else if ('hoverCapture' in request) {
             toggle(request, sender.tab);

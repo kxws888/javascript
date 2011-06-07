@@ -513,18 +513,22 @@ dom.Event = {
             elem = elems[0];
             if (elem.nodeType === 3) {
                 var text = elem.nodeValue;
-                if (this.rSingleWord.test(text) && !/^h\d$/i.test(parent.tagName)) {
+                if (this.rSingleWord.test(text) && parent.resolve) {
                     this.text = elem.nodeValue;
                     this.handle(e);
                     this.node = parent;
                     this.timer = undefined;
                     return;
                 }
-                else if (!parent.resolve && this.rHasWord.test(text)) {
+                else if (this.rHasWord.test(text)) {
                     text = text.replace(this.rAllWord, function (str) {
                         return '<bdo>' + str + '</bdo>';
                     });
                     parent.innerHTML = text;
+                    elems = parent.getElementsByTagName('bdo');
+                    for (i = 0, len = elems.length ; i < len ; i += 1) {
+                        elems[i].resolve = true;
+                    }
                 }
             }
         }
