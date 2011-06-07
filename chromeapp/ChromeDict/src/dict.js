@@ -502,7 +502,7 @@ dom.Event = {
                 this.timer = null;
                 this.hoverHanlder(e);
             }
-        }, this), 1000);
+        }, this), 500);
     };
 
     Dict.prototype.hoverHanlder = function (e) {
@@ -517,8 +517,6 @@ dom.Event = {
                     this.text = elem.nodeValue;
                     this.handle(e);
                     this.node = parent;
-                    this.timer = undefined;
-                    return;
                 }
                 else if (this.rHasWord.test(text)) {
                     text = text.replace(this.rAllWord, function (str) {
@@ -543,6 +541,7 @@ dom.Event = {
                 }
             }
         }
+        this.timer = undefined;
         parent.resolve = true;
         this.ui.style.display = 'none';
     };
@@ -559,12 +558,13 @@ dom.Event = {
         }
     };
 
-    Dict.prototype.handle = function (e) {/*
-        var css = getComputedStyle(e.target, null), lineHeight;
-        lineHeight = parseInt(css.getPropertyValue('line-height'));
-        if (isNaN(lineHeight)) {
-            lineHeight = parseInt(css.getPropertyValue('font-size'), 10) * 1.2;
-        }*/
+    Dict.prototype.handle = function (e) {
+        var data = {};
+        if (this.text.length > 0) {
+            data['cmd'] = 'query';
+            data['w'] = this.text;
+            this.port.postMessage(data);
+        }
     };
 
     Dict.prototype.createUI = function () {};
@@ -613,16 +613,6 @@ dom.Event = {
         e.stopPropagation();
     };
 
-    DictSimple.prototype.handle = function (e) {
-        var data = {};
-        this.super.handle.call(this, e);
-        if (this.text.length > 0) {
-            data['cmd'] = 'query';
-            data['w'] = this.text;
-            this.port.postMessage(data);
-        }
-    };
-
     DictSimple.prototype.show = function (data) {
         var i, len, item, ul, li;
         if (data.key === this.text) {
@@ -639,6 +629,7 @@ dom.Event = {
                 }
             }
             else {
+                this.uiPs.innerHTML = '';
                 this.uiTrans.innerHTML = '没有翻译结果';
             }
 
@@ -690,10 +681,7 @@ dom.Event = {
         this.uiTriangle.className = triangleClass;
     };
 
-
-    function DictFull(args) {}
-
-    var dict, tab;
+    var dict;
     //document.addEventListener('DOMContentLoaded', initDict, false);
 
     chrome.extension.sendRequest({cmd: 'config'}, function (response) {
@@ -704,9 +692,6 @@ dom.Event = {
                 hoverCapture: response.hoverCapture,
                 dragCapture: response.dragCapture
             });
-        }
-        else {
-            //dict = new DictFull();
         }
     });
 
