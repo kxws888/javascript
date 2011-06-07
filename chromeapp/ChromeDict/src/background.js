@@ -8,7 +8,7 @@
         localStorage.mainDict = 'powerword';
         localStorage.assistDict = 'dictcn';
         localStorage.hoverCapture = '1';
-        localStorage.dragCapture = '1';
+        localStorage.dragCapture = '0';
     }
 
     const DICT_API = {
@@ -16,7 +16,33 @@
         dictcn: 'http://dict.cn/ws.php?utf8=true&q='
     };
 
-    var status, menuItemIdHover, menuItemIdDrag;
+    const DICT_QUERY = {
+        powerword: Powerword,
+        dictcn: Dictcn
+    };
+
+    var database, dbRequest = webkitIndexedDB.open('dict'), status, menuItemIdHover, menuItemIdDrag;
+
+    dbRequest.onerror = function(e) {
+        console.log('indexdb open error');
+    };
+
+    dbRequest.onsuccess = function(e) {
+        database = e.target.result;
+        if (database.version != '1.0') {
+            var request = database.setVersion("1.0");
+
+            request.onerror = function (event) {
+                console.log('setVersion error');
+            };
+
+            request.onsuccess = function (e) {
+                var powerword, dictcn;
+                powerword = database.createObjectStore('powerword', {keyPath: 'key'});
+                dictcn = database.createObjectStore('dictcn', {keyPath: 'key'});
+            };
+        }
+    };
 
     menuItemIdHover = chrome.contextMenus.create({
         title: '关闭取词',
@@ -163,11 +189,12 @@
         if (port.name === 'dict') {
             port.onMessage.addListener(function (msg, port) {
                 switch (msg.cmd) {
+                case 'setCaptureMode':
+                    setCaptureMode(msg, port);
+                    break;
                 case 'query':
                     simpleQuery(msg, port);
                     break;
-                case 'setCaptureMode':
-                    setCaptureMode(msg, port);
                 }
             });
         }
@@ -179,73 +206,100 @@
     };
 
     function simpleQuery(msg, port) {
-        var mainDict = localStorage.mainDict, assistDict = localStorage.assistDict, mainAjax, assistAjax, complete = false;
-        mainAjax = ajax({
-            url: DICT_API[mainDict],
+        var mainDict = localStorage.mainDict, assistDict = localStorage.assistDict, assistRes, status = 'init';
+        new DICT_QUERY[mainDict]({
             word: msg.w,
-            load: function (e) {
-                var res;
-                switch (mainDict) {
-                case 'powerword':
-                    res = powerword(e);
-                    break;
-                case 'dictcn':
-                    res = dictcn(e);
-                    break;
-                }
-
-                if (res.result) {
-                    res.key = msg.w;
-                    complete = true;
-                    port.postMessage(res);
+            load: function (json) {
+                status = 'complete';
+                port.postMessage(json);
+            },
+            error: function (word) {
+                status = 'error';
+                if (typeof assistRes !== 'undefined') {
+                    port.postMessage(assistRes);
                 }
             }
-        });
-        if (assistDict) {
-            assistAjax = ajax({
-                url: DICT_API[assistDict],
-                word: msg.w,
-                load: function (e) {
-                    if (!complete) {
-                        var res;
-                        switch (assistDict) {
-                        case 'powerword':
-                            res = powerword(e);
-                            break;
-                        case 'dictcn':
-                            res = dictcn(e);
-                            break;
-                        }
+        }).query();
 
-                        if (res.result) {
-                            res.key = msg.w;console.log(res)
-                            port.postMessage(res);
-                        }
-                        else {
-                            res.key = msg.w;
-                            port.postMessage(res);
-                        }
-                    }
-                },
-                error: function (e) {
-                    if (!complete) {
-                        port.postMessage({key: msg.w, result:false});
-                    }
+        new DICT_QUERY[assistDict]({
+            word: msg.w,
+            load: function (json) {
+                if (status === 'error') {
+                    port.postMessage(json);
                 }
-            });
-        }
+                assistRes = json;
+            },
+            error: function (word) {
+                if (status === 'error') {
+                    port.postMessage({key: msg.w});
+                }
+                assistRes = {key: msg.w};
+            }
+        }).query();
     }
 
-    function ajax(args) {
+    /*
+    * Query
+    */
+
+    function Query(args) {
+        args = args || {};
+        this.word = args.word;
+        this.load = args.load;
+        this.error = args.error;
+    }
+
+    Query.prototype.query = function () {
+        var objectStore = database.transaction([this.model], webkitIDBTransaction.READ).objectStore(this.model), request;
+        request = objectStore.get(this.word);
+        request.addEventListener('success', dom.Tool.proxy(function (e) {
+            if (typeof e.target.result === 'undefined') {
+                this.ajax();
+            }
+            else {
+                this.load(e.target.result);
+            }
+        }, this), false);
+        request.addEventListener('error', dom.Tool.proxy(this.ajax, this), false);
+    };
+
+    Query.prototype.updateDB = function (data) {
+        var objectStore = database.transaction([this.model], webkitIDBTransaction.WRITE).objectStore(this.model), request;
+        request = objectStore.add(data);
+    };
+
+    Query.prototype.ajax = function (word) {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', args.url + args.word, true);
-        xhr.onload = args.load;
-        xhr.onerror = args.error;
+        xhr.open('GET', this.api + this.word, true);
+        xhr.addEventListener('load', dom.Tool.proxy(this.ajaxLoad, this), false);
+        xhr.addEventListener('error', dom.Tool.proxy(this.ajaxError, this), false);
         xhr.send(null);
+    };
+
+    Query.prototype.ajaxLoad = function (e) {
+        //override
+    };
+
+    Query.prototype.ajaxError = function (e) {
+        this.error(this.word);
+    };
+
+
+
+
+    function Powerword(args) {
+
+        this.api = DICT_API.powerword;
+        this.model = 'powerword';
+
+        this.super.constructor.call(this, args);
     }
 
-    function powerword(e) {
+    dom.Tool.extend(Powerword, Query);
+
+    Powerword.prototype.ajaxLoad = function (e) {
         var xml = e.target.responseXML, json = {}, elems, elem, i, len, item;
+        json.key = this.word;
         if (xml) {
             elems = xml.getElementsByTagName('ps')[0];
             json.ps = elems ? elems.firstChild.nodeValue : '';
@@ -262,17 +316,26 @@
             }
         }
 
-        if (xml && json.tt.length > 0) {
-            json.result = true;
+        if (json.tt && json.tt.length > 0) {
+            this.load(json);
+            this.updateDB(json);
         }
         else {
-            json.result = false;
+            this.ajaxError();
         }
+    };
 
-        return json;
+
+    function Dictcn(args) {
+
+        this.api = DICT_API.dictcn;
+        this.model = 'dictcn';
+        this.super.constructor.call(this, args);
     }
 
-    function dictcn(e) {
+    dom.Tool.extend(Dictcn, Query);
+
+    Dictcn.prototype.ajaxLoad = function (e) {
         var xml = e.target.responseText, json = {}, elems, elem, i, len, item, parser, reg = /[a-z]\..+?(?=[a-z]\.|$)/gm;
         if (xml) {
             parser = new DOMParser();
@@ -297,15 +360,14 @@
             }
         }
 
-        if (xml && json.tt.length > 0) {
-            json.result = true;
+        if (json.tt && json.tt.length > 0) {
+            json.key = this.word;
+            this.load(json);
+            this.updateDB(json);
         }
         else {
-            json.result = false;
+            this.ajaxError();
         }
-
-        return json;
-    }
+    };
 
 })();
-

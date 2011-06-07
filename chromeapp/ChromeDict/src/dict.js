@@ -412,6 +412,7 @@ dom.Event = {
             this.dblclickProxy = null;
             this.dragStartProxy = null;
             this.dragCapture = false;
+            this.ui.style.display = 'none';
         }
         else {
             this.scope.addEventListener('click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this), false);
@@ -427,6 +428,7 @@ dom.Event = {
             this.hoverProxy = null;
             this.getMousePosProxy = null;
             this.hoverCapture = false;
+            this.ui.style.display = 'none';
         }
         else {
             this.scope.addEventListener('mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this), false);
@@ -459,7 +461,7 @@ dom.Event = {
         if (e.detail > 1) {
             this.capture(e);
         }
-        else if (!this.hoverCapture && this.endPos === null) {
+        else if (this.endPos === null) {
             this.ui.style.display = 'none';
         }
     };
@@ -621,24 +623,19 @@ dom.Event = {
         var i, len, item, ul, li;
         if (data.key === this.text) {
             this.uiKey.innerHTML = this.text;
-            if (data.result) {
-                if ('tt' in data) {
-                    this.uiPs.innerHTML = data.ps === '' ? '' : '[' + data.ps + ']';
-                    this.uiTrans.innerHTML = '';
+            if ('tt' in data) {
+                this.uiPs.innerHTML = data.ps === '' ? '' : '[' + data.ps + ']';
+                this.uiTrans.innerHTML = '';
 
-                    for (i = 0, len = data.tt.length ; i < len ; i += 1) {
-                        item = data.tt[i];
-                        li = document.createElement('li');
-                        li.innerHTML = item.pos + ' ' + item.acceptation;
-                        this.uiTrans.appendChild(li);
-                    }
-                }
-                else {
-                    this.uiTrans.innerHTML = '没有翻译结果';
+                for (i = 0, len = data.tt.length ; i < len ; i += 1) {
+                    item = data.tt[i];
+                    li = document.createElement('li');
+                    li.innerHTML = item.pos + ' ' + item.acceptation;
+                    this.uiTrans.appendChild(li);
                 }
             }
             else {
-                this.uiTrans.innerHTML = '翻译出错';
+                this.uiTrans.innerHTML = '没有翻译结果';
             }
 
             this.ui.style.display = '';
@@ -695,7 +692,7 @@ dom.Event = {
     var dict, tab;
     //document.addEventListener('DOMContentLoaded', initDict, false);
 
-    chrome.extension.sendRequest({cmd: 'config'}, function (response) {console.log(response)
+    chrome.extension.sendRequest({cmd: 'config'}, function (response) {
         if (response.ui === 'simple') {
             dict = new DictSimple({
                 hotKey: response.hotKey,
