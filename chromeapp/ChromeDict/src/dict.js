@@ -499,14 +499,15 @@ dom.Event = {
         clearTimeout(this.timer);
         this.timer = setTimeout(dom.Tool.proxy(function () {
             if (this.hoverX === e.pageX && this.hoverY === e.pageY) {
-                this.timer = null;
+                //this.timer = null;
                 this.hoverHanlder(e);
             }
-        }, this), 500);
+        }, this), 250);
     };
 
     Dict.prototype.hoverHanlder = function (e) {
         this.text = null;
+        this.timer = undefined;
         var parent = e.target, elems, wraper, i, len, elem, next;
         elems = parent.childNodes;
         if (elems.length === 1) {
@@ -522,6 +523,7 @@ dom.Event = {
                     text = text.replace(this.rAllWord, function (str) {
                         return '<bdo>' + str + '</bdo>';
                     });
+                    this.timer = null;
                     parent.innerHTML = text;
                     elems = parent.getElementsByTagName('bdo');
                     for (i = 0, len = elems.length ; i < len ; i += 1) {
@@ -532,6 +534,7 @@ dom.Event = {
         }
         else if (!parent.resolve) {
             elems = Array.prototype.slice.call(elems, 0);
+            this.timer = null;
             for (i = 0, len = elems.length ; i < len ; i += 1) {
                 elem = elems[i];
                 if (elem.nodeType === 3 && this.rHasWord.test(elem.nodeValue)) {
@@ -541,7 +544,6 @@ dom.Event = {
                 }
             }
         }
-        this.timer = undefined;
         parent.resolve = true;
         this.ui.style.display = 'none';
     };

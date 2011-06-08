@@ -54,7 +54,7 @@
     });
 
     chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-        if (tab.url.indexOf('https://chrome.google.com/webstore') === -1 && tab.status !== 'complete') {
+        if (!/^chrome/.test(tab.url) && tab.url.indexOf('https://chrome.google.com/webstore') === -1 && tab.status !== 'complete') {
             chrome.tabs.executeScript(null, {file: "src/dict.js"});
             chrome.pageAction.setIcon({
                 tabId: tabId,
