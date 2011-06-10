@@ -1,15 +1,16 @@
 (function ($) {
-/**
+    'use strict';
+    /**
      * @name hg.Lightbox
      * @author nhnst liuming
      * @description Lightbox is simple script to display content in a modal dialog, pass the content for pupup to the "box" arguments, and config other arguments to meet specific needs
-     * @version 1.1 20110415
+     * @version 20110527.5
      * @param {Var} box A cssQuery string, dom object or jQuery object which is for operation
      * @param {Boolean} draggable Anable drag
      * @param {Boolean} exclusive Attach a big enough background to make all the content except the lightbox non-interactive
      * @param {String} maskClass When exclusive is set to true, specify a class for style in CSS
     */
-    $.Class("hg.Lightbox", {
+    $.Class("Lightbox", {
         init : function (args) {
             this.box = '';
             this.draggable = true;
@@ -22,29 +23,48 @@
                 throw 'must specify an object';
             }
             this.box = $(this.box);
-            this.box.hide();
-            this.width = this.box.width();
-            this.height = this.box.height();
-            this.box.css('z-index', '100');
-            this.box.css('position', 'absolute');
+            this.box.css('position', 'fixed');
 
             if (this.exclusive) {
                 this.mask = $('<div>');
                 this.mask.addClass(this.maskClass);
                 this.mask.css({
-                    position: 'absolute',
+                    position: 'fixed',
                     left: 0,
                     top: 0,
                     width: '100%',
                     height: $(document).height(),
                     display: 'none',
-                    zIndex: '99'
+                    zIndex: '99999'
                 });
+                try {
+                    this.mask.css('backgroundColor', 'rgba(0,0,0,0.7)');
+                }
+                catch (e) {
+                    this.mask.css({
+                        background: 'transparent',
+                        filter: 'progid:DXImageTransform.Microsoft.gradient(startColorstr=#70000000,endColorstr=#70000000)',
+                        zoom: 1
+                    })
+                }
+                this.mask.append(this.box);
                 this.mask.appendTo('body');
+                this.box.show();
+            }
+            else {
+                this.box.css('z-index', '99999');
+                this.box.hide();
             }
 
             if (this.draggable) {
                 this.box.bind('mousedown', $.proxy(this.dragInit, this));
+                this.box.find('a').each(function (index, elem) {
+                    $(elem).bind('mousedown', function (e) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        return false;
+                    })
+                });
                 this.x = 0;
                 this.y = 0;
             }
@@ -52,51 +72,52 @@
 
         show : function (pos) {
 
+            if (this.exclusive) {
+                this.mask.show();
+            }
+            else {
+                this.box.show();
+            }
+
             if (typeof pos === 'undefined') {
-                this.left = this.left ? this.left : ($(window).width() - this.width) / 2;
-                this.top = this.top ? this.top : ($(window).height() - this.height) / 2;
+                this.left = ($(window).width() - this.box.width()) / 2;
+                this.top = ($(window).height() - this.box.height()) / 2;
             }
             else {
                 this.left = pos[0];
                 this.top = pos[1];
             }
-            this.scrollLeft = $(document).scrollLeft();
-            this.scrollTop = $(document).scrollTop();
 
-            this.box.css('left', this.left + this.scrollLeft);
-            this.box.css('top', this.top + this.scrollTop);
-            if (this.exclusive) {
-                this.mask.show();
-            }
-            this.box.show();
+            //this.scrollLeft = $(document).scrollLeft();
+            //this.scrollTop = $(document).scrollTop();
 
+            this.box.css('left', this.left);
+            this.box.css('top', this.top);
+
+/*
             $(window).bind('scroll.lightbox', $.proxy(function () {
                 this.scrollLeft = $(document).scrollLeft();
                 this.scrollTop = $(document).scrollTop();
                 this.box.css('left', this.left + this.scrollLeft);
                 this.box.css('top', this.top + this.scrollTop);
             }, this));
-
+*/
             $(window).bind('resize.lightbox', $.proxy(function (e) {
-                this.left = ($(window).width() - this.width) / 2;
-                this.top = ($(window).height() - this.height) / 2;
-                this.box.css('left', this.left + this.scrollLeft);
-                this.box.css('top', this.top + this.scrollTop);
+                this.left = ($(window).width() - this.box.width()) / 2;
+                this.top = ($(window).height() - this.box.height()) / 2;
+                this.box.css('left', this.left);
+                this.box.css('top', this.top);
             }, this));
         },
 
-        hide : function (pos) {
+        hide : function () {
             if (this.exclusive) {
                 this.mask.hide();
             }
-            if (typeof pos !== 'undefined') {
-                this.box.css({
-                    left: pos[0],
-                    top: pos[1]
-                });
+            else {
+                this.box.hide();
             }
-            this.box.hide();
-            $(window).unbind('.lightbox');
+            //$(window).unbind('.lightbox');
         },
 
         dragInit : function (e) {

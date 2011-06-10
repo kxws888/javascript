@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ImagePreloader Demo</title>
+<script type="text/javascript" src="ImagePreloader.js"></script>
+<style type="text/css">
+    div {float: left; width: 200px; height: 150px; margin: 10px 0 0 10px; border: 1px solid #bfbfbf;}
+    div.loading {background: url(spider.gif) center center no-repeat}
+    img {width: 200px; height: 150px;}
+</style>
+</head>
+<body>
+<script type="text/javascript">
+var images = ["http://us.blizzard.com/diablo3/_images/wallpapers/wall1/wall1-800x600.jpg"];
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall2/wall2-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall3/wall3-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall4/wall4-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall5/wall5-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall6/wall6-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall7/wall7-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall8/wall8-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall9/wall9-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall10/wall10-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall11/wall11-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall12/wall12-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall13/wall13-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall14/wall14-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall15/wall15-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall16/wall6-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall17/wall17-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall18/wall18-800x600.jpg");
+images.push("http://us.blizzard.com/diablo3/_images/wallpapers/wall19/wall19-800x600.jpg");
+for (var i = 0, len = images.length ; i < len ; i += 1) {
+    var div = document.createElement('div');
+    div.id = 'image' + i;
+    div.className = 'loading';
+    document.body.appendChild(div);
+}
+
+new ImagePreloader(images, function (image, images, nload) {
+    if (image.bLoaded) {
+        var img = document.createElement('img'), div;
+        img.src = image.src;
+        div = document.getElementById('image' + image.nIndex);
+        div.className = '';
+        div.appendChild(img);
+    }
+})
+
+</script>
+</body>
+</html>

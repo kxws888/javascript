@@ -1,44 +1,52 @@
 (function ($) {
     'use strict';
     /**
-    * @name hg.Slideshow
+    * name hg.Slideshow
     * @author nhnst liuming
-    * @version 1.2 20110421
+    * @version 20110609.4
     */
     $.Class("hg.Slideshow", {
-        init : function (args) {
+        init: function () {
             this.gap = 5000;
             this.length = 5;
             this.loop = true;
             this.step = 1;
+
+            $.extend(this, arguments[0]);
+
             this.count = 1;
             this.timer = null;
-
-            $.extend(this, args);
         },
 
-        start : function () {
+        start: function () {
             var self = this;
             if (!this.timer) {
                 this.timer = setInterval(function () {
-                    self.next.call(self);
+                    self.next();
                 }, self.gap);
             }
         },
 
-        stop : function () {
+        stop: function () {
             clearInterval(this.timer);
             this.timer = null;
         },
 
-        goto : function (num) {
-            if (this.count === num) {
-                return false;
+        moveTo: function (index) {
+            if (this.count !== index) {
+                if (index < 0 ) {
+                    index += this.length + 1;
+                }
+                if (index > this.length) {
+                    index = this.length;
+                }
+                this.count = index;
+                return index;
             }
-            this.count = num;
+            return -1;
         },
 
-        prev : function () {
+        prev: function () {
             var target = this.count - this.step;
             if (target < 1) {
                 if (this.loop) {
@@ -46,13 +54,13 @@
                 }
                 else {
                     target = 1;
-                    return false;
+                    return -1;
                 }
             }
-            this.goto(target);
+            return this.moveTo(target);
         },
 
-        next : function () {
+        next: function () {
             var target = this.count + this.step;
             if (target > this.length) {
                 if (this.loop) {
@@ -60,65 +68,189 @@
                 }
                 else {
                     target = this.length;
-                    return false;
+                    return -1;
                 }
             }
-            this.goto(target);
+            return this.moveTo(target);
         }
     });
 
-    $.Class.extend(hg.Slideshow, 'hg.SlideshowGW', {
-        init : function (args) {
+})(jQuery);
+
+/******************************************************************************************************************************************************************
+*******************************************************************************************************************************************************************
+************************************************************************ DIVISION *********************************************************************************
+*******************************************************************************************************************************************************************
+******************************************************************************************************************************************************************/
+(function ($) {
+    'use strict';
+    /**
+    * hg.SlideshowF for fade effect
+    * @author nhnst liuming
+    * @version 20110609.4
+    */
+    $.Class.extend(hg.Slideshow, 'hg.SlideshowF', {
+        init: function () {
 
             this.stage = null;
             this.slides = null;
+            this.btnIndex = null;
+            this.btnPrev = null;
+            this.btnNext = null;
+
+            $.extend(this, arguments[0]);
+
+            var self = this, stage;
+
+            stage = $(this.stage).eq(0);
+            this.slides = $(this.slides, stage);
+
+            if (this.length === 'auto') {
+                this.length = this.slides.length;
+            }
+
+            if (this.btnIndex) {
+                this.btnIndex = stage.find(this.btnIndex);
+                this.btnIndex.each(function (index, elem) {
+                    var i = index + 1;
+                    $(elem).bind('click', function () {
+                        self.moveTo(i);
+                    });
+                });
+            }
+
+            if (this.btnPrev) {
+                stage.find(this.btnPrev).bind('click', function (e) {
+                    self.prev();
+                    e.preventDefault();
+                    return false;
+                });
+            }
+
+            if (this.btnNext) {
+                stage.find(this.btnNext).bind('click', function (e) {
+                    self.next();
+                    e.preventDefault();
+                    return false;
+                });
+            }
+        },
+
+        moveTo: function (index) {
+            var bak = this.count, res = this.$super.moveTo(index);
+            if (res !== -1) {
+                this.slides.eq(res - 1).stop(true, true).fadeIn(500);
+                this.slides.eq(bak - 1).stop(true, true).fadeOut(500);
+                if (this.btnIndex) {
+                    this.btnIndex.eq(res - 1).addClass('active');
+                    this.btnIndex.eq(bak - 1).removeClass('active');
+                }
+            }
+        }
+    });
+})(jQuery);
+
+/******************************************************************************************************************************************************************
+*******************************************************************************************************************************************************************
+************************************************************************ DIVISION *********************************************************************************
+*******************************************************************************************************************************************************************
+******************************************************************************************************************************************************************/
+(function ($) {
+    'use strict';
+    /**
+    * hg.SlideshowS for slide effect
+    * @author nhnst liuming
+    * @version 20110609.4
+    */
+    $.Class.extend(hg.Slideshow, 'hg.SlideshowS', {
+        init: function () {
+
+            this.stage = null;
+            this.slides = null;
+            this.btnIndex = null;
             this.btnPrev = null;
             this.btnNext = null;
             this.unit = null;
             this.direction = 'horizontal';
 
-            $.extend(this, args);
-            var self = this, stage, btnPrev, btnNext;
+            $.extend(this, arguments[0]);
+
+            var self = this, stage;
 
             stage = $(this.stage).eq(0);
-            this.slides = $(this.slides, stage);
-            btnPrev = stage.find(this.btnPrev);
-            btnNext = stage.find(this.btnNext);
+            this.slides = $(this.slides, stage).parent();
             this.prop = this.direction === 'horizontal' ? 'left' : 'top';
-            this.lock = false;
+
+            if (this.length === 'auto') {
+                this.length = this.slides.children().length;
+            }
 
             this.slides.css(this.prop, 0);
 
-            btnPrev.click(function (e) {
-                self.prev();
-                e.preventDefault();
-                return false;
-            });
-
-            btnNext.click(function (e) {
-                self.next();
-                e.preventDefault();
-                return false;
-            });
-
-            this.slides.find('div.conts p.img script').remove();
-        },
-
-        goto : function (num) {
-            this._goto(num);
-            this.slides.css(this.prop, (1 - num) * this.unit);
-        },
-
-        _goto : function (num) {
-            if (this.count === num) {
-                return false;
+            if (this.btnIndex) {
+                this.btnIndex = stage.find(this.btnIndex);
+                this.btnIndex.each(function (index, elem) {
+                    var i = index + 1;
+                    $(elem).click(function () {
+                        self.slideTo(i);
+                    });
+                });
             }
-            this.count = num;
+
+            if (this.btnPrev) {
+                stage.find(this.btnPrev).click(function (e) {
+                    if (self.length > 1) {
+                        self.prev();
+                    }
+                    e.preventDefault();
+                    return false;
+                });
+            }
+
+            if (this.btnNext) {
+                stage.find(this.btnNext).click(function (e) {
+                    if (self.length > 1) {
+                        self.next();
+                    }
+                    e.preventDefault();
+                    return false;
+                });
+            }
         },
 
-        prev : function () {
+        reset : function (index) {
+            this.count = index;
+            this.slides.css(this.prop, -this.unit * (index - 1));
+        },
+
+        moveTo : function (index) {
+            if (this.btnIndex) {
+                this.btnIndex.eq(this.count - 1).removeClass('active');
+                this.btnIndex.eq(index - 1).addClass('active');
+            }
+            if (this.count !== index) {
+                if (index < 0 ) {
+                    index += this.length + 1;
+                }
+                if (index > this.length) {
+                    index = this.length;
+                }
+                this.count = index;
+            }
+        },
+
+        slideTo: function (index) {
+            if (index > this.count) {
+                this.next(index - this.count);
+            }
+            else if (index < this.count) {
+                this.prev(index - this.count);
+            }
+        },
+
+        prev : function (step) {
             this.slides.stop(true, true);
-            var target = this.count - this.step, self = this,  i, props = {};
+            var target = this.count - (step || this.step), self = this,  i, props = {};
             if (target < 1) {
                 if (this.loop) {
                     target = this.length + target;
@@ -135,7 +267,7 @@
                 }
             }
 
-            this._goto(target);
+            this.moveTo(target);
             props[this.prop] = '+=' + this.unit * this.step;
             this.slides.animate(props, 500, function () {
                 if (typeof i !== 'undefined') {
@@ -148,9 +280,9 @@
             });
         },
 
-        next : function () {
+        next : function (step) {
             this.slides.stop(true, true);
-            var target = this.count + this.step, self = this,  i, props = {};
+            var target = this.count + (step || this.step), self = this,  i, props = {};
             if (target > this.length) {
                 if (this.loop) {
                     target = target - this.length;
@@ -167,7 +299,7 @@
                 }
             }
 
-            this._goto(target);
+            this.moveTo(target);
             props[this.prop] = '-=' + this.unit * this.step;
             this.slides.animate(props, 500, function () {
                 if (typeof i !== 'undefined') {
@@ -178,6 +310,92 @@
                     }
                 }
             });
+        }
+    });
+})(jQuery);
+
+/******************************************************************************************************************************************************************
+*******************************************************************************************************************************************************************
+************************************************************************ DIVISION *********************************************************************************
+*******************************************************************************************************************************************************************
+******************************************************************************************************************************************************************/
+(function ($) {
+    'use strict';
+    /**
+    * hg.SlideshowSF for slide and fade effect
+    * @author nhnst liuming
+    * @version 20110609.4
+    */
+    $.Class.extend(hg.Slideshow, 'hg.SlideshowSF', {
+        init : function (args) {
+
+            this.stage = null;
+            this.slides = null;
+            this.btnIndex = null;
+            this.btnPrev = null;
+            this.btnNext = null;
+            this.unit = null;
+            this.direction = 'horizontal';
+
+            $.extend(this, args);
+            var self = this, stage;
+
+            stage = $(this.stage).eq(0);
+            this.slides = $(this.slides, stage);
+            this.prop = this.direction === 'horizontal' ? 'left' : 'top';
+
+            if (this.length === 'auto') {
+                this.length = this.slides.length;
+            }
+
+            this.slides.css(this.prop, 0);
+
+            if (this.btnIndex) {
+                this.btnIndex = stage.find(this.btnIndex);
+                this.btnIndex.each(function (index, elem) {
+                    var i = index + 1;
+                    $(elem).click(function (e) {
+                        self.moveTo(i);
+                        e.preventDefault();
+                    });
+                });
+            }
+
+            if (this.btnPrev) {
+                stage.find(this.btnPrev).click(function (e) {
+                    self.prev();
+                    e.preventDefault();
+                    return false;
+                });
+            }
+
+            if (this.btnNext) {
+                stage.find(this.btnNext).click(function (e) {
+                    self.next();
+                    e.preventDefault();
+                    return false;
+                });
+            }
+        },
+
+        moveTo : function (index) {
+            var self = this, offset = index > this.count ? -20 : 20, props = {};
+            if (this.btnIndex) {
+                this.btnIndex.eq(this.count - 1).removeClass('active');
+                this.btnIndex.eq(index - 1).addClass('active');
+            }
+
+            props[self.prop] = offset;
+            props['opacity'] = 0.5;
+            this.slides.eq(this.count - 1).animate(props, 300, function () {
+                $(this).css(self.prop, 0).hide();
+                props[self.prop] = 0;
+                props['opacity'] = 1;
+                self.slides.eq(index - 1).css(self.prop, -offset).css('opacity', 0.5).show().animate(props, 300, function () {
+                    $(this).css(self.prop, 0);
+                })
+            });
+            this.$super.moveTo(index);
         }
     });
 
