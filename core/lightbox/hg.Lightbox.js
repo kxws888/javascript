@@ -4,18 +4,17 @@
      * @name hg.Lightbox
      * @author nhnst liuming
      * @description Lightbox is simple script to display content in a modal dialog, pass the content for pupup to the "box" arguments, and config other arguments to meet specific needs
-     * @version 20110527.5
+     * @version 20110610.5
      * @param {Var} box A cssQuery string, dom object or jQuery object which is for operation
      * @param {Boolean} draggable Anable drag
      * @param {Boolean} exclusive Attach a big enough background to make all the content except the lightbox non-interactive
      * @param {String} maskClass When exclusive is set to true, specify a class for style in CSS
     */
-    $.Class("Lightbox", {
+    $.Class("hg.Lightbox", {
         init : function (args) {
             this.box = '';
             this.draggable = true;
             this.exclusive = true;
-            this.maskClass = 'mask';
 
             $.extend(this, args);
 
@@ -27,7 +26,6 @@
 
             if (this.exclusive) {
                 this.mask = $('<div>');
-                this.mask.addClass(this.maskClass);
                 this.mask.css({
                     position: 'fixed',
                     left: 0,
@@ -56,6 +54,11 @@
                 this.box.hide();
             }
 
+            this.mask ? this.mask.show() : this.box.show();
+            this.width = this.box.width();
+            this.height = this.box.height();
+            this.mask ? this.mask.hide() : this.box.hide();
+
             if (this.draggable) {
                 this.box.bind('mousedown', $.proxy(this.dragInit, this));
                 this.box.find('a').each(function (index, elem) {
@@ -80,8 +83,8 @@
             }
 
             if (typeof pos === 'undefined') {
-                this.left = ($(window).width() - this.box.width()) / 2;
-                this.top = ($(window).height() - this.box.height()) / 2;
+                this.left = ($(window).width() - this.width) / 2;
+                this.top = ($(window).height() - this.height) / 2;
             }
             else {
                 this.left = pos[0];
@@ -103,8 +106,8 @@
             }, this));
 */
             $(window).bind('resize.lightbox', $.proxy(function (e) {
-                this.left = ($(window).width() - this.box.width()) / 2;
-                this.top = ($(window).height() - this.box.height()) / 2;
+                this.left = ($(window).width() - this.width) / 2;
+                this.top = ($(window).height() - this.height) / 2;
                 this.box.css('left', this.left);
                 this.box.css('top', this.top);
             }, this));
@@ -158,21 +161,30 @@
  * @param {Bollean} animateBackgroundOnly Only animate background, this is mainly for performance optimization especially when the animate object contains a lot of dom element
  * @param {Number} animateSpeed The speed of animation
  */
-    $.Class.extend(hg.Lightbox, 'Lightbox', {
+    $.Class.extend(hg.Lightbox, 'hg.LightboxZ', {
         init : function (args) {
             this.animateBackgroundOnly = false;
             this.animateSpeed = 500;
+
+            if (this.animateBackgroundOnly) {
+                this.innerBox = document.createDocumentFragment();
+            }
         },
 
         show : function (pos) {
             var self = this;
             this.$super.show(pos);
             if (this.animateBackgroundOnly) {
-                var html = this.box.html();
-                this.box.html('');
-                this.zoomIn(this.animateSpeed, function () {
-                    self.box.html(html);
-                });
+                var childNodes = Array.prototype.slice.call(this.box[0].childNodes, 0), i = 0, len = childNodes.length;
+                for (; i < len ; i += 1) {
+                    this.innerBox.appendChild(childNodes[i]);
+                }
+                this.zoomIn(this.animateSpeed, $.proxy(function () {
+                    var childNodes = Array.prototype.slice.call(this.innerBox.childNodes, 0), i = 0, len = childNodes.length;
+                    for (; i < len ; i += 1) {
+                        this.box.appendChild(childNodes[i]);
+                    }
+                }, this));
             }
             else {
                 this.zoomIn(this.animateSpeed);
@@ -182,50 +194,55 @@
         hide : function (pos) {
             var self = this;
             if (this.animateBackgroundOnly) {
-                var html = this.box.html();
-                this.box.html('');
-                this.zoomOut(this.animateSpeed, function () {
-                    self.box.html(html);
-                    self.$super.hide(pos);
-                }, pos);
+                var childNodes = Array.prototype.slice.call(this.box[0].childNodes, 0), i = 0, len = childNodes.length;
+                for (; i < len ; i += 1) {
+                    this.innerBox.appendChild(childNodes[i]);
+                }
+                this.zoomOut(this.animateSpeed, $.proxy(function () {
+                    var childNodes = Array.prototype.slice.call(this.innerBox.childNodes, 0), i = 0, len = childNodes.length;
+                    for (; i < len ; i += 1) {
+                        this.box.appendChild(childNodes[i]);
+                    }
+                }, this));
             }
             else {
                 this.zoomOut(this.animateSpeed, function () {
                     self.$super.hide(pos);
                 }, pos);
-            }        
+            }
         },
-		
-		zoomIn : function (animateSpeed, callback, pos) {
-			this.box.css({
-				width: 0,
-				height: 0,
-                left: this.left + this.width / 2,
-                top: this.top + this.height / 2,
-				overflow: 'hidden'
-			}).animate({
-                width: this.width,
-                height: this.height,
-                left: this.left,
-                top: this.top
-            }, animateSpeed, callback);
-		},
+
+        zoomIn : function (animateSpeed, callback, pos) {
+            var fProp = {}, tProp = {};
+            fProp.width = 0;
+            fProp.height = 0;
+            fProp.left = this.left + this.width / 2;
+            fProp.top = this.top + this.height / 2;
+            fProp.overflow = 'hidden';
+
+            tProp.width = this.width;
+            tProp.height = this.height;
+            tProp.left = this.left;
+            tProp.top = this.top;
+
+            this.box.css(fProp).animate(tProp, animateSpeed, callback);
+        },
 
         zoomOut : function (animateSpeed, callback, pos) {
-            var left = this.left + this.width / 2, top = this.top + this.height / 2;
+            var fProp = {}, tProp = {};
+            fProp.overflow = 'hidden';
+
+            tProp.width = 0;
+            tProp.height = 0;
+            tProp.left = this.left + this.width / 2;
+            tProp.top = this.top + this.height / 2;
+
             if (typeof pos !== 'undefined') {
                 left = pos[0];
                 top = pos[1];
             }
-			this.box.css({
-				overflow: 'hidden'
-			}).animate({
-				width: 0,
-				height: 0,
-                left: left,
-                top: top
-            }, animateSpeed, callback);
-		}        
+            this.box.css(fProp).animate(tProp, animateSpeed, callback);
+        }
     });
 
 })(jQuery);

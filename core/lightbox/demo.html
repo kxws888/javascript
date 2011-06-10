@@ -2,25 +2,34 @@
 <html>
 <head>
 <title>hg.Lightbox Demo</title>
-<link rel="stylesheet" href="lightbox.css" type="text/css" media="screen, projection">
-<script type="text/javascript" src="http://alpha-static.hangame.co.jp/js/fw/jquery/jquery-1.4.2.min.js"></script>
-<script type="text/javascript" src="http://alpha-static.hangame.co.jp/js/fw/jquery/core.1.0.js"></script>
+<style type="text/css">
+#lb {
+    width: 100px;
+    height: 100px;
+    text-align: center;
+    line-height: 100px;
+    background-color: #bfbfbf;
+}
+</style>
+<script type="text/javascript" src="../jquery.js"></script>
+<script type="text/javascript" src="../jquery.class.js"></script>
 <script type="text/javascript" src="hg.Lightbox.js"></script>
 </style>
 </head>
 <body>
 <div id="lb">test</div>
 <script type="text/javascript">
-var a = new Lightbox({
+var a = new hg.LightboxZ({
 box: jQuery('#lb').clone(false).css({width:'300px',height:'300px'}),
-draggable: true
+draggable: true,
+animateBackgroundOnly: true
 });
 jQuery('#lb').click(function () {
     a.show();
-    })
-
-h1 = document.createElement('table');document.body.appendChild(h1);
-
+    setTimeout(function () {
+        a.hide();
+    }, 3000)
+})
 </script>
 </body>
 </html>
