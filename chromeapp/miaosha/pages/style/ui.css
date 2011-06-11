@@ -1,0 +1,150 @@
+html {
+    -webkit-transition-property: -webkit-box-shadow;
+    -webkit-transition-duration: 2s;
+}
+
+#miaosha-viclm {
+    font-family: Arial, 'Microsoft Yahei', Simsun, sans-serif;
+    font-size: 16px;
+    -webkit-box-shadow: 0px -5px 80px #505050;
+    background: white;
+    border: 1px solid #BCC1D0;
+    border-radius: 2px;
+    min-width: 400px;
+    display: inline-block;
+    padding: 0;
+    position: absolute;
+}
+
+#miaosha-viclm * {
+    position: static;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    z-index: auto;
+
+    float: none;
+    clear: none;
+    display: '';
+
+    margin: 0;
+    padding: 0;
+    border-width: medium;
+    border-color: inherit;
+    border-style: none;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    max-width: none;
+    max-height: none;
+
+    color: inherit;
+    background-attachment: scroll;
+    background-color: transparent;
+    background-image: none;
+    background-position: 0% 0%;
+    background-repeat: repeat;
+
+    font-size: 15px;
+    font-family: Arial, 'Microsoft Yahei', Simsun, sans-serif;
+    line-height: normal;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: normal;
+    text-align: left;
+    text-decoration: none;
+    text-indent: 0;
+    text-transform: none;
+    white-space: normal;
+    letter-spacing: normal;
+    word-spacing: normal;
+    vertical-align: baseline;
+    overflow: visible;
+    visibility: visible;
+}
+
+#miaosha-viclm h1 {
+    background: -webkit-linear-gradient(white, #F8F8F8);
+    border-bottom: 1px solid rgba(188, 193, 208, .5);
+    font-size: 105%;
+    font-weight: bold;
+    padding: 10px 15px 8px 15px;
+    color: #53637D;
+    margin: 0;
+}
+
+#miaosha-viclm section {
+    padding: 10px 15px 5px 15px;
+}
+
+#miaosha-viclm section div {
+    margin: 10px 0;
+}
+
+#miaosha-viclm section label{
+    margin:0 5px;
+}
+
+#miaosha-viclm section input[type=checkbox]{
+    margin-right:5px;
+}
+
+#miaosha-viclm input[type=number] {
+    -webkit-border-radius: 2px;
+    border: 1px solid #AAA;
+    padding: 3px;
+    margin: 0 5px;
+}
+#miaosha-viclm div:nth-of-type(2) input[type=number] {
+    width: 80px;
+    margin-left: 0;
+}
+
+#miaosha-viclm footer {
+    border-top: 1px solid rgba(188, 193, 208, .5);
+    padding: 12px 12px 12px 230px;
+}
+
+#miaosha-viclm button, #miaosha-controller button {
+    -webkit-border-radius: 2px;
+    -webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+    -webkit-user-select: none;
+    background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+    border: 1px solid #AAA;
+    color: #444;
+    font-size: inherit;
+    margin-bottom: 0px;
+    margin-left: 5px;
+    min-width: 4em;
+    padding: 3px 12px 3px 12px;
+}
+
+
+
+#miaosha-controller {
+    position: absolute;
+    top: 0;
+    right: 10px;
+    -webkit-box-shadow: #666 0px 2px 5px;
+    background-color: white;
+    border-bottom: 1px solid #B8B8B8;
+    min-width: 300px;
+    font-size: 16px;
+    z-index: 2005101168;
+}
+
+#miaosha-controller h1 {
+    border-bottom: 1px solid #EEE;
+    color: #53637D;
+    font-size: 105%;
+    font-weight: bold;
+    margin: 0;
+    padding: 13px 0 4px 10px;
+    text-shadow: white 0 1px 2px;
+}
+
+#miaosha-controller button{
+    margin: 10px;
+}
