@@ -8,10 +8,9 @@ function createUI() {
     +'<button>停止秒杀</button>';
     aside.innerHTML = html;
     document.body.appendChild(aside);
-    aside.querySelector('button').addEventListener('click', saveConfigs, false);
+    aside.querySelector('button').addEventListener('click', function () {
+        this.disabled = true;
+        chrome.extension.sendRequest({abort: true});
+    }, false);
     return aside;
 }
-
-controller.querySelector('button').click(function () {
-    chrome.extension.sendRequest({'abort': true});
-});

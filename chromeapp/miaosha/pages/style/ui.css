@@ -14,9 +14,10 @@ html {
     display: inline-block;
     padding: 0;
     position: absolute;
+    z-index: 19860208;
 }
 
-#miaosha-viclm * {
+#miaosha-viclm *, #miaosha-tips * {
     position: static;
     top: auto;
     right: auto;
@@ -123,19 +124,22 @@ html {
 
 
 
-#miaosha-controller {
+#miaosha-controller, #miaosha-tips {
     position: absolute;
     top: 0;
     right: 10px;
+    -webkit-transition-property: -webkit-box-shadow;
+    -webkit-transition-duration: 1s;
     -webkit-box-shadow: #666 0px 2px 5px;
     background-color: white;
-    border-bottom: 1px solid #B8B8B8;
+    border: 1px solid #B8B8B8;
+    border-top: none;
     min-width: 300px;
     font-size: 16px;
     z-index: 2005101168;
 }
 
-#miaosha-controller h1 {
+#miaosha-controller h1, #miaosha-tips h1 {
     border-bottom: 1px solid #EEE;
     color: #53637D;
     font-size: 105%;
@@ -147,4 +151,10 @@ html {
 
 #miaosha-controller button{
     margin: 10px;
+}
+
+
+#miaosha-tips p {
+    padding: 10px;
+    color: red;
 }
