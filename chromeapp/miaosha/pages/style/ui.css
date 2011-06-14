@@ -122,6 +122,13 @@ html {
     padding: 3px 12px 3px 12px;
 }
 
+#miaosha-viclm button[disabled], #miaosha-controller button[disabled] {
+    -webkit-box-shadow: none;
+    background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+    border-color: #AAA;
+    color: #888;
+}
+
 
 
 #miaosha-controller, #miaosha-tips {
@@ -137,6 +144,10 @@ html {
     min-width: 300px;
     font-size: 16px;
     z-index: 2005101168;
+}
+
+#miaosha-tips {
+    border-color:  #f00;
 }
 
 #miaosha-controller h1, #miaosha-tips h1 {

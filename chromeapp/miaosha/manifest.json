@@ -16,13 +16,6 @@
 
     "background_page": "pages/background.html",
 
-    "content_scripts": [
-        {
-            "matches": ["*://*/*"],
-            "css": ["pages/style/ui.css"]
-        }
-    ],
-
     "permissions": [
         "tabs",
         "notifications",

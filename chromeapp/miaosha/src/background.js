@@ -1,9 +1,6 @@
 ﻿(function () {
-    localStorage.quarry = JSON.stringify({
-        amazon: 'b.priceLarge'
-    });
-    const PRICE_REG = /\d+(,\d+)?(\.\d+)?/, QUARRY_REG = /http:\/\/(?:www\.)?([a-z]+)\./i;
-    var tabs = {}, notification, sound, counter = 0, active = false, quarrys = JSON.parse(localStorage.quarry);
+    const PRICE_REG = /\d+(,\d+)?(\.\d+)?/;
+    var tabs = {}, notification, sound, counter = 0, active = false;
 
     notification = webkitNotifications.createNotification(
         '../assets/icon48.png',  // icon url - can be relative
@@ -19,59 +16,66 @@
     sound.loop = 'loop';
 
     chrome.browserAction.onClicked.addListener(function(tab) {
-        var q = QUARRY_REG.exec(tab.url)[1], data = quarrys[q];
-        if (data) {
-            //chrome.tabs.executeScript(tab.id, {code: tmpl('config', {queryStr: data, priceReg: PRICE_REG.toString()})});
-            
-        }
-        else {
-            //chrome.tabs.executeScript(tab.id, {file: "src/pick.js"});
-        }
+        chrome.tabs.insertCSS(tab.id, {file: 'pages/style/ui.css'});
         chrome.tabs.executeScript(tab.id, {file: "src/init.js"});
     });
 
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+        var tabId = sender.tab.id;
         if ('success' in request) {
-            delete tabs[sender.tab.id];
-            counter -= 1;
-            if (counter === 0) {
-                chrome.tabs.onUpdated.removeListener(autoFresh);
-                active = false;
-            }
+            mStop(tabId);
             notification.show();
             if (request.sound) {
                 sound.play();
             }
         }
         else if ('abort' in request) {
-            clearTimeout(tabs[sender.tab.id].timer);
-            delete tabs[sender.tab.id];
-            counter -= 1;
-            if (counter === 0) {
-                chrome.tabs.onUpdated.removeListener(autoFresh);
-                active = false;
-            }
+            mStop(tabId);
         }
         else {
-            if (!tabs[sender.tab.id]) {
+            if (!tabs[tabId]) {
                 counter += 1;
             }
-            tabs[sender.tab.id] = request;
-            tabs[sender.tab.id].timer = setTimeout(function () {
+            tabs[tabId] = request;
+            tabs[tabId].url = sender.tab.url;
+            tabs[tabId].timer = setTimeout(function () {
                 chrome.tabs.update(sender.tab.id, {url: sender.tab.url});
                 if (!active) {
-                    chrome.tabs.onUpdated.addListener(autoFresh);
+                    chrome.tabs.onUpdated.addListener(tabsUpdatedHanlder);
+                    chrome.tabs.onRemoved.addListener(tabsRemovedHanlder);
                     active = true;
                 }
             }, request.gap * 1000);
         }
     });
 
-    function autoFresh(tabId, changeInfo, tab) {
-        if (tab.status === 'complete' && tabs[tabId]) {
-            //chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
-            chrome.tabs.executeScript(tabId, {file: 'src/controller.js'});
-            chrome.tabs.executeScript(tabId, {code: tmpl('check', tabs[tabId])});
+    function tabsUpdatedHanlder(tabId, changeInfo, tab) {
+        if (tab.status !== 'complete' && tabs[tabId]) {
+            if (tab.url !== tabs[tabId].url) {
+                mStop(tabId);
+            }
+            else {
+                chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
+                chrome.tabs.executeScript(tabId, {file: 'src/controller.js'});
+                chrome.tabs.executeScript(tabId, {code: tmpl('check', tabs[tabId])});
+            }
+        }
+    }
+
+    function tabsRemovedHanlder(tabId, removeInfo) {
+        if (tabs[tabId]) {
+            mStop(tabId);
+        }
+    }
+
+    function mStop(tabId) {
+        clearTimeout(tabs[tabId].timer);
+        delete tabs[tabId];
+        counter -= 1;
+        if (counter === 0) {
+            chrome.tabs.onUpdated.removeListener(tabsUpdatedHanlder);
+            chrome.tabs.onRemoved.removeListener(tabsRemovedHanlder);
+            active = false;
         }
     }
 
