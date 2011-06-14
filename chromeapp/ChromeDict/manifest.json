@@ -1,6 +1,6 @@
 {
-    "name": "Hover Translate",
-    "version": "1.0.1",
+    "name": "易词",
+    "version": "1.1",
     "description": "Chrome下最好用的翻译工具,可取词可划词,支持多词典",
 
     "icons": {
@@ -10,8 +10,7 @@
     },
 
     "page_action": {
-        "default_icon": "assets/normal.png",
-        "default_title": "Hover Translate"
+        "default_title": "易词"
     },
     "background_page": "pages/background.html",
 

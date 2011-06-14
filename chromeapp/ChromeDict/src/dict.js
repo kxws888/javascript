@@ -419,7 +419,6 @@ dom.Event = {
             this.scope.addEventListener('mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this), false);
             this.dragCapture = true;
         }
-        this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: this.hoverCapture});
     };
 
     Dict.prototype.hoverCaptureSwitch = function () {
@@ -434,7 +433,6 @@ dom.Event = {
             this.scope.addEventListener('mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this), false);
             this.hoverCapture = true;
         }
-        this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: this.hoverCapture});
     };
 
     Dict.prototype.hotKeyHandler = function (e) {
@@ -442,18 +440,12 @@ dom.Event = {
         if (e.keyCode === this.hotKey.hover.keyCode && e.ctrlKey === this.hotKey.hover.ctrlKey
            && e.altKey === this.hotKey.hover.altKey && e.shiftKey === this.hotKey.hover.shiftKey && e.metaKey === this.hotKey.hover.metaKey) {
             this.hoverCaptureSwitch();
-            chrome.extension.sendRequest({
-                hoverCapture: self.hoverCapture,
-                dragCapture: self.dragCapture
-            });
+            this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: this.hoverCapture});
         }
         else if (e.keyCode === this.hotKey.drag.keyCode && e.ctrlKey === this.hotKey.drag.ctrlKey
            && e.altKey === this.hotKey.drag.altKey && e.shiftKey === this.hotKey.drag.shiftKey && e.metaKey === this.hotKey.drag.metaKey) {
             this.dragCaptureSwitch();
-            chrome.extension.sendRequest({
-                hoverCapture: self.hoverCapture,
-                dragCapture: self.dragCapture
-            });
+            this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: this.hoverCapture});
         }
     };
 
@@ -687,33 +679,31 @@ dom.Event = {
     //document.addEventListener('DOMContentLoaded', initDict, false);
 
     chrome.extension.sendRequest({cmd: 'config'}, function (response) {
-        if (response.ui === 'simple') {
-            dict = new DictSimple({
-                hotKey: response.hotKey,
-                skin: response.skin,
-                hoverCapture: response.hoverCapture,
-                dragCapture: response.dragCapture
-            });
-        }
+        dict = new DictSimple({
+            hotKey: response.hotKey,
+            skin: response.skin,
+            hoverCapture: response.hoverCapture,
+            dragCapture: response.dragCapture
+        });
     });
 
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
         if (dict) {
-            if (request.cmd === 'toggleHoverCapture') {
+            switch (request.cmd) {
+            case 'toggleHoverCapture':
                 dict.hoverCaptureSwitch();
-            }
-            else if (request.cmd === 'toggleDragCapture'){
+                break;
+            case 'toggleDragCapture':
                 dict.dragCaptureSwitch();
+                break;
+            case 'setCaptureMode':
+                request.hoverCapture !== dict.hoverCapture && dict.hoverCaptureSwitch();
+                request.dragCapture !== dict.dragCapture && dict.dragCaptureSwitch();
             }
+
             sendResponse({
                 hoverCapture: dict.hoverCapture,
                 dragCapture: dict.dragCapture
-            });
-        }
-        else {
-            sendResponse({
-                hoverCapture: true,
-                dragCapture: true
             });
         }
     });

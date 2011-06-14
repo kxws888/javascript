@@ -43,34 +43,27 @@
             };
         }
     };
-
+/*
     menuItemIdHover = chrome.contextMenus.create({
-        title: '关闭取词',
+        title: '启动易词',
         onclick: contextMenusHanlder
     });
-    menuItemIdDrag = chrome.contextMenus.create({
-        title: '关闭划词',
-        onclick: contextMenusHanlder
-    });
-
+*/
     chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
         if (!/^chrome/.test(tab.url) && tab.url.indexOf('https://chrome.google.com/webstore') === -1 && tab.status !== 'complete') {
             chrome.tabs.executeScript(null, {file: "src/dict.js"});
-            chrome.pageAction.setIcon({
-                tabId: tabId,
-                path: chrome.extension.getURL('assets/normal.png')
-            });
-            chrome.pageAction.show(tabId);
-            toggle({
-                hoverCapture: localStorage.hoverCapture === '1' ? true : false,
-                dragCapture: localStorage.dragCapture === '1' ? true : false
-            }, tab);
+            setPageActionIcon(tabId);
+            chrome.pageAction.show(tabId);console.log(1)
         }
     });
-//direct
+
     chrome.tabs.onSelectionChanged.addListener(function (tabId, selectInfo) {
-        chrome.tabs.sendRequest(tabId, {cmd: 'contextMenus'}, function (response) {
-            toggle(response);
+        chrome.tabs.sendRequest(tabId, {
+            cmd: 'setCaptureMode',
+            dragCapture: localStorage.dragCapture === '1' ? true : false,
+            hoverCapture: localStorage.hoverCapture === '1' ? true : false
+        }, function () {
+            setPageActionIcon(tabId);console.log(2)
         });
     });
 
@@ -78,78 +71,35 @@
         var cmd = info.menuItemId === menuItemIdHover ? 'toggleHoverCapture' : 'toggleDragCapture';
         chrome.tabs.getSelected(null, function(tab) {
             chrome.tabs.sendRequest(tab.id, {cmd: cmd}, function (response) {
-                toggle(response, tab);
+                toggle(response, tab.id);
             });
         });
     }
 
-    function toggle(response, tab) {
-        var index = [], ico;
-        if (response.hoverCapture) {
-            chrome.contextMenus.update(menuItemIdHover, {
-                title: '关闭取词'
-            });
-            index[index.length] = 'hover';
+    function setPageActionIcon(tabId) {
+        var ico, hoverCapture = localStorage.hoverCapture, dragCapture = localStorage,dragCapture;
+        if (hoverCapture === '1' && dragCapture === '1') {
+            ico = 'assets/normal.png';
+        }
+        else if (hoverCapture === '1') {
+            ico = 'assets/hover.png';
+        }
+        else if (dragCapture === '1') {
+            ico = 'assets/drag.png';
         }
         else {
-            chrome.contextMenus.update(menuItemIdHover, {
-                title: '开启取词'
-            });
+            ico = 'assets/off.png';
         }
-
-        if (response.dragCapture) {
-            chrome.contextMenus.update(menuItemIdDrag, {
-                title: '关闭划词'
-            });
-            index[index.length] = 'drag';
-        }
-        else {
-            chrome.contextMenus.update(menuItemIdDrag, {
-                title: '开启划词'
-            });
-        }
-
-        if (tab) {
-            if (index.length === 2) {
-                ico = 'assets/normal.png';
-            }
-            else if (index.length === 1) {
-                ico = 'assets/' + index[0] + '.png';
-            }
-            else {
-                ico = 'assets/off.png';
-            }
-
-            chrome.pageAction.setIcon({
-                tabId: tab.id,
-                path: chrome.extension.getURL(ico)
-            });
-        }
+console.log(111111111111111111111111)
+        chrome.pageAction.setIcon({
+            tabId: tabId,
+            path: chrome.extension.getURL(ico)
+        });
     }
-/*
-    chrome.pageAction.onClicked.addListener(dictSwitch);
-
-    function dictSwitch() {
-        if (!status) {
-            chrome.tabs.executeScript(null, {file: "src/dict.js"});
-            chrome.pageAction.onClicked.removeListener(dictSwitch);
-            chrome.pageAction.onClicked.addListener(function (tab) {
-                status = !status;
-                chrome.pageAction.setIcon({
-                    tabId: tab.id,
-                    path: chrome.extension.getURL(status ? 'assets/icon16.png' : 'assets/icon16_grey.png')
-                });
-                chrome.extension.sendRequest({cmd: status});
-            });
-        }
-    }*/
 
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
         if (request.cmd === 'config') {
             sendResponse(getConfig());
-        }
-        else if ('hoverCapture' in request) {
-            toggle(request, sender.tab);
         }
     });
 
@@ -159,7 +109,6 @@
         params.skin = localStorage.skin;
         params.hoverCapture = localStorage.hoverCapture === '1' ? true : false;
         params.dragCapture = localStorage.dragCapture === '1' ? true : false;
-        //params.hoverCapture = localStorage.hoverCapture;
 
         if (localStorage.hotKeySwitch === '0') {
             hotKeys = null;
@@ -170,16 +119,7 @@
                 drag: JSON.parse(localStorage.hotKeyDrag)
             };
         }
-        params.hotKey = hotKeys;/*
-
-        dictsOrder = JSON.parse(localStorage['dictsOrder']);
-        dictsAvailable = JSON.parse(localStorage['dictsAvailable']);
-        for (i = 0, len = dictsOrder.length ; i < len ; i += 1) {
-            if (dictsOrder[i] in dictsAvailable) {
-                dicts[dicts.length] = dictsOrder[i];
-            }
-        }
-        params.dicts = dicts;*/
+        params.hotKey = hotKeys;
 
         return params;
     }
@@ -190,6 +130,7 @@
                 switch (msg.cmd) {
                 case 'setCaptureMode':
                     setCaptureMode(msg, port);
+                    setPageActionIcon(port.tab.id);console.log(3)
                     break;
                 case 'query':
                     simpleQuery(msg, port);
