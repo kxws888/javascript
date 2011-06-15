@@ -9,6 +9,7 @@
         localStorage.assistDict = 'dictcn';
         localStorage.hoverCapture = '1';
         localStorage.dragCapture = '0';
+        localStorage.status = '1';
     }
 
     const DICT_API = {
@@ -49,26 +50,30 @@
         onclick: contextMenusHanlder
     });
 */
+    setPageActionIcon(localStorage.status === '1');
     chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-        if (!/^chrome/.test(tab.url) && tab.url.indexOf('https://chrome.google.com/webstore') === -1 && tab.status !== 'complete') {
-            chrome.tabs.executeScript(null, {file: "src/dict.js"});
-            setPageActionIcon(tabId);
-            chrome.pageAction.show(tabId);console.log(1)
+        if (tab.status === 'complete') { return; }
+        setPageActionIcon(false);
+        if (!/^chrome/.test(tab.url) && tab.url.indexOf('https://chrome.google.com/webstore') === -1 && localStorage.status === '1') {
+            chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
+            chrome.tabs.executeScript(tabId, {file: "src/dict.js"});
+            setPageActionIcon(true);
         }
     });
 
     chrome.tabs.onSelectionChanged.addListener(function (tabId, selectInfo) {
+        setPageActionIcon(false);
         chrome.tabs.sendRequest(tabId, {
             cmd: 'setCaptureMode',
             dragCapture: localStorage.dragCapture === '1' ? true : false,
             hoverCapture: localStorage.hoverCapture === '1' ? true : false
         }, function () {
-            setPageActionIcon(tabId);console.log(2)
+            setPageActionIcon(true);
         });
     });
 
     function contextMenusHanlder(info, tab) {
-        var cmd = info.menuItemId === menuItemIdHover ? 'toggleHoverCapture' : 'toggleDragCapture';
+        var cmd = localStorage.status === '1' ? 'toggleHoverCapture' : 'toggleDragCapture';
         chrome.tabs.getSelected(null, function(tab) {
             chrome.tabs.sendRequest(tab.id, {cmd: cmd}, function (response) {
                 toggle(response, tab.id);
@@ -76,25 +81,27 @@
         });
     }
 
-    function setPageActionIcon(tabId) {
-        var ico, hoverCapture = localStorage.hoverCapture, dragCapture = localStorage,dragCapture;
-        if (hoverCapture === '1' && dragCapture === '1') {
-            ico = 'assets/normal.png';
-        }
-        else if (hoverCapture === '1') {
-            ico = 'assets/hover.png';
-        }
-        else if (dragCapture === '1') {
-            ico = 'assets/drag.png';
+    function setPageActionIcon(status) {
+        var ico, hoverCapture = localStorage.hoverCapture, dragCapture = localStorage.dragCapture;
+        if (status) {
+            if (hoverCapture === '1' && dragCapture === '1') {
+                ico = 'assets/normal.png';
+            }
+            else if (hoverCapture === '1') {
+                ico = 'assets/hover.png';
+            }
+            else if (dragCapture === '1') {
+                ico = 'assets/drag.png';
+            }
+            else {
+                ico = 'assets/off.png';
+            }
         }
         else {
-            ico = 'assets/off.png';
+            ico = 'assets/grey.png';
         }
-console.log(111111111111111111111111)
-        chrome.pageAction.setIcon({
-            tabId: tabId,
-            path: chrome.extension.getURL(ico)
-        });
+
+        chrome.browserAction.setIcon({path: chrome.extension.getURL(ico)});
     }
 
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
@@ -130,7 +137,7 @@ console.log(111111111111111111111111)
                 switch (msg.cmd) {
                 case 'setCaptureMode':
                     setCaptureMode(msg, port);
-                    setPageActionIcon(port.tab.id);console.log(3)
+                    setPageActionIcon(true);
                     break;
                 case 'query':
                     simpleQuery(msg, port);
@@ -244,6 +251,9 @@ console.log(111111111111111111111111)
             elems = xml.getElementsByTagName('ps')[0];
             json.ps = elems ? elems.firstChild.nodeValue : '';
 
+            elems = xml.getElementsByTagName('pron')[0];
+            json.pron = elems ? elems.firstChild.nodeValue.trim() : '';
+
             json.tt = [];
             elems = xml.getElementsByTagName('acceptation');
             for (i = 0, len = elems.length ; i < len ; i += 1) {
@@ -282,6 +292,9 @@ console.log(111111111111111111111111)
             xml = parser.parseFromString(xml,"text/xml");
             elem = xml.getElementsByTagName('pron')[0];
             json.ps = elem ? elem.firstChild.nodeValue : '';
+
+            elem = xml.getElementsByTagName('audio')[0];
+            json.pron = elem ? elem.firstChild.nodeValue : '';
 
             json.tt = [];
             elem = xml.getElementsByTagName('def')[0];

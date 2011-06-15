@@ -572,6 +572,8 @@ dom.Event = {
 
         this.uiKey = this.ui.querySelector('h1');
         this.uiPs = this.ui.querySelector('header span');
+        this.uiPronBtn = this.ui.querySelector('header canvas');
+        this.uiPron = this.ui.querySelector('header audio');
         this.uiTrans = this.ui.querySelector('ul');
         this.uiTriangle = this.ui.querySelector('div:last-of-type');
     }
@@ -579,13 +581,21 @@ dom.Event = {
     dom.Tool.extend(DictSimple, Dict);
 
     DictSimple.prototype.createUI = function () {
-        var aside = document.createElement('aside'), header, triangle;
+        var aside = document.createElement('aside'), header, uiPronBtn, uiPron, triangle;
         aside.id = 'dict-viclm-simple';
         aside.className = this.skin;
 
         header = document.createElement('header');
         header.appendChild(document.createElement('h1'));
         header.appendChild(document.createElement('span'));
+        uiPronBtn = this.drawAlert(300, 300);
+        uiPronBtn.style.cssText = 'width: 12px; height: 12px;';
+        header.appendChild(uiPronBtn);
+        uiPron = document.createElement('audio');
+        header.appendChild(uiPron);
+        uiPronBtn.addEventListener('click', function () {
+            uiPron.play();
+        }, false);
         aside.appendChild(header);
 
         aside.appendChild(document.createElement('ul'));
@@ -603,28 +613,54 @@ dom.Event = {
         return aside;
     };
 
+    DictSimple.prototype.drawAlert = function (w, h) {
+        var canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+        canvas.width = w;
+        canvas.height = h;
+        ctx.beginPath();
+        ctx.fillStyle = '#000';
+
+        ctx.moveTo(26, 71);
+        ctx.lineTo(84, 71);
+        ctx.lineTo(177, 0);
+        ctx.lineTo(177, 300);
+        ctx.lineTo(84, 229);
+        ctx.lineTo(26, 229);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.fillStyle = '#000';
+
+        ctx.moveTo(222, 76);
+        ctx.lineTo(236, 63);
+        ctx.bezierCurveTo(272, 93, 296, 186, 234, 247);
+        ctx.lineTo(220, 234);
+        ctx.bezierCurveTo(253, 202, 270, 131, 222, 76);
+        ctx.closePath();
+        ctx.fill();
+        return canvas;
+    };
+
     DictSimple.prototype.eventClear = function (e) {
         e.stopPropagation();
     };
 
     DictSimple.prototype.show = function (data) {
         var i, len, item, ul, li;
-        if (data.key === this.text) {
+        if (data.key === this.text && 'tt' in data) {
             this.uiKey.innerHTML = this.text;
-            if ('tt' in data) {
-                this.uiPs.innerHTML = data.ps === '' ? '' : '[' + data.ps + ']';
-                this.uiTrans.innerHTML = '';
+            this.uiPs.innerHTML = data.ps === '' ? '' : '[' + data.ps + ']';
+            this.uiPron.src = data.pron;
+            this.uiPronBtn.style.display = data.pron === '' ?  'none' : '';
+            console.log(data)
+            this.uiTrans.innerHTML = '';
 
-                for (i = 0, len = data.tt.length ; i < len ; i += 1) {
-                    item = data.tt[i];
-                    li = document.createElement('li');
-                    li.innerHTML = item.pos + ' ' + item.acceptation;
-                    this.uiTrans.appendChild(li);
-                }
-            }
-            else {
-                this.uiPs.innerHTML = '';
-                this.uiTrans.innerHTML = '没有翻译结果';
+            for (i = 0, len = data.tt.length ; i < len ; i += 1) {
+                item = data.tt[i];
+                li = document.createElement('li');
+                li.innerHTML = item.pos + ' ' + item.acceptation;
+                this.uiTrans.appendChild(li);
             }
 
             this.ui.style.display = '';

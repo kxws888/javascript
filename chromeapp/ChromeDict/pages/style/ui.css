@@ -1,9 +1,10 @@
 #dict-viclm-simple {
     font-family: Arial, 'Microsoft Yahei', Simsun, sans-serif;
     font-size: 12px;
+    line-height: 1.2em;
     position: absolute;
     display: inline-block;
-    padding: 5px;
+    padding: 4px;
     z-index: 19860208;
     border-radius:5px;
 }
@@ -58,16 +59,24 @@
 }
 
 #dict-viclm-simple header {
-    display: -webkit-box;
+    margin-bottom: 1px;
 }
 
 #dict-viclm-simple h1 {
-    margin-bottom: 5px;
     font-weight: bold;
+    display: inline;
 }
 
-#dict-viclm-simple header span{
-    margin-left: 5px;
+#dict-viclm-simple header span {
+    margin-left: 3px;
+}
+
+#dict-viclm-simple header canvas {
+    margin-left: 3px;
+    cursor: pointer;
+    vertical-align: center;
+    position: relative;
+    top: 2px;
 }
 
 #dict-viclm-simple ul {
@@ -195,53 +204,4 @@
 
 #dict-viclm-simple.black div:last-of-type {
    border-color:#333 transparent;
-}
-
-.dict-viclm-clear {
-    position: static;
-    top: auto;
-    right: auto;
-    bottom: auto;
-    left: auto;
-    z-index: auto;
-
-    float: none;
-    clear: none;
-    display: '';
-
-    margin: 0;
-    padding: 0;
-    border-width: medium;
-    border-color: inherit;
-    border-style: none;
-    width: auto;
-    height: auto;
-    min-width: 0;
-    min-height: 0;
-    max-width: none;
-    max-height: none;
-
-    color: inherit;
-    background-attachment: scroll;
-    background-color: transparent;
-    background-image: none;
-    background-position: 0% 0%;
-    background-repeat: repeat;
-
-    font-size: inherit;
-    line-height: inherit;
-    font-style: inherit;
-    font-variant: inherit;
-    font-weight: inherit;
-    text-align: left;
-    text-decoration: none;
-    text-indent: 0;
-    text-transform: none;
-    white-space: normal;
-    letter-spacing: normal;
-    word-spacing: normal;
-    vertical-align: baseline;
-    overflow: visible;
-    visibility: visible;
-
 }
