@@ -1,23 +1,45 @@
 (function ($) {
     'use strict';
     /**
-    * name hg.Slideshow
-    * @author nhnst liuming
-    * @version 20110609.4
+    * @class
     */
-    $.Class("hg.Slideshow", {
+    $.Class("hg.Slideshow",
+        /** @lends Slideshow.prototype */
+        {
+        /**
+        * hg.Slideshow is abstract class for slideshow, inherit it if you want a slideshow on webpage
+        *
+        * @author nhnst liuming
+        * @version 20110617.5
+        * @constructs
+        * @requires jQuery
+        * @param {Number} [gap=5000] The rate of slideshow plays
+        * @param {length} length The number of slides
+        * @param {Boolean} [loop=true] Indicate whether the slideshow plays loop
+        * @param {Integer} [step=1] The step of slideshow moves
+        */
         init: function () {
-            this.gap = 5000;
-            this.length = 5;
-            this.loop = true;
-            this.step = 1;
+            var args = arguments[0] || {};
 
-            $.extend(this, arguments[0]);
+            this.gap = args.gap || 5000;
+            this.length = args.length;
+            this.loop = !!args.loop;
+            this.step = args.step || 1;
 
             this.count = 1;
             this.timer = null;
         },
-
+        /**
+        * reset the slideshow
+        * @public
+        */
+        reset: function () {
+            this.count = 1;
+        },
+        /**
+        * start playing the slideshow
+        * @public
+        */
         start: function () {
             var self = this;
             if (!this.timer) {
@@ -26,12 +48,20 @@
                 }, self.gap);
             }
         },
-
+        /**
+        * stop playing the slideshow
+        * @public
+        */
         stop: function () {
             clearInterval(this.timer);
             this.timer = null;
         },
-
+        /**
+        * move to a special slide
+        * @public
+        * @param {Integer} index The No. of slide
+        * @returns {Integer} The No. of slide moved to, return -1 if moving failed(e.g., move to current slide)
+        */
         moveTo: function (index) {
             if (this.count !== index) {
                 if (index < 0 ) {
@@ -45,7 +75,11 @@
             }
             return -1;
         },
-
+        /**
+        * move to next slide
+        * @public
+        * @returns {Integer} The No. of slide moved to, return -1 if moving failed(e.g., move to current slide)
+        */
         prev: function () {
             var target = this.count - this.step;
             if (target < 1) {
@@ -59,7 +93,11 @@
             }
             return this.moveTo(target);
         },
-
+        /**
+        * move to previous slide
+        * @public
+        * @returns {Integer} The No. of slide moved to, return -1 if moving failed(e.g., move to current slide)
+        */
         next: function () {
             var target = this.count + this.step;
             if (target > this.length) {
