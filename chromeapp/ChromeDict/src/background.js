@@ -14,12 +14,14 @@
 
     const DICT_API = {
         powerword: 'http://dict-co.iciba.com/api/dictionary.php?w=',
-        dictcn: 'http://dict.cn/ws.php?utf8=true&q='
+        dictcn: 'http://dict.cn/ws.php?utf8=true&q=',
+        qqdict: 'http://dict.qq.com/dict?q='
     };
 
     const DICT_QUERY = {
         powerword: Powerword,
-        dictcn: Dictcn
+        dictcn: Dictcn,
+        qqdict: QQDict
     };
 
     var database, dbRequest = webkitIndexedDB.open('dict'), status, menuItemIdHover, menuItemIdDrag;
@@ -30,17 +32,20 @@
 
     dbRequest.onsuccess = function(e) {
         database = e.target.result;
-        if (database.version != '1.0') {
-            var request = database.setVersion("1.0");
+        if (database.version != '1.1') {
+            var request = database.setVersion("1.1");
 
             request.onerror = function (event) {
                 console.log('setVersion error');
             };
 
             request.onsuccess = function (e) {
-                var powerword, dictcn;
+                var powerword, dictcn, qqdict;
+                database.deleteObjectStore('powerword');
+                database.deleteObjectStore('dictcn');
                 powerword = database.createObjectStore('powerword', {keyPath: 'key'});
                 dictcn = database.createObjectStore('dictcn', {keyPath: 'key'});
+                qqdict = database.createObjectStore('qqdict', {keyPath: 'key'});
             };
         }
     };
@@ -168,7 +173,8 @@
             }
         }).query();
 
-        new DICT_QUERY[assistDict]({
+        if (assistDict) {
+            new DICT_QUERY[assistDict]({
             word: msg.w,
             load: function (json) {
                 if (status === 'error') {
@@ -183,6 +189,7 @@
                 assistRes = {key: msg.w};
             }
         }).query();
+        }
     }
 
     /*
@@ -323,4 +330,44 @@
         }
     };
 
+
+    function QQDict(args) {
+
+        this.api = DICT_API.qqdict;
+        this.model = 'qqdict';
+        this.super.constructor.call(this, args);
+    }
+
+    dom.Tool.extend(QQDict, Query);
+
+    QQDict.prototype.ajaxLoad = function (e) {
+        var xml = eval('(' + e.target.responseText + ')'), json = {}, elems, elem, i, len, item;
+        if (xml.local) {
+            xml = xml.local[0];
+            json.ps = xml.pho ? xml.pho[0] : '';
+
+            //json.pron = elem ? elem.firstChild.nodeValue : '';
+
+            json.tt = [];
+            elems = xml.des;
+            if (elems) {
+                for (i = 0, len = elems.length ; i < len ; i += 1) {
+                    item = elems[i];
+                    json.tt.push({
+                        pos: item.p,
+                        acceptation: item.d
+                    });
+                }
+            }
+        }
+
+        if (json.tt && json.tt.length > 0) {
+            json.key = this.word;
+            this.load(json);
+            this.updateDB(json);
+        }
+        else {
+            this.ajaxError();
+        }
+    };
 })();
