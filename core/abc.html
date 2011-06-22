@@ -1,14 +1,63 @@
 <!DOCTYPE HTML>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title></title>
-  <script type="text/javascript" src="dom-1.1.1.js"></script>
+<meta charset="UTF-8">
+<title></title>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.class.js"></script>
+<script type="text/javascript">
+"use strict"
+$.Class('Person', {
+init: function (age, sex) {
+    this.age = age;
+    this.sex = sex;
+},
+setAge: function (age) {
+    this.age = age;
+}
+});
 
+$.Class.extend(Person, 'Programmer', {
+init: function (age, sex) {
+    this.age = age;
+},
+setAge: function (age) {
+console.log(this.sex)
+    //this.$super.setAge(age);
+    console.log(this.$super)
+}
+
+})
+
+var p = new Person(20, 'femail');
+
+var pro = new Programmer(20, 'femail');
+//var pro2 = new Programmer(40, 'mail');
+pro.setAge(21);
+
+
+
+
+function fn() {
+
+}
+
+fn.prototype.test = function () {
+    console.log('test', this)
+    this.obj.abc();
+}
+
+fn.prototype.obj = {
+    abc: function () {console.log(this, 'innnnnnner')}
+}
+
+var f1 = new fn();
+var f2 = new fn();
+f2.obj['1'] = 1;
+</script>
 </head>
 <body>
-    <p>At w3schools.com you <a>will learn howa</a> to make a website. We offer free tutorials in all web development technologies.
-Select a tutorial from the menu to the left.,</p>
+
 
 </body>
 </html>
