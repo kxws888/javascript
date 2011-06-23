@@ -10,11 +10,16 @@ jQuery.extend({
 			var _this = this;
 			var a = [];
 			while (typeof _this.$super != "undefined") {
+                var $super = _this.$super;
+                _this.$super = new Object;
+                for (var x in $super) {
+                    _this.$super[x] = $super[x];
+                }
 				_this.$super.$this = this;
 				if (typeof _this.$super.init == "function") a[a.length] = _this;
 				_this = _this.$super;
 			}
-			for (var i = a.length - 1; i > -1; i--) {a[i].$super.init.apply(a[i].$super, arguments);console.log(a[i].$super.age)}
+			for (var i = a.length - 1; i > -1; i--) a[i].$super.init.apply(a[i].$super, arguments);
 			if (this.init instanceof Function) this.init.apply(this, arguments);
 		}
 		typeClass.prototype = obj;
@@ -63,7 +68,7 @@ jQuery.extend(jQuery.Class,{
 				return function () {
 					var f = this.$this[m];
 					var t = this.$this;
-					var r = (t[m] = func).apply(this, arguments);
+					var r = (t[m] = func).apply(t, arguments);
 					t[m] = f;
 					return r;
 				};
@@ -79,7 +84,7 @@ jQuery.extend(jQuery.Class,{
 			for (var x in superClass) {
 				if (x == "prototype") continue;
 				this[x] = superClass[x];
-			}console.log(this.prototype.$super)
+			}
 			return this;
 		},
 	extend :

@@ -20,11 +20,13 @@ setAge: function (age) {
 $.Class.extend(Person, 'Programmer', {
 init: function (age, sex) {
     this.age = age;
+    //this.sex = sex;
 },
 setAge: function (age) {
-console.log(this.sex)
-    //this.$super.setAge(age);
-    console.log(this.$super)
+    console.log('sex:', this.sex)
+    console.log('age:', this.age)
+    this.$super.setAge(age)
+    console.log('age:', this.age)
 }
 
 })
@@ -38,22 +40,6 @@ pro.setAge(21);
 
 
 
-function fn() {
-
-}
-
-fn.prototype.test = function () {
-    console.log('test', this)
-    this.obj.abc();
-}
-
-fn.prototype.obj = {
-    abc: function () {console.log(this, 'innnnnnner')}
-}
-
-var f1 = new fn();
-var f2 = new fn();
-f2.obj['1'] = 1;
 </script>
 </head>
 <body>
