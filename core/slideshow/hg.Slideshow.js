@@ -1,8 +1,6 @@
 (function ($) {
     'use strict';
-    /**
-    * @class
-    */
+    /** @class */
     $.Class("hg.Slideshow",
         /** @lends Slideshow.prototype */
         {
@@ -10,7 +8,7 @@
         * hg.Slideshow is abstract class for slideshow, inherit it if you want a slideshow on webpage
         *
         * @author nhnst liuming
-        * @version 20110617.5
+        * @version 20110623.4
         * @constructs
         * @requires jQuery
         * @param {Number} [gap=5000] The rate of slideshow plays
@@ -18,7 +16,7 @@
         * @param {Boolean} [loop=true] Indicate whether the slideshow plays loop
         * @param {Integer} [step=1] The step of slideshow moves
         */
-        init: function () {
+        init: function (args) {
             var args = arguments[0] || {};
 
             this.gap = args.gap || 5000;
@@ -44,8 +42,8 @@
             var self = this;
             if (!this.timer) {
                 this.timer = setInterval(function () {
-                    self.next();
-                }, self.gap);
+                    self.order === 'asc' ? self.next() : self.prev.call(self);
+                }, this.gap);
             }
         },
         /**
@@ -111,6 +109,7 @@
             }
             return this.moveTo(target);
         }
+
     });
 
 })(jQuery);

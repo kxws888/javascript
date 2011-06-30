@@ -1,59 +1,47 @@
 (function ($) {
     'use strict';
-    hg = hg || {};
-    /**
-    * @class
-    */
+    /** @class */
     $.Class("hg.Lightbox",
         /** @lends Lightbox.prototype */
         {
         /**
          * hg.Lightbox A basic lightbox for webpage, inherit it if you want some amazon effect
          * @author nhnst liuming
-         * @version 20110617.5
+         * @version 20110623.4
          * @constructs
          * @param {String|Object} box A cssQuery string, dom object or jQuery object which is for operation
          * @param {Boolean} [draggable=true] Whether to allow dragging
          * @param {Boolean} [exclusive=true] Whether to attach a big enough background to make all the content except the lightbox itself non-interactive
         */
-        init: function (args) {
+        init : function (args) {
             this.box = null;
             this.draggable = true;
             this.exclusive = true;
 
             $.extend(this, args);
 
-            this.box = $(this.box);
-            this.box.css('position', 'fixed');
+            this.box = this.box === null ? this.createBox() : $(this.box);
+            this.box.css({
+                position: 'fixed',
+                display: 'none',
+                zIndex: '19860208'
+            });
 
             if (this.exclusive) {
                 this.mask = $('<div>');
                 this.mask.css({
-                    position: 'fixed',
+                    position: 'absolute',
                     left: 0,
                     top: 0,
                     width: '100%',
                     height: $(document).height(),
                     display: 'none',
-                    zIndex: '99999'
+                    zIndex: '19860207',
+                    opacity: '0.5',
+                    filter: 'alpha(opacity=50)',
+                    backgroundColor: 'black'
                 });
-                try {
-                    this.mask.css('backgroundColor', 'rgba(0,0,0,0.7)');
-                }
-                catch (e) {
-                    this.mask.css({
-                        background: 'transparent',
-                        filter: 'progid:DXImageTransform.Microsoft.gradient(startColorstr=#70000000,endColorstr=#70000000)',
-                        zoom: 1
-                    })
-                }
-                this.mask.append(this.box);
                 this.mask.appendTo(document.body);
-                this.box.show();
-            }
-            else {
-                this.box.css('z-index', '99999');
-                this.box.hide();
             }
 
             if (this.draggable) {
@@ -69,9 +57,8 @@
                 this.y = 0;
             }
 
-            if (navigator.appVersion.indexOf('MSIE 6.0') > -1) {
+            if (!window.XMLHttpRequest) {
                 this.box.css('position', 'absolute').addClass('lightbox');
-                this.mask && this.mask.css('position', 'absolute');
             }
         },
         /**
@@ -83,16 +70,21 @@
         * Show the lightbox
         * @public
         */
-        show: function () {
+        show : function () {
 
             this.status = true;
 
-            this.exclusive ? this.mask.show() : this.box.show();
+            if (this.exclusive) {
+                this.mask.show();
+            }
+
+            this.box.show();
 
             this.left = ($(window).width() - this.box.width()) / 2;
             this.top = ($(window).height() - this.box.height()) / 2;
 
-            if (navigator.appVersion.indexOf('MSIE 6.0') > -1) {
+
+            if (!window.XMLHttpRequest) {
                 this.box.css('left', this.left + $(document).scrollLeft());
                 this.box.css('top', this.top + $(document).scrollTop());
             }
@@ -112,16 +104,19 @@
         * Hide the lightbox
         * @public
         */
-        hide: function () {
+        hide : function () {
             this.status = false;
-            this.exclusive ? this.mask.hide() : this.box.hide();
+            if (this.exclusive) {
+                this.mask.hide();
+            }
+            this.box.hide();
             $(window).unbind('.lightbox');
         },
         /**
         * Drag init
         * @private
         */
-        dragInit: function (e) {
+        dragInit : function (e) {
             this.box.css('cursor', 'move');
             var doc = $(document);
             doc.data('$drag', true);
@@ -135,26 +130,29 @@
         * Drag on
         * @private
         */
-        draging: function (e) {
+        draging : function (e) {
             var left, top, x, y;
             x = e.pageX;
             y = e.pageY;
-            left = x - this.x + this.left;
-            top = y - this.y + this.top;
-            this.box.css({
-                left: left,
-                top: top
-            });
+            this.left = x - this.x + this.left;
+            this.top = y - this.y + this.top;
+
+            if (!window.XMLHttpRequest) {
+                this.box.css('left', this.left + $(document).scrollLeft());
+                this.box.css('top', this.top + $(document).scrollTop());
+            }
+            else {
+                this.box.css('left', this.left);
+                this.box.css('top', this.top);
+            }
             this.x = x;
             this.y = y;
-            this.left = left;
-            this.top = top;
         },
         /**
         * Drag end
         * @private
         */
-        dragEnd: function () {
+        dragEnd : function () {
             this.box.css('cursor', '');
             var doc = $(document);
             doc.data('$drag', false);

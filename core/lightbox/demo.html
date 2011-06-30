@@ -34,7 +34,7 @@ html, body{
 <div id="lb">test</div>
 <script type="text/javascript">
 var a = new hg.LightboxZ({
-box: jQuery('#lb').clone(false).css({width:'300px',height:'300px'}),
+box: jQuery('#lb').clone(false).css({width:'300px',height:'300px'}).appendTo('body'),
 draggable: true,
 animateBackgroundOnly: false
 });
