@@ -41,8 +41,6 @@
 
             request.onsuccess = function (e) {
                 var powerword, dictcn, qqdict;
-                database.deleteObjectStore('powerword');
-                database.deleteObjectStore('dictcn');
                 powerword = database.createObjectStore('powerword', {keyPath: 'key'});
                 dictcn = database.createObjectStore('dictcn', {keyPath: 'key'});
                 qqdict = database.createObjectStore('qqdict', {keyPath: 'key'});
