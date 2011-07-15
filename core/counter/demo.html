@@ -6,11 +6,16 @@
   <script type="text/javascript" src="hg.counter.js"></script>
 </head>
 <body>
-  
+    <canvas id="counter"></canvas>
 </body>
 <script type="text/javascript">
     new hg.Counter({
-        length: 5
+        length: 3,
+        order: 'asc',
+        value: 915,
+        stage: 'counter',
+        size: [77, 132],
+        numberImage: ['bright_b.png', 'dark_b.png']
     });
 </script>
 </html>
