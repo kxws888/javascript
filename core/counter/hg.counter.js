@@ -141,9 +141,7 @@ hg.Counter = (function () {
         },
 
         start: function () {
-            this.flush();
             var self = this;
-            self.value += 1;
             if (self.bits[self.length - 1].walk() === -1) {
                 console.log('end')
                 return;
@@ -154,7 +152,7 @@ hg.Counter = (function () {
         },
 
         walk: function () {
-            this.value += this.order === 'asc' ? 1 : -1;
+            this.value += this.order === 'asc' ? 1 : -1;console.log(this.value)
             if (this.value > 9) {
                 if (this.index === 0) {
                     this.value = 9;
@@ -170,7 +168,7 @@ hg.Counter = (function () {
                     }
                 }
             }
-            else if (this.index < 0) {
+            else if (this.value < 0) {
                 if (this.index === 0) {
                     this.value = 0;
                     return -1;
@@ -232,6 +230,7 @@ hg.Counter = (function () {
                             bit.back = back;
                             bit.draw = this.drawNumber;
                         }
+                        this.flush();
                         self.start();
                     }
                 }).apply(self, arguments);
