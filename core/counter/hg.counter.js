@@ -145,7 +145,7 @@ hg.Counter = (function () {
             var self = this;
             self.value += 1;
             if (self.bits[self.length - 1].walk() === -1) {
-                alert('end')
+                console.log('end')
                 return;
             }
             setTimeout(function () {
@@ -196,12 +196,10 @@ hg.Counter = (function () {
             this.$super.init.call(this, args);
 
             this.stage = document.getElementById(args.stage);
-            this.size = args.size;
+            this.stage.width = 231;
+            this.stage.height = 132;
             this.numberImage = args.numberImage;
 
-            this.stage.width = args.size[0] * this.length;
-            this.stage.height = args.size[1];
-            this.stage.style.backgroundColor = 'black';
             this.ctx = this.stage.getContext('2d');
 
             this.numbersData = {
@@ -216,33 +214,34 @@ hg.Counter = (function () {
                 8: [1,1,1,1,1,1,1],
                 9: [1,1,1,1,0,1,1]
             };
-            this.numberCanvas = {};
 
-            var i, canvas, self = this;
-            for (i = 0 ; i < this.length ; i += 1) {
-                canvas = document.createElement('canvas');
-                canvas.width = this.stage.width / this.length;
-                canvas.height = this.stage.height;
-                this.bits[i].canvas = canvas;
-            }
+            var self = this;
 
-            new ImagePreloader(this.numberImage, function(oImage, aImages, nProcessed, nLoaded) {
-                if (nLoaded === aImages.length) {
-                    self.front = aImages[0];
-                    self.back = aImages[1];
+            new ImagePreloader(this.numberImage, function () {
+                (function(oImage, aImages, nProcessed, nLoaded) {
+                    if (nLoaded === aImages.length) {
+                        var front = aImages[0], back = aImages[1], i, canvas, bit;
 
-                    self.start();
-                    for (i = 0 ; i < 10 ; i += 1) {
-                        //self.numberCanvas[i] = self.drawNumber(i, self.size[0], self.size[1], front, back);
+                        for (i = 0 ; i < this.length ; i += 1) {
+                            bit = this.bits[i];
+                            canvas = document.createElement('canvas');
+                            canvas.width = 77;
+                            canvas.height = 132;
+                            bit.canvas = canvas;
+                            bit.front = front;
+                            bit.back = back;
+                            bit.draw = this.drawNumber;
+                        }
+                        self.start();
                     }
-                }
+                }).apply(self, arguments);
             });
         },
 
         flush: function () {
             this.$super.flush.call(this);
-            for (var i = this.length - 1 ; i >= 0 ; i -= 1) {
-                this.bits[i].canvas = this.drawNumber(this.bits[i].value, this.size[0], this.size[1], this.front, this.back);
+            for (var i = 0 ; i < this.length ; i += 1) {
+                this.bits[i].draw();
             }
             this.drawStage();
         },
@@ -250,25 +249,30 @@ hg.Counter = (function () {
         walk: function () {
             var now = this.counter.$super.walk.call(this);
             if (now > -1) {
-                this.counter.drawNumber(this.value, this.counter.size[0], this.counter.size[1], this.counter.front, this.counter.back);
+                this.draw();
                 this.counter.drawStage();
             }
             return now;
         },
 
         drawStage: function () {
-            this.ctx.clearRect(0, 0, this.stage.width, this.stage.height);
-            for (var i = this.length - 1 ; i >= 0 ; i -= 1) {
-                this.ctx.drawImage(this.bits[i].canvas, this.size[0] * i, 0);
+            this.ctx.clearRect(0, 0, 231, 132);
+            for (var i = 0 ; i < this.length ; i += 1) {
+                this.ctx.drawImage(this.bits[i].canvas, 77 * i, 0);
             }
         },
 
-        drawNumber: function (n, w, h, front, back) {
-            var canvas = document.createElement('canvas'), ctx, data = this.numbersData[n], radians = Math.PI / 2;
-            canvas.width = w;
-            canvas.height = h;
-            ctx = canvas.getContext('2d');
+        drawNumber: function () {
+            var ctx, data = this.counter.numbersData[this.value], radians = Math.PI / 2, front, back;
+            ctx = this.canvas.getContext('2d');
+            front = this.front;
+            back = this.back;
+
+            ctx.restore();
+            ctx.clearRect(0, 0, 77, 132);
+            ctx.save();
             ctx.translate(12, 15);
+
             ctx.drawImage(data[0] ? front : back, 0, 0);
 
             ctx.translate(55, 5);
@@ -292,8 +296,6 @@ hg.Counter = (function () {
             ctx.translate(4, 6);
             ctx.rotate(radians);
             ctx.drawImage(data[6] ? front : back, 0, 0);
-
-            return canvas;
         }
     });
 
