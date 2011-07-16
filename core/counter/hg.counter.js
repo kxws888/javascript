@@ -113,7 +113,6 @@ hg.Counter = (function () {
 
         init: function (args) {
             args = args || {};
-            this.value = args.value;
             this.length = args.length;
             this.order = args.order;
 
@@ -132,9 +131,9 @@ hg.Counter = (function () {
             }
         },
 
-        flush: function () {
-            var i, value = this.value;
-            for (i = 0 ; i < this.length ; i += 1) {
+        set: function (value) {
+            this.value = value;
+            for (var i = 0 ; i < this.length ; i += 1) {
                 this.bits[i].value = Math.floor(value / Math.pow(10, (this.length - i - 1)));
                 value -= this.bits[i].value * Math.pow(10, (this.length - i - 1));
             }
@@ -152,7 +151,7 @@ hg.Counter = (function () {
         },
 
         walk: function () {
-            this.value += this.order === 'asc' ? 1 : -1;console.log(this.value)
+            this.value += this.order === 'asc' ? 1 : -1;
             if (this.value > 9) {
                 if (this.index === 0) {
                     this.value = 9;
@@ -193,12 +192,14 @@ hg.Counter = (function () {
         init: function (args) {
             this.$super.init.call(this, args);
 
+            this.gap = args.gap || 0;
             this.stage = document.getElementById(args.stage);
-            this.stage.width = 231;
+            this.stage.width = 77 * this.length + this.gap * (this.length - 1);
             this.stage.height = 132;
             this.numberImage = args.numberImage;
 
             this.ctx = this.stage.getContext('2d');
+            this.ctx.fillStyle = '#fff';
 
             this.numbersData = {
                 0: [1,1,1,1,1,1,0],
@@ -230,19 +231,45 @@ hg.Counter = (function () {
                             bit.back = back;
                             bit.draw = this.drawNumber;
                         }
-                        this.flush();
-                        self.start();
+                        this.flush(2368165039, 5000, 200);
                     }
                 }).apply(self, arguments);
             });
         },
 
-        flush: function () {
-            this.$super.flush.call(this);
+        set: function (value) {
+            this.$super.set.call(this, value);
             for (var i = 0 ; i < this.length ; i += 1) {
                 this.bits[i].draw();
             }
             this.drawStage();
+        },
+
+        flush: function (value, time, rate) {
+            var self = this, timer, start = +new Date(), i = this.length - 1, delay = 0;
+            time = time || 5000;
+            rate = rate || 200;
+            timer = setInterval(function () {
+                (function () {
+                    var num, last = Math.pow(10, this.length - i);
+                    if (delay || (+new Date() - start) > time) {
+                        if (i < 0) {
+                            clearInterval(timer);console.log('flush ends', value)
+                            return;
+                        }
+                        delay += 1;
+                        num = Math.floor(Math.random() * Math.pow(10, i)) * last + (value - Math.floor(value / last) * last);
+                        if (delay === Math.floor(1000 / rate) + 1) {
+                            i -= 1;
+                            delay = 1;
+                        }
+                    }
+                    else {
+                        num = Math.floor(Math.random() * Math.pow(10, this.length));
+                    }
+                    this.set(num);
+                }).call(self);
+            }, rate);
         },
 
         walk: function () {
@@ -255,10 +282,12 @@ hg.Counter = (function () {
         },
 
         drawStage: function () {
-            this.ctx.clearRect(0, 0, 231, 132);
+            this.ctx.clearRect(0, 0, this.stage.width, 132);
             for (var i = 0 ; i < this.length ; i += 1) {
-                this.ctx.drawImage(this.bits[i].canvas, 77 * i, 0);
+                this.ctx.drawImage(this.bits[i].canvas, 77 * i + this.gap * i, 0);
+                this.ctx.rect(77 * (i + 1) + this.gap * i, 0, this.gap, 132);
             }
+            this.ctx.fill();
         },
 
         drawNumber: function () {
@@ -302,5 +331,3 @@ hg.Counter = (function () {
     return CounterC;
 
 })();
-
-
