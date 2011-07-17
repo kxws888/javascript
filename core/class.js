@@ -33,27 +33,27 @@ function ClassC(parent, child) {
 }
 
 hg.Class = function(){
-	var klass = function(){
-		this.$init.apply(this, arguments);
-	};
-	var args = [];
-	for (var i = 0, l = arguments.length; i < l; i++) {
-		args[i] = arguments[i];
-	}
-	var prototype = args.slice(-1)[0];
-	var _prototype = {};
-	var supers = args.slice(0, -1);
-	for (var i in supers) {
-		var _super = supers[i];
-		if (typeof _super == "function") {
-			$.extend(_prototype, _super.prototype);
-			_prototype.$super = _super.prototype;
-		} else if (typeof _super == "object"){
-			$.extend(_prototype, _super);
-		}
-	}
-	klass.prototype = $.extend(_prototype, prototype);
-	return klass;
+    var klass = function(){
+        this.$init.apply(this, arguments);
+    };
+    var args = [];
+    for (var i = 0, l = arguments.length; i < l; i++) {
+        args[i] = arguments[i];
+    }
+    var prototype = args.slice(-1)[0];
+    var _prototype = {};
+    var supers = args.slice(0, -1);
+    for (var i in supers) {
+        var _super = supers[i];
+        if (typeof _super == "function") {
+            $.extend(_prototype, _super.prototype);
+            _prototype.$super = _super.prototype;
+        } else if (typeof _super == "object"){
+            $.extend(_prototype, _super);
+        }
+    }
+    klass.prototype = $.extend(_prototype, prototype);
+    return klass;
 };
 
 
