@@ -6,15 +6,40 @@
   <script type="text/javascript" src="hg.counter.js"></script>
 </head>
 <body>
-    <canvas id="counter" style="background-color:black"></canvas>
+    <canvas id="counter1"></canvas><br/>
+    <canvas id="counter2" style="background-color:black"></canvas><br/>
+    <canvas id="clock" style="background-color:black"></canvas>
 </body>
 <script type="text/javascript">
-    new hg.Counter({
+var counter1, counter2, clock;
+
+counter1 = new hg.CounterT({
+    length: 10,
+    stage: 'counter1',
+    font: 'bold 60px arial',
+    width: 56,
+    height: 76,
+    borderWidth: 4,
+    padding: [10, 6]
+});
+counter1.flush(2368165039, 5000, 50);
+
+new hg.ImagePreloader(['bright_b.png', 'dark_b.png'], 2, function (aImages, nLoaded) {
+
+    counter2 = new hg.CounterIH({
         length: 10,
-        order: 'desc',
-        stage: 'counter',
-        gap: 5,
-        numberImage: ['bright_b.png', 'dark_b.png']
+        stage: 'counter2',
+        numberImage: aImages
     });
+    counter2.flush(2368165039, 5000, 100);
+
+    clock = new hg.Clock({
+        length: 6,
+        stage: 'clock',
+        numberImage: aImages
+        });
+    clock.set();
+    clock.start();
+});
 </script>
 </html>
