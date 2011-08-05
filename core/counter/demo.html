@@ -3,17 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <title></title>
+  <style type="text/css">
+      #counter0 {
+          list-style-type: none;
+          padding: 0;
+      }
+      #counter0 > .num {
+          float: left;
+          width: 25px;
+          height: 35px;
+          margin-right: 1px;
+          border: 1px solid #CCC;
+          background: -webkit-gradient(linear,0 0,0 100%,from(#F9F9F9),color-stop(.2,white),color-stop(.4,white),to(#EEE));
+          color: #F50;
+          font-family: HelveticaNeue;
+          font-size: 35px;
+          line-height: 35px;
+      }
+  </style>
   <script type="text/javascript" src="hg.counter.js"></script>
 </head>
 <body>
+    <ul id="counter0">
+        <li class="num">0</li>
+        <li class="num">0</li>
+        <li class="num">5</li>
+        <li class="num">4</li>
+        <li class="num">3</li>
+        <li class="num">2</li>
+        <li class="num"></li>
+        <li class="unit">人</li>
+    </ul><br/>
+    
     <canvas id="counter1"></canvas><br/>
     <canvas id="counter2" style="background-color:black"></canvas><br/>
     <canvas id="clock" style="background-color:black"></canvas>
 </body>
 <script type="text/javascript">
-var counter1, counter2, clock;
+var counter0, counter1, counter2, clock;
 
-counter1 = new hg.CounterT({
+counter0 = new hg.CounterTH({
+    length: 7,
+    bitHolder: '#counter0 li.num'
+});
+counter0.flush(8165039, 5000, 50);
+
+counter1 = new hg.CounterTC({
     length: 10,
     stage: 'counter1',
     font: 'bold 60px arial',

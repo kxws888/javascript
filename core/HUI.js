@@ -303,9 +303,20 @@
     });
 
 /****************************************************************************************************************************************************************/
-
-    $.Class('hg.Placeholder', {
-
+    /** @class */
+    $.Class('hg.Placeholder',
+        /** @lends Placeholder.prototype */
+        {
+        /**
+        * hg.Placeholder is a fack attribute called placeholder of html5 form element, in case to fix the lack of browser support
+        *
+        * @author nhnst liuming
+        * @version 20110727.3
+        * @constructs
+        * @param {Object} elements The rate of slideshow plays
+        * @param {String} highlight The css class for highlight
+        * @namespace hg
+        */
         init: function (args) {
             args = args || {};
             this.elements = $(args.elements);
@@ -319,11 +330,17 @@
                 });
             }
         },
-
+        /**
+        * detect if browser support the placeholder attribute
+        * @private
+        */
         support: (function() {
             return 'placeholder' in document.createElement('input');
         })(),
-
+        /**
+        * handle focus event
+        * @private
+        */
         onfocus: function (e) {
             var target = e.target;
             this.highlight && $(target).addClass(this.highlight);
@@ -333,7 +350,10 @@
                 }
             }
         },
-
+        /**
+        * handle blur event
+        * @private
+        */
         onblur: function (e) {
             var target = e.target;
             this.highlight && $(target).removeClass(this.highlight);
@@ -413,12 +433,6 @@
         moveTo: function (index) {
             var res = index;
             if (this.count !== index) {
-                if (index < 0 ) {
-                    index += this.length + 1;
-                }
-                if (index > this.length) {
-                    index = this.length;
-                }
                 this.count = index;
             }
             else {
@@ -462,6 +476,150 @@
             return this.moveTo(target);
         }
 
+    });
+
+    /** @class */
+    $.Class.extend(hg.Slideshow, 'hg.SlideshowS',
+        /** @lends SlideshowS.prototype */
+        {
+        /**
+        * hg.Slideshow is a slideshow animating by sliding
+        *
+        * @author nhnst liuming
+        * @version 20110727.3
+        * @constructs
+        * @augments hg.Slideshow
+        * @requires jQuery
+        * @param {Object|String} stage The container of slideshow
+        * @param {Object|String} slides The slide content of slideshow
+        * @param {Object|String} btnIndex The index controller of slideshow
+        * @param {Object|String} btnPrev The prev button
+        * @param {Object|String} btnNext The next button
+        * @param {Number|String} unit The length of every slide, specify 'auto' to caculate it automatly
+        * @param {String} easing The animation easing
+        * @param {String} direction The direction of slideshow
+        */
+        init : function (args) {
+
+            this.stage = null;
+            this.slides = null;
+            this.btnIndex = null;
+            this.btnPrev = null;
+            this.btnNext = null;
+            this.unit = null;
+            this.easing = null;
+            this.direction = 'horizontal';
+
+            $.extend(this, args);
+
+            var self = this, stage;
+
+            stage = $(this.stage).eq(0);
+            this.slides = $(this.slides, stage);
+            this.prop = this.direction === 'horizontal' ? 'left' : 'top';
+
+            if (this.length === 'auto') {
+                this.length = this.slides.children().length;
+            }
+
+            this.slides.css(this.prop, 0);
+            this.direction === 'horizontal' ? this.slides.width(this.unit * this.length) : this.slides.height(this.unit * this.length);
+
+            if (this.btnIndex) {
+                this.btnIndex = stage.find(this.btnIndex);
+                this.btnIndex.each(function (index, elem) {
+                    var i = index + 1;
+                    $(elem).click(function () {
+                        var bak = this.count;
+                        if (self.moveTo(i) > -1) {
+                            self.slideTo(bak, i);
+                        }
+                    });
+                });
+            }
+
+            if (this.btnPrev) {
+                stage.find(this.btnPrev).click(function (e) {
+                    if (self.length > 1) {
+                        self.prev();
+                    }
+                    e.preventDefault();
+                    return false;
+                });
+            }
+
+            if (this.btnNext) {
+                stage.find(this.btnNext).click(function (e) {
+                    if (self.length > 1) {
+                        self.next();
+                    }
+                    e.preventDefault();
+                    return false;
+                });
+            }
+        },
+
+        reset : function () {
+            this.$super.reset();
+            this.slides.css(this.prop, 0);
+        },
+
+        slideTo : function (from, to, callback) {
+            var props = {}, animOptions = {};
+            this.slides.stop(true, true);
+            props[this.prop] = '-=' + this.unit * (to - from);
+            animOptions['duration'] = 500;
+            this.easing && (animOptions['easing'] = this.easing);
+            animOptions['complete'] = callback;
+            this.slides.animate(props, animOptions);
+        },
+
+        prev : function () {
+            var bak = this.count, res = this.$super.prev(), self = this,  i;
+            if (res > -1) {
+                if (res > bak) {
+                    i = this.length;
+                    while (i > bak) {
+                        this.slides.children(':last').prependTo(this.slides);
+                        i -= 1;
+                    }
+                    this.slides.css(this.prop, parseInt(this.slides.css(this.prop), 10) - this.unit * (this.length - bak));
+                }
+
+                this.slideTo(bak, bak - this.step, function () {
+                    if (typeof i !== 'undefined') {
+                        self.slides.css(self.prop, parseInt(self.slides.css(self.prop), 10) - self.unit * i);
+                        while (i) {
+                            self.slides.children(':last').prependTo(self.slides);
+                            i -= 1;
+                        }
+                    }
+                });
+            }
+        },
+
+        next : function () {
+            var bak = this.count, res = this.$super.next(), self = this,  i;
+            if (res > -1) {
+                if (res < bak) {
+                    i = 1;
+                    while (i < bak) {
+                        this.slides.children(':first').appendTo(this.slides);
+                        i += 1;
+                    }
+                    this.slides.css(this.prop, parseInt(this.slides.css(this.prop), 10) + this.unit * (i - 1));
+                }
+                this.slideTo(bak, bak + this.step, function () {
+                    if (typeof i !== 'undefined') {
+                        self.slides.css(self.prop, parseInt(self.slides.css(self.prop), 10) + self.unit * (self.length - i + 1));
+                        while (i <= self.length) {
+                            self.slides.children(':first').appendTo(self.slides);
+                            i += 1;
+                        }
+                    }
+                });
+            }
+        }
     });
 
 /****************************************************************************************************************************************************************/

@@ -3,6 +3,7 @@
         localStorage.ui = 'simple';
         localStorage.skin = 'orange';
         localStorage.hotKeySwitch = '1';
+	localStorage.assistKey = '{"ctrlKey":true,"altKey":true,"shiftKey":false,"metaKey":false}';
         localStorage.hotKeyHover = '{"ctrlKey":false,"altKey":true,"shiftKey":false,"metaKey":false,"keyCode":112}';
         localStorage.hotKeyDrag = '{"ctrlKey":false,"altKey":true,"shiftKey":false,"metaKey":false,"keyCode":113}';
         localStorage.mainDict = 'powerword';

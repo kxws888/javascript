@@ -10,7 +10,8 @@
     },
 
     "browser_action": {
-        "default_title": "易词"
+        "default_title": "易词",
+	"default_popup": "pages/popup.html"
     },
 
     "background_page": "pages/background.html",
