@@ -3,7 +3,7 @@
 
     function init() {
         mainview = document.getElementById('mainview');
-        dicts = document.getElementById('dictSection');
+        dicts = document.getElementById('hoverSection');
 
         uiEnhance();
         restoreOptions();
@@ -27,9 +27,19 @@
             elements[i].addEventListener('click', checkSwitchClickHanlder, false);
         }
         //dict
-        elements = mainview.querySelectorAll('select');
+        elements = mainview.querySelectorAll('#hoverSection select');
         for (i = 0, len = elements.length ; i < len ; i += 1) {
             elements[i].addEventListener('change', setDict, false);
+        }
+        //speed
+        elements = mainview.querySelectorAll('#hoverSection input[type=range]');
+        for (i = 0, len = elements.length ; i < len ; i += 1) {
+            elements[i].addEventListener('change', setSpeed, false);
+        }
+        //assist key
+        elements = mainview.querySelectorAll('#assistKeySection select');
+        for (i = 0, len = elements.length ; i < len ; i += 1) {
+            elements[i].addEventListener('change', setAssistKey, false);
         }
         //hot key
         elements = mainview.querySelectorAll('#hotKeySection input[type=text]');
@@ -103,6 +113,14 @@
             assistDict.querySelector('[value=' + target.value + ']').style.display = 'none';
         }
         localStorage[target.name] = target.value;
+    }
+
+    function setSpeed() {
+        localStorage.speed = this.value;
+    }
+
+    function setAssistKey(e) {
+        localStorage.assistKey = this.value;
     }
 
     function setHotKey(e) {
@@ -180,12 +198,25 @@
             checkSwitch(elem, elem.parentNode.parentNode.parentNode.querySelectorAll('input[type=text]'));
         }
 
-        elements = mainview.querySelectorAll('select');
+        elements = mainview.querySelectorAll('#hoverSection select');
         for (i = 0, len = elements.length ; i < len ; i += 1) {
-            elem = elements[i];console.log(localStorage[elem.name])
+            elem = elements[i];
             elem.querySelector('option[value=' + localStorage[elem.name] + ']').selected = true;
             setDict.call(elem, {target: elem});
         }
+
+        elements = mainview.querySelectorAll('#hoverSection input[type=range]');
+        for (i = 0, len = elements.length ; i < len ; i += 1) {
+            elem = elements[i];
+            elem.value = localStorage.speed;
+        }
+
+        elements = mainview.querySelectorAll('#assistKeySection select');
+        for (i = 0, len = elements.length ; i < len ; i += 1) {
+            elem = elements[i];
+            elem.querySelector('option[value=' + localStorage.assistKey + ']').selected = true;
+        }
+
 
         //hot key
         elements = mainview.querySelectorAll('#hotKeySection input[type=text]');

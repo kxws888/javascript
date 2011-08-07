@@ -1,16 +1,16 @@
 ﻿(function () {
     if (!localStorage.skin) {
-        localStorage.ui = 'simple';
         localStorage.skin = 'orange';
         localStorage.hotKeySwitch = '1';
-	localStorage.assistKey = '{"ctrlKey":true,"altKey":true,"shiftKey":false,"metaKey":false}';
+        localStorage.assistKey = 'none';
         localStorage.hotKeyHover = '{"ctrlKey":false,"altKey":true,"shiftKey":false,"metaKey":false,"keyCode":112}';
         localStorage.hotKeyDrag = '{"ctrlKey":false,"altKey":true,"shiftKey":false,"metaKey":false,"keyCode":113}';
         localStorage.mainDict = 'powerword';
         localStorage.assistDict = 'dictcn';
         localStorage.hoverCapture = '1';
-        localStorage.dragCapture = '1';
+        localStorage.dragCapture = '0';
         localStorage.status = '1';
+        localStorage.speed = '50';
     }
 
     const DICT_API = {
@@ -48,23 +48,21 @@
             };
         }
     };
-/*
-    menuItemIdHover = chrome.contextMenus.create({
-        title: '启动易词',
+
+    /*menuItemIdHover = chrome.contextMenus.create({
+        title: '查询',
         onclick: contextMenusHanlder
-    });
-*/
+    });*/
+
     setPageActionIcon(localStorage.status === '1');
     chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-        if (tab.status === 'complete') { return; }
-        setPageActionIcon(false);
-        if (!/^chrome/.test(tab.url) && tab.url.indexOf('https://chrome.google.com/webstore') === -1 && localStorage.status === '1') {
+        if (tab.status !== 'complete' && !/^chrome/.test(tab.url) && tab.url.indexOf('https://chrome.google.com/webstore') === -1) {
             chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
             chrome.tabs.executeScript(tabId, {file: "src/dict.js"});
-            setPageActionIcon(true);
         }
     });
 
+    /*
     chrome.tabs.onSelectionChanged.addListener(function (tabId, selectInfo) {
         setPageActionIcon(false);
         chrome.tabs.sendRequest(tabId, {
@@ -74,7 +72,7 @@
         }, function () {
             setPageActionIcon(true);
         });
-    });
+    });*/
 
     function contextMenusHanlder(info, tab) {
         var cmd = localStorage.status === '1' ? 'toggleHoverCapture' : 'toggleDragCapture';
@@ -131,6 +129,8 @@
             };
         }
         params.hotKey = hotKeys;
+        params.speed = parseInt(localStorage.speed, 10);
+        params.assistKey = localStorage.assistKey === 'none' ? null : {"ctrlKey":localStorage.assistKey.indexOf('ctrl') > -1,"altKey":localStorage.assistKey.indexOf('alt') > -1};
 
         return params;
     }
@@ -143,8 +143,24 @@
                     setCaptureMode(msg, port);
                     setPageActionIcon(true);
                     break;
+                case 'getCaptureMode':
+                    port.postMessage({cmd: 'setCaptureMode', hoverCapture: localStorage.hoverCapture === '1', dragCapture: localStorage.dragCapture === '1'});
+                    break;
                 case 'query':
-                    simpleQuery(msg, port);
+                    if (msg.dict) {
+                        new DICT_QUERY[msg.dict]({
+                            word: msg.w,
+                            load: function (json) {
+                                port.postMessage(json);
+                            },
+                            error: function (word) {
+                                port.postMessage({key: msg.w});
+                            }
+                        }).query();
+                    }
+                    else {
+                        simpleQuery(msg, port);
+                    }
                     break;
                 }
             });
@@ -154,6 +170,7 @@
     function setCaptureMode(msg, port) {
         localStorage.hoverCapture = msg.hoverCapture ? '1' : '0';
         localStorage.dragCapture = msg.dragCapture ? '1' : '0';
+        port.postMessage(msg);
     };
 
     function simpleQuery(msg, port) {

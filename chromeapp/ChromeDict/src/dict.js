@@ -390,6 +390,8 @@ dom.Event = {
         this.hoverCapture = args.hoverCapture;
         this.dragCapture = args.dragCapture;
         this.hotKey = args.hotKey || null;
+        this.assistKey = args.assistKey || null;
+        this.speed = args.speed || 50;
         this.skin = args.skin || 'orange';
         this.ui = this.createUI();
         this.port = chrome.extension.connect({name: 'dict'});
@@ -398,20 +400,33 @@ dom.Event = {
         this.rAllWord = /\b[a-z]+([-'][a-z]+)*\b/gmi;
         this.rSingleWord = /^[a-z]+([-'][a-z]+)*$/i;
 
-        this.port.onMessage.addListener(dom.Tool.proxy(this.show, this));
+        this.port.onMessage.addListener(dom.Tool.proxy(function (msg) {
+            if (msg.cmd === 'setCaptureMode') {
+                if (msg.dragCapture !== this.dragCapture) {
+                    this.dragCapture = !this.dragCapture;
+                    setDragCapture();
+                }
+                if (msg.hoverCapture !== this.hoverCapture) {
+                    this.hoverCapture = !this.hoverCapture;
+                    setHoverCapture();
+                }
+            }
+            else {
+                this.show(msg);
+            }
+        }, this));
 
         this.hotKey && this.scope.addEventListener('keyup', this.hoverHanlderProxy = dom.Tool.proxy(this.hotKeyHandler, this), false);
-        this.dragCapture && this.dragCaptureSwitch();
-        this.hoverCapture && this.hoverCaptureSwitch();
+        this.setDragCapture();
+        this.setHoverCapture();
     };
 
-    Dict.prototype.dragCaptureSwitch = function () {
-        if (this.dblclickProxy) {
+    Dict.prototype.setDragCapture = function () {
+        if (!this.dragCapture) {
             this.scope.removeEventListener('click', this.dblclickProxy, false);
             this.scope.removeEventListener('mousedown', this.dragStartProxy, false);
             this.dblclickProxy = null;
             this.dragStartProxy = null;
-            this.dragCapture = false;
             this.ui.style.display = 'none';
         }
         else {
@@ -421,12 +436,11 @@ dom.Event = {
         }
     };
 
-    Dict.prototype.hoverCaptureSwitch = function () {
-        if (this.hoverProxy) {
+    Dict.prototype.setHoverCapture = function () {
+        if (!this.hoverCapture) {
             this.scope.removeEventListener('mouseover', this.hoverProxy, false);
             this.hoverProxy = null;
             this.getMousePosProxy = null;
-            this.hoverCapture = false;
             this.ui.style.display = 'none';
         }
         else {
@@ -439,19 +453,21 @@ dom.Event = {
         var self = this;
         if (e.keyCode === this.hotKey.hover.keyCode && e.ctrlKey === this.hotKey.hover.ctrlKey
            && e.altKey === this.hotKey.hover.altKey && e.shiftKey === this.hotKey.hover.shiftKey && e.metaKey === this.hotKey.hover.metaKey) {
-            this.hoverCaptureSwitch();
-            this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: this.hoverCapture});
+            //this.hoverCaptureSwitch();
+            this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: !this.hoverCapture});
         }
         else if (e.keyCode === this.hotKey.drag.keyCode && e.ctrlKey === this.hotKey.drag.ctrlKey
            && e.altKey === this.hotKey.drag.altKey && e.shiftKey === this.hotKey.drag.shiftKey && e.metaKey === this.hotKey.drag.metaKey) {
-            this.dragCaptureSwitch();
-            this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: this.hoverCapture});
+            //this.dragCaptureSwitch();
+            this.port.postMessage({cmd: 'setCaptureMode', dragCapture: !this.dragCapture, hoverCapture: this.hoverCapture});
         }
     };
 
     Dict.prototype.dblclick = function (e) {
         if (e.detail > 1) {
-            this.capture(e);
+            if (!this.assistKey || e.altKey === this.assistKey.altKey && e.ctrlKey === this.assistKey.ctrlKey) {
+                this.capture(e);
+            }
         }
         else if (this.endPos === null) {
             this.ui.style.display = 'none';
@@ -469,8 +485,10 @@ dom.Event = {
     Dict.prototype.dragEnd = function (e) {
         var event = dom.Event.fix(e);
         if (this.startPos !== event.pageX) {
-            this.endPos = event.pageX;
-            this.capture(e);
+            if (!this.assistKey || e.altKey === this.assistKey.altKey && e.ctrlKey === this.assistKey.ctrlKey) {
+                this.endPos = event.pageX;
+                this.capture(e);
+            }
         }
         this.onDrag = false;
     };
@@ -478,6 +496,10 @@ dom.Event = {
     Dict.prototype.hoverTrigger = function (e) {
 
         if (this.onDrag) {
+            return;
+        }
+
+        if (this.assistKey && (e.altKey !== this.assistKey.altKey || e.ctrlKey !== this.assistKey.ctrlKey)) {
             return;
         }
 
@@ -494,7 +516,7 @@ dom.Event = {
                 //this.timer = null;
                 this.hoverHanlder(e);
             }
-        }, this), 250);
+        }, this), this.speed * 20);
     };
 
     Dict.prototype.hoverHanlder = function (e) {
@@ -653,7 +675,6 @@ dom.Event = {
             this.uiPs.innerHTML = data.ps === '' ? '' : '[' + data.ps + ']';
             this.uiPron.src = data.pron;
             this.uiPronBtn.style.display = data.pron === '' ?  'none' : '';
-            console.log(data)
             this.uiTrans.innerHTML = '';
 
             for (i = 0, len = data.tt.length ; i < len ; i += 1) {
@@ -717,6 +738,8 @@ dom.Event = {
     chrome.extension.sendRequest({cmd: 'config'}, function (response) {
         dict = new DictSimple({
             hotKey: response.hotKey,
+            assistKey: response.assistKey,
+            speed: response.speed,
             skin: response.skin,
             hoverCapture: response.hoverCapture,
             dragCapture: response.dragCapture
