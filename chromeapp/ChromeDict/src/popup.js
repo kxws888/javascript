@@ -4,7 +4,7 @@
     btnDrag = document.getElementById('drag');
     content = document.querySelector('section');
     port.postMessage({cmd: 'getCaptureMode'});
-    port.onMessage.addListener(function (msg) {
+    port.onMessage.addListener(function (msg) {console.log(msg)
         if (msg.cmd === 'setCaptureMode') {
             if (msg.dragCapture) {
                 btnDrag.className = 'active';
@@ -82,6 +82,7 @@
 
     function setCaptureMode() {
         this.className = this.className === '' ? 'active' : '';
+        //console.log({cmd: 'setCaptureMode', dragCapture: btnDrag.className === 'active', hoverCapture: btnHover.className === 'active'})
         port.postMessage({cmd: 'setCaptureMode', dragCapture: btnDrag.className === 'active', hoverCapture: btnHover.className === 'active'});
     }
     btnHover.addEventListener('click', setCaptureMode, false);
@@ -90,7 +91,7 @@
 
     searchbox = document.querySelector('input');
     searchbox.addEventListener('keyup', function (e) {
-        if (e.keyCode === 13) {
+        if (e.keyCode === 13 && this.value.trim().length > 0) {
             port.postMessage({cmd: 'query', w: this.value.trim(), dict: localStorage.mainDict});
             e.preventDefault();
         }
@@ -107,7 +108,9 @@
                 nav[i].className = '';
             }
             this.className = 'active';
-            port.postMessage({cmd: 'query', w: searchbox.value.trim(), dict: this.rel})
+            if (searchbox.value.trim().length > 0) {
+                port.postMessage({cmd: 'query', w: searchbox.value.trim(), dict: this.rel});
+            }
         }
         e.preventDefault();
     }

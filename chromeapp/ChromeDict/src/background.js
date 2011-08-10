@@ -1,17 +1,15 @@
 ﻿(function () {
-    if (!localStorage.skin) {
-        localStorage.skin = 'orange';
-        localStorage.hotKeySwitch = '1';
-        localStorage.assistKey = 'none';
-        localStorage.hotKeyHover = '{"ctrlKey":false,"altKey":true,"shiftKey":false,"metaKey":false,"keyCode":112}';
-        localStorage.hotKeyDrag = '{"ctrlKey":false,"altKey":true,"shiftKey":false,"metaKey":false,"keyCode":113}';
-        localStorage.mainDict = 'powerword';
-        localStorage.assistDict = 'dictcn';
-        localStorage.hoverCapture = '1';
-        localStorage.dragCapture = '0';
-        localStorage.status = '1';
-        localStorage.speed = '50';
-    }
+    localStorage.skin || (localStorage.skin = 'orange');
+    localStorage.hotKeySwitch || (localStorage.hotKeySwitch = '1');
+    localStorage.assistKey || (localStorage.assistKey = 'none');
+    localStorage.hotKeyHover || (localStorage.hotKeyHover = '{"ctrlKey":false,"altKey":true,"shiftKey":false,"metaKey":false,"keyCode":112}');
+    localStorage.hotKeyDrag || (localStorage.hotKeyDrag = '{"ctrlKey":false,"altKey":true,"shiftKey":false,"metaKey":false,"keyCode":113}');
+    localStorage.mainDict || (localStorage.mainDict = 'powerword');
+    localStorage.assistDict || (localStorage.assistDict = 'dictcn');
+    localStorage.hoverCapture || (localStorage.hoverCapture = '1');
+    localStorage.dragCapture || (localStorage.dragCapture = '0');
+    localStorage.status || (localStorage.status = '1');
+    localStorage.speed || (localStorage.speed = '50');
 
     const DICT_API = {
         powerword: 'http://dict-co.iciba.com/api/dictionary.php?w=',
@@ -142,6 +140,14 @@
                 case 'setCaptureMode':
                     setCaptureMode(msg, port);
                     setPageActionIcon(true);
+                    if (!port.tab) {
+                        chrome.tabs.getAllInWindow(null, function (tabs) {
+                            var request = {cmd: 'setCaptureMode', hoverCapture: localStorage.hoverCapture === '1', dragCapture: localStorage.dragCapture === '1'};
+                            for (var i = 0, len = tabs.length ; i < len ; i += 1) {
+                                chrome.tabs.sendRequest(tabs[i].id, request);
+                            }
+                        });
+                    }
                     break;
                 case 'getCaptureMode':
                     port.postMessage({cmd: 'setCaptureMode', hoverCapture: localStorage.hoverCapture === '1', dragCapture: localStorage.dragCapture === '1'});

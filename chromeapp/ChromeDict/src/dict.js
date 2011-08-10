@@ -401,33 +401,22 @@ dom.Event = {
         this.rSingleWord = /^[a-z]+([-'][a-z]+)*$/i;
 
         this.port.onMessage.addListener(dom.Tool.proxy(function (msg) {
-            if (msg.cmd === 'setCaptureMode') {
-                if (msg.dragCapture !== this.dragCapture) {
-                    this.dragCapture = !this.dragCapture;
-                    setDragCapture();
-                }
-                if (msg.hoverCapture !== this.hoverCapture) {
-                    this.hoverCapture = !this.hoverCapture;
-                    setHoverCapture();
-                }
-            }
-            else {
-                this.show(msg);
-            }
+            this.show(msg);
         }, this));
 
         this.hotKey && this.scope.addEventListener('keyup', this.hoverHanlderProxy = dom.Tool.proxy(this.hotKeyHandler, this), false);
-        this.setDragCapture();
-        this.setHoverCapture();
+        this.dragCapture && this.setDragCapture();
+        this.hoverCapture && this.setHoverCapture();
     };
 
     Dict.prototype.setDragCapture = function () {
-        if (!this.dragCapture) {
+        if (this.dblclickProxy) {
             this.scope.removeEventListener('click', this.dblclickProxy, false);
             this.scope.removeEventListener('mousedown', this.dragStartProxy, false);
             this.dblclickProxy = null;
             this.dragStartProxy = null;
             this.ui.style.display = 'none';
+            this.dragCapture = false;
         }
         else {
             this.scope.addEventListener('click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this), false);
@@ -437,11 +426,12 @@ dom.Event = {
     };
 
     Dict.prototype.setHoverCapture = function () {
-        if (!this.hoverCapture) {
+        if (this.hoverProxy) {
             this.scope.removeEventListener('mouseover', this.hoverProxy, false);
             this.hoverProxy = null;
             this.getMousePosProxy = null;
             this.ui.style.display = 'none';
+            this.hoverCapture = false;
         }
         else {
             this.scope.addEventListener('mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this), false);
@@ -453,13 +443,13 @@ dom.Event = {
         var self = this;
         if (e.keyCode === this.hotKey.hover.keyCode && e.ctrlKey === this.hotKey.hover.ctrlKey
            && e.altKey === this.hotKey.hover.altKey && e.shiftKey === this.hotKey.hover.shiftKey && e.metaKey === this.hotKey.hover.metaKey) {
-            //this.hoverCaptureSwitch();
-            this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: !this.hoverCapture});
+            this.setHoverCapture();
+            this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: this.hoverCapture});
         }
         else if (e.keyCode === this.hotKey.drag.keyCode && e.ctrlKey === this.hotKey.drag.ctrlKey
            && e.altKey === this.hotKey.drag.altKey && e.shiftKey === this.hotKey.drag.shiftKey && e.metaKey === this.hotKey.drag.metaKey) {
-            //this.dragCaptureSwitch();
-            this.port.postMessage({cmd: 'setCaptureMode', dragCapture: !this.dragCapture, hoverCapture: this.hoverCapture});
+            this.setDragCapture();
+            this.port.postMessage({cmd: 'setCaptureMode', dragCapture: this.dragCapture, hoverCapture: this.hoverCapture});
         }
     };
 
@@ -747,23 +737,9 @@ dom.Event = {
     });
 
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-        if (dict) {
-            switch (request.cmd) {
-            case 'toggleHoverCapture':
-                dict.hoverCaptureSwitch();
-                break;
-            case 'toggleDragCapture':
-                dict.dragCaptureSwitch();
-                break;
-            case 'setCaptureMode':
-                request.hoverCapture !== dict.hoverCapture && dict.hoverCaptureSwitch();
-                request.dragCapture !== dict.dragCapture && dict.dragCaptureSwitch();
-            }
-
-            sendResponse({
-                hoverCapture: dict.hoverCapture,
-                dragCapture: dict.dragCapture
-            });
+        if (dict && request.cmd === 'setCaptureMode') {
+            request.hoverCapture !== dict.hoverCapture && dict.setHoverCapture();
+            request.dragCapture !== dict.dragCapture && dict.setDragCapture();
         }
     });
 
