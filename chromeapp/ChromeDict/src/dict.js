@@ -1,9 +1,6 @@
-'use strict';
-var dom = {};
-/**
- * tool function
-*/
-dom.Tool = {
+(function () {
+    'use strict';
+var Tool = {
     extend: function (childCtor, parentCtor) {
         function tempCtor() {};
         tempCtor.prototype = parentCtor.prototype;
@@ -15,15 +12,6 @@ dom.Tool = {
     proxy: function (fn, obj) {
         return function () {
             return fn.apply(obj, arguments);
-        }
-    },
-
-    trim: function (str) {
-        if (str.trim) {
-            return str.trim();
-        }
-        else {
-            return str.replace(/^\s+|\s+$/, '');
         }
     },
 
@@ -87,297 +75,6 @@ dom.Tool = {
     })()
 }
 
-/**
-* Class-style JavaScript statement and inheritance
-* @Author Liuming
-* @version 1.1
-* @param {String} ns the name of class
-* @param {Object} extend parent class
-* @param {Object} obj the content of class
-**/
-dom.Class = (function () {
-    'use strict';
-    function Class(ns, extend, obj) {
-        if (typeof obj === 'undefined') {
-            obj = extend;
-            extend = undefined;
-        }
-        if (!obj.init) {
-            obj.init = function () {};
-        }
-
-        function Class() {
-            return this.init.apply(this, arguments);
-        }
-        Class.prototype = obj;
-        if (extend) {
-            inherit(Class, extend);
-        }
-        Class.prototype.constructor = Class;
-        verifyNameSpace(ns, Class);
-    }
-
-    function inherit(childCtor, parentCtor) {
-        var key, child = childCtor.prototype, parent = parentCtor.prototype, init, superReg = /\.\$super\./;
-        if (!superReg.test(child.init)) {
-            init = child.init;
-            child.init = function () {
-                this.$super.init.apply(this, arguments);
-                init.apply(this, arguments);
-            };
-        }
-        for (key in parent) {
-            if (child[key] && typeof child[key] === 'function') {
-                if (superReg.test(child[key])) {
-                    child[key] = (function (childFn, parentFn, name) {
-                        return function () {
-                            var self = this;
-                            this.$super = this.$super || {};
-                            this.$super[name] = function () {
-                                return parentFn.apply(self, arguments);
-                            }
-                            return childFn.apply(this, arguments);
-                        };
-                    })(child[key], parent[key], key);
-                }
-            }
-            else {
-                child[key] = parent[key];
-            }
-        }
-    }
-
-    function verifyNameSpace(ns, obj) {
-        var names = ns.split('.'), componentName = '', parent = window, i, length, n;
-        componentName = names.pop();
-        for (i = 0, length = names.length; i < length; i += 1) {
-            n = names[i];
-            if (typeof parent[n] === 'undefined') {
-                parent[n] = {};
-            }
-            parent = parent[n];
-        }
-        parent[componentName] = obj;
-    }
-
-    return Class;
-})();
-
-dom.Query = {
-
-    one: function (query, parent) {
-        parent = parent || document;
-        if (parent.querySelector) {
-            if (parent === document) {
-                return document.querySelector(query);
-            }
-            var oldID = parent.id;
-            parent.id = 'rooted' + (+new Date());
-            try {
-                return parent.querySelector('#' + parent.id + ' ' + query);
-            }
-            catch (e) {
-                throw e;
-            }
-            finally {
-                parent.id = oldID;
-            }
-        }
-        else {
-            return this.$$(query, parent)[0];
-        }
-    },
-
-    all: function (query, parent) {
-        parent = parent || document;
-        if (parent.querySelectorAll) {
-            if (parent === document) {
-                return document.querySelectorAll(query);
-            }
-            var oldID = parent.id;
-            parent.id = 'rooted' + (++arguments.callee.counter);
-            try {
-                return parent.querySelectorAll('#' + parent.id + ' ' + query);
-            } catch (e) {
-                throw e;
-            } finally {
-                parent.id = oldID;
-            }
-        }
-        else {
-            if (!parent.push) {
-                parent = [parent];
-            }
-            var regex = /\S+\s*/;
-            var section = regex.exec(query);
-            if (section) {
-                var remain = query.slice(section[0].length);
-                section = section[0].replace(/\s+$/, '');
-                var result = [];
-                var id;
-                var tagName;
-                var className;
-                var level = section.split('.');
-
-                if (level[0].charAt(0) === '#') {
-                    id = level[0].slice(1);
-                }
-                else {
-                    tagName = level[0];
-                }
-
-                if (level[1]) {
-                    className = level[1];
-                }
-
-                for (var i = 0, len = parent.length ; i < len ; i++) {
-                    var elem = parent[i];
-                    var nodeList;
-                    if (id) {
-                        result.push(document.getElementById(id));
-                        continue;
-                    }
-                    else if (tagName) {
-                        nodeList = elem.getElementsByTagName(tagName);
-                    }
-                    if (className) {
-                        if (!nodeList) {
-                            nodeList = elem.getElementsByTagName('*');
-                        }
-                        var regexClassName = new RegExp('(^|\\s)' + className + '(\\s|$)');
-                        for (i = 0, len = nodeList.length ; i < len ; i++) {
-                            if (regexClassName.test(nodeList[i].className)) {
-                                result.push(nodeList[i]);
-                            }
-                        }
-                    }
-                    else {
-                        result = result.concat(dom.Tool.toArray(nodeList));
-                    }
-                }
-                return this.$$(remain, result);
-            }
-            else {
-                var obj = {};
-                var a = [];
-                for (var j = 0, jLen = parent.length ; j < jLen ; j++) {
-                    var item = parent[j];
-                    if (item.uniqueId === undefined) {
-                        item.uniqueId = 1;
-                        a.push(item);
-                    }
-                }
-                for (j = 0, jLen = a.length ; j < jLen ; j++) {
-                    a[j].uniqueId = undefined;
-                }
-                return a;
-            }
-
-        }
-    },
-
-    prev: function (node) {
-        while (node = node.previousSibling) {
-            if (node.nodeType === 1) {
-                return node;
-            }
-        }
-        return null;
-    },
-
-    next: function (node) {
-        while (node = node.nextSibling) {
-            if (node.nodeType === 1) {
-                return node;
-            }
-        }
-        return null;
-    }
-}
-
-dom.Event = {
-    add: function(node, event, fn) {
-        if (node.addEventListener) {
-            this.add = function (node, event, fn) {
-                node.addEventListener(event, fn, false);
-            }
-        }
-        else if (node.attachEvent) {
-            this.add = function (node, event, fn) {
-                node.attachEvent('on' + event, fn);
-            }
-        }
-
-        this.add(node, event, fn);
-    },
-
-    remove: function(node, event, fn) {
-        if (node.removeEventListener) {
-            this.remove = function (node, event, fn) {
-                node.removeEventListener(event, fn, false);
-            }
-        }
-        else if (node.detachEvent) {
-            this.remove = function (node, event, fn) {
-                node.detachEvent('on' + event, fn);
-            }
-        }
-        this.remove(node, event, fn);
-    },
-
-    one: function (node, event, fn) {
-        var self = this, fname = event + (+new Date());
-        node[fname] = function () {
-            self.remove(node, event, node[fname]);
-            node[fname] = null;
-            fn.apply(this, arguments);
-        };
-        this.add(node, event, node[fname]);
-    },
-
-    fix: function (e) {
-        if (e) {
-            this.fix = function (e) {
-                return {
-                    pageX : e.pageX,
-                    pageY : e.pageY,
-                    target : e.target,
-                    preventDefault : function () {
-                        e.preventDefault();
-                    },
-                    stopPropagation : function () {
-                        e.stopPropagation();
-                    }
-                }
-            }
-        }
-        else {
-            this.fix = function () {
-                return {
-                    pageX : window.eventclientX + document.body.scrollLeft,
-                    pageY : window.event.clientY + document.body.scrollTop,
-                    target : window.event.srcElement,
-                    preventDefault : function () {
-                        window.event.returnValue = false;
-                    },
-                    stopPropagation : function () {
-                        window.event.cancelBubble = true;
-                    }
-                }
-            }
-        }
-
-        return this.fix(e);
-    }
-};
-
-/******************************************************************************************************************************************************************
-*******************************************************************************************************************************************************************
-***************************************************************************** Dict ********************************************************************************
-*******************************************************************************************************************************************************************
-******************************************************************************************************************************************************************/
-
-(function () {
 
     /**
     * Dict
@@ -400,11 +97,11 @@ dom.Event = {
         this.rAllWord = /\b[a-z]+([-'][a-z]+)*\b/gmi;
         this.rSingleWord = /^[a-z]+([-'][a-z]+)*$/i;
 
-        this.port.onMessage.addListener(dom.Tool.proxy(function (msg) {
+        this.port.onMessage.addListener(Tool.proxy(function (msg) {
             this.show(msg);
         }, this));
 
-        this.hotKey && this.scope.addEventListener('keyup', this.hoverHanlderProxy = dom.Tool.proxy(this.hotKeyHandler, this), false);
+        this.hotKey && this.scope.addEventListener('keyup', this.hoverHanlderProxy = Tool.proxy(this.hotKeyHandler, this), false);
         this.dragCapture && this.setDragCapture();
         this.hoverCapture && this.setHoverCapture();
     };
@@ -419,8 +116,8 @@ dom.Event = {
             this.dragCapture = false;
         }
         else {
-            this.scope.addEventListener('click', this.dblclickProxy = dom.Tool.proxy(this.dblclick, this), false);
-            this.scope.addEventListener('mousedown', this.dragStartProxy = dom.Tool.proxy(this.dragStart, this), false);
+            this.scope.addEventListener('click', this.dblclickProxy = Tool.proxy(this.dblclick, this), false);
+            this.scope.addEventListener('mousedown', this.dragStartProxy = Tool.proxy(this.dragStart, this), false);
             this.dragCapture = true;
         }
     };
@@ -434,7 +131,7 @@ dom.Event = {
             this.hoverCapture = false;
         }
         else {
-            this.scope.addEventListener('mouseover', this.hoverProxy = dom.Tool.proxy(this.hoverTrigger, this), false);
+            this.scope.addEventListener('mouseover', this.hoverProxy = Tool.proxy(this.hoverTrigger, this), false);
             this.hoverCapture = true;
         }
     };
@@ -465,22 +162,22 @@ dom.Event = {
     };
 
     Dict.prototype.dragStart = function (e) {
-        var event = dom.Event.fix(e);
-        dom.Event.one(document, 'mouseup', dom.Tool.proxy(this.dragEnd, this));
-        this.startPos = event.pageX;
+	document.dictonmouseup = Tool.proxy(this.dragEnd, this);
+	document.addEventListener('mouseup', document.dictonmouseup, false);
+        this.startPos = e.pageX;
         this.endPos = null;
         this.onDrag = true;
     };
 
     Dict.prototype.dragEnd = function (e) {
-        var event = dom.Event.fix(e);
-        if (this.startPos !== event.pageX) {
+        if (this.startPos !== e.pageX) {
             if (!this.assistKey || e.altKey === this.assistKey.altKey && e.ctrlKey === this.assistKey.ctrlKey) {
-                this.endPos = event.pageX;
+                this.endPos = e.pageX;
                 this.capture(e);
             }
         }
         this.onDrag = false;
+	document.removeEventListener('mouseup', document.dictonmouseup, false);
     };
 
     Dict.prototype.hoverTrigger = function (e) {
@@ -501,7 +198,7 @@ dom.Event = {
         this.hoverX = e.pageX;
         this.hoverY = e.pageY;
         clearTimeout(this.timer);
-        this.timer = setTimeout(dom.Tool.proxy(function () {
+        this.timer = setTimeout(Tool.proxy(function () {
             if (this.hoverX === e.pageX && this.hoverY === e.pageY) {
                 //this.timer = null;
                 this.hoverHanlder(e);
@@ -590,7 +287,7 @@ dom.Event = {
         this.uiTriangle = this.ui.querySelector('div:last-of-type');
     }
 
-    dom.Tool.extend(DictSimple, Dict);
+    Tool.extend(DictSimple, Dict);
 
     DictSimple.prototype.createUI = function () {
         var aside = document.createElement('aside'), header, uiPronBtn, uiPron, triangle;

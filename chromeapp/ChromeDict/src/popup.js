@@ -4,7 +4,7 @@
     btnDrag = document.getElementById('drag');
     content = document.querySelector('section');
     port.postMessage({cmd: 'getCaptureMode'});
-    port.onMessage.addListener(function (msg) {console.log(msg)
+    port.onMessage.addListener(function (msg) {
         if (msg.cmd === 'setCaptureMode') {
             if (msg.dragCapture) {
                 btnDrag.className = 'active';

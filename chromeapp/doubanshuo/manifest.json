@@ -1,15 +1,14 @@
 {
-  "name": "豆瓣说",
-  "version": "0.2",
-  "description": "豆瓣说辅助软件",
+  "name": "豆聊",
+  "version": "1.0",
+  "description": "豆瓣也有聊天工具啦",
   "background_page": "pages/background.html",
-  "browser_action": {
-    "default_icon": "assets/doupi16.png",
-    "default_popup": "pages/popup.html"
+  "page_action": {
+    "default_icon": "assets/doupi16.png"
   },
   "permissions": [
     "tabs",
     "notifications",
-    "http://*/"
+    "http://*.douban.com/"
   ]
 }

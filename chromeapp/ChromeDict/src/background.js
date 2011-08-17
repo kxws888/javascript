@@ -7,7 +7,7 @@
     localStorage.mainDict || (localStorage.mainDict = 'powerword');
     localStorage.assistDict || (localStorage.assistDict = 'dictcn');
     localStorage.hoverCapture || (localStorage.hoverCapture = '1');
-    localStorage.dragCapture || (localStorage.dragCapture = '0');
+    localStorage.dragCapture || (localStorage.dragCapture = '1');
     localStorage.status || (localStorage.status = '1');
     localStorage.speed || (localStorage.speed = '50');
 

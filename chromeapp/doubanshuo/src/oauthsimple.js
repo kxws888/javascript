@@ -3,8 +3,8 @@ var oauth = (function () {
     var api_key, api_key_secret, request_token, request_token_secret, access_token, access_token_secret, signature_method,
     request_token_uri, authorization_uri, access_token_uri, resources_uri, tab;
 
-    api_key = '08b471e2693c92131a1d55a73bb5b639';
-    api_key_secret = '5c8ae82130722882',
+    api_key = '0d9e9cda9e4620fe28dbd68fdad262fa';
+    api_key_secret = '8c956c0c3d4947b9',
     signature_method = 'HMAC-SHA1';
     request_token_uri = 'http://www.douban.com/service/auth/request_token';
     access_token_uri = 'http://www.douban.com/service/auth/access_token';
@@ -98,8 +98,9 @@ var oauth = (function () {
     }
 
     function main(callback) {
+	callback = callback || function () {};
         if (!localStorage.getItem('access_token')) {
-            chrome.browserAction.setBadgeText({text: 'auth'});
+            //chrome.browserAction.setBadgeText({text: 'auth'});
             getRequestToken(function () {
                 chrome.tabs.create({
                     url: getUserAuthorizationURL()
@@ -110,7 +111,7 @@ var oauth = (function () {
 
             chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
                 if (request.greeting == "hello") {
-                    chrome.browserAction.setBadgeText({text: ''});
+                    //chrome.browserAction.setBadgeText({text: ''});
                     chrome.tabs.remove(tab.id);
                     getAccessToken(function () {
                         localStorage.setItem('consumer_key', api_key);
