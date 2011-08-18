@@ -4,7 +4,8 @@
   "description": "豆瓣也有聊天工具啦",
   "background_page": "pages/background.html",
   "page_action": {
-    "default_icon": "assets/doupi16.png"
+    "default_icon": "assets/icon16.png",
+    "default_title": "豆聊"
   },
   "permissions": [
     "tabs",

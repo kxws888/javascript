@@ -75,6 +75,8 @@ Resource.prototype.request = function () {
 }
 
 
+
+
 function Mail(args) {
     this.notification = webkitNotifications.createHTMLNotification('notification.html');
     this.mailList = [];
@@ -85,86 +87,56 @@ function Mail(args) {
 	return self.nofify.apply(self, arguments);
     }
 
+    this.people = [];
+    this.filterRegTest = /说:[\r\n]+\|/m;
+    this.filterRegFront = /^([\s\S]+?[\r\n])?[^\r\n]+?说:[\r\n]+\|/m;
+    this.filterRegBack = /^[\s\S]+[\r\n]\|.+?[\r\n]+([\s\S]+)$/m;
+
     chrome.extension.onConnect.addListener(function(port) {
-	 if (port.name === 'dchat') {
-	     port.onMessage.addListener(function(msg) {
-		 switch (msg.cmd) {
-		 case 'send':
+	//port.sender.tab
+	if (port.name === 'dchat') {
+	    port.onMessage.addListener(function(msg) {
+		switch (msg.cmd) {
+		case 'send':
 		    self.send(msg, function (data, e) {console.log(data)
 			if (data === 'ok') {
-			    port.postMessage({result: true});
-			}
-			else if (data === 403){
-
+			    port.postMessage({cmd: 'sended', result: true});
 			}
 		    }, function (e) {
-			port.postMessage({cmd: 'sended', result: false});
+			if (e.status === 403) {
+			    port.postMessage({cmd: 'sended', result: false, captcha: e.responseText});
+			}
+			//port.postMessage({cmd: 'sended', result: false});
 		    });
-		 case 'receivestart':
-		    self.timer = setInterval(function () {
-			self.receive(function (data, e) {
-			    data = JSON.parse(data).entry;
-			    var i, len, key, people, mails = [];
-			    for (i = 0, len = data.length ; i < len ; i += 1) {
-				people = data[i].author.link[1]['@href'].match(/\/([^\/]+)\/?$/)[1];
-				if (people === msg.people) {
-				    mails[mails.length] = data[i].id['$t'];
-				}
-			    }
-			    for (i = 0, len = mails.length ; i < len ; i += 1) {
-				new Resource({
-				    url: mails[i],
-				    method: 'get',
-				    data: 'alt=json',
-				    load: function (data) {
-					data = JSON.parse(data);
-					var response = {}, str1, str2;
-					response.cmd = 'received';
-					response.people = data.author.link[1]['@href'].match(/\/([^\/]+)\/?$/)[1];
-					response.timestamp = data.published['$t'];
+		    break;
+		case 'receivestart':
+		    if (self.people.indexOf(msg.people) === -1) {
+			self.people.push(msg.people);
+		    }
+		    if (self.people.length > -1) {
+			self.receiveStart(port);
+		    }
+		    break;
+		 }
+	     });
 
-					str1 = data.content['$t'].trim();console.log(data, str1)
-					if (/说:[\r\n]+\|/m.test(str1)) {
-					    str2 = /^([\s\S]+?[\r\n])?[\s\S]+?说:[\r\n]+\|/m.exec(str1)[1];
-					    if (typeof str2 === 'undefined') {
-						str2 = /^[\s\S]+[\r\n]\|.+?[\r\n]+([\s\S]+)$/m.exec(str1)[1];
-					    }
-					}
-					else {
-					    str2 = str1;
-					}
-					response.content = str2;
-					port.postMessage(response);
-				    }
-				}).request();
-			    }
-			}, function (e) {
-			    console.log(e)
-			});
-		    }, 30000);
+	     port.onDisconnect.addListener(function (port) {
+		 if (port.name === 'dchat') {
+		     self.people.splice(self.people.indexOf(port.tab.url.match(/\/([^\/]+)\/?$/)[1]), 1);
+		     if (self.people.length === 0) {
+			 clearInterval(self.timer);
+		     }
 		 }
 	     });
 	 }
      });
-}
 
-Mail.prototype.getMe = function (callback) {
-    var self = this;
-    new Resource({
-	url: 'http://api.douban.com/people/%40me',
-	method: 'get',
-	data: 'alt=json',
-	load: function (data, e) {
-	    data = JSON.parse(data);
-	    self.me = data['db:uid']['$t'];
-	    callback(true);
-	},
-	error: function (e) {
-	    chrome.tabs.create({url: 'pages/log.html'}, function (tab) {
-		chrome.tabs.sendRequest(tab.id, e);
-	    });
-	}
-    }).request();
+     chrome.extension.onConnect.addListener(function(port) {
+	//port.sender.tab
+	if (port.name === 'dchat') {
+	    
+	 }
+     });
 }
 
 Mail.prototype.send = function (msg, load, error) {
@@ -198,21 +170,52 @@ Mail.prototype.receive = function (load, error) {
 }
 
 
-Mail.prototype.receiveSuccess = function (data, e) {
-    data = data.entry;
-    console.log(data)
-    if (data.length > 0) {
-	var i, len, tmp;
-	for (i = 0, len = data.length ; i < len ; i += 1) {
-	    tmp = data[i];
-	    this.mailList[this.mailList.length] = {
-		title: tmp.title.$t,
-		author: tmp.author.name.$t,
-		link: tmp.link[1]['@href']
+Mail.prototype.receiveStart = function (port) {
+    var self = this;
+    self.timer = setInterval(function () {
+	self.receive(function (data, e) {
+	    var i, len, key, people, mails = [];
+	    data = JSON.parse(data).entry;
+	    for (i = 0, len = data.length ; i < len ; i += 1) {
+		people = data[i].author.link[1]['@href'].match(/\/([^\/]+)\/?$/)[1];
+		if (self.people.indexOf(people) > -1) {
+		    mails[mails.length] = data[i].id['$t'];
+		}
 	    }
-	}
-	this.notification.show();
-    }
+	    for (i = 0, len = mails.length ; i < len ; i += 1) {
+		new Resource({
+		    url: mails[i],
+		    method: 'get',
+		    data: 'alt=json',
+		    load: function (data) {
+			data = JSON.parse(data);
+			var response = {}, str1, str2;
+			response.cmd = 'received';
+			response.people = data.author.link[1]['@href'].match(/\/([^\/]+)\/?$/)[1];
+			response.timestamp = data.published['$t'];
+
+			str1 = data.content['$t'].trim();
+			if (self.filterRegTest.test(str1)) {
+			    str2 = self.filterRegFront.exec(str1)[1];
+			    if (typeof str2 === 'undefined') {
+				str2 = self.filterRegBack.exec(str1)[1];
+				if (typeof str2 === 'undefined') {
+				    str2 = '';
+				}
+			    }
+			}
+			else {
+			    str2 = str1;
+			}
+			response.content = str2;console.log(str1, str2)
+			port.postMessage(response);
+		    }
+		}).request();
+	    }
+	}, function (e) {
+	    console.log(e)
+	});
+    }, 30000);
 }
 
 Mail.prototype.nofify = function () {
@@ -234,15 +237,34 @@ Mail.prototype.nofify = function () {
     }, 0);
 }
 
-Mail.prototype.play = function () {
+
+/*
+Mail.prototype.getMe = function (callback) {
     var self = this;
-    this.request();
+    new Resource({
+	url: 'http://api.douban.com/people/%40me',
+	method: 'get',
+	data: 'alt=json',
+	load: function (data, e) {
+	    data = JSON.parse(data);
+	    self.me = data['db:uid']['$t'];
+	    callback(true);
+	},
+	error: function (e) {
+	    chrome.tabs.create({url: 'pages/log.html'}, function (tab) {
+		chrome.tabs.sendRequest(tab.id, e);
+	    });
+	}
+    }).request();
 }
+*/
+
 
 var doumail = new Mail();
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (tab.status !== 'complete' && tab.url.indexOf('www.douban.com/people/') > -1) {
 	chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
 	chrome.tabs.executeScript(tabId, {file: "src/contentscript.js"});
+	chrome.pageAction.show(tab.id);
     }
 });
