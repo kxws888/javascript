@@ -105,8 +105,8 @@ function Mail(args) {
                                     content: msg.content,
                                     people: msg.people,
                                     captcha: {
-                                        token: /=(.+?)&amp;/.exec(e.responseText),
-                                        string: /captcha_url=(.+)$/.exec(e.responseText)
+                                        token: /=(.+?)&amp;/.exec(e.responseText)[1],
+                                        string: /captcha_url=(.+)$/.exec(e.responseText)[1]
                                     }
                                 }
                             });

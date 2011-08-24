@@ -41,7 +41,7 @@
         port.onMessage.addListener(function (msg) {
             if (msg.cmd === 'sended') {
                 if (!msg.result) {
-                    var tokenstring = document.getElementById('tokenstring');
+                    var tokenstring = document.getElementById('tokenstring');console.log(msg.msg.captcha.string)
                     if (tokenstring) {
                         tokenstring.find('img').src = msg.msg.captcha.string;
                         msgList.querySelector('div:last-of-type').appendChild(tokenstring);
@@ -54,8 +54,8 @@
                 }
                 else {
                     if (textbox.bak) {
-                        delete textbox;
-                        msgList.removeChild(document.getElementById('tokenstring'));
+                        delete textbox.bak;
+                        console.log(msgList.removeChild(document.getElementById('tokenstring')));
                     }
                 }
             }
