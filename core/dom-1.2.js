@@ -1,3 +1,4 @@
+alert(1)
 /**
  * dom.js
  * It's a light library only contains several methods which are used most in the development.
@@ -5,7 +6,6 @@
  * @version 20110527.5
  * @license New BSD License
 */
-'use strict';
 var dom = {};
 /**
  * tool function
