@@ -68,7 +68,7 @@ Resource.prototype.request = function () {
     xhr.onerror = function (e) {
         self.error.call(self, e);
     }
-    xhr.open(this.method, this.url, true);
+    xhr.open(this.method, this.url, true)
     xhr.setRequestHeader('content-type', 'application/atom+xml');
     xhr.setRequestHeader('Authorization', this.oauth());
     xhr.send(this.data);
@@ -82,7 +82,7 @@ function Mail(args) {
     var self = this;
 
     this.people = [];
-    this.filterRegTest = /:[\r\n]+\|/m;
+    this.filterRegTest = /[\r\n][^\r\n]+:[\r\n]+\|/m;
     this.filterRegFront = /^([\s\S]+?[\r\n])?[^\r\n]+?:[\r\n]+\|/m;
     this.filterRegBack = /^[\s\S]+[\r\n]\|.+?[\r\n]+([\s\S]+)$/m;
 
