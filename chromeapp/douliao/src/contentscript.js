@@ -1,6 +1,6 @@
 (function () {
     var container = document.querySelector('#profile .user-opt'), button,
-    people, port = null, lock = false, lastTime = +new Date(),
+    people, port = null, lock = false, msgRequreToken = null, lastTime = +new Date(),
     chatWindow, textbox, msgList;
     button = container.querySelector('a.mr5').cloneNode(false);
     button.innerHTML = '豆聊';
@@ -20,15 +20,11 @@
             msgList = chatWindow.querySelector('section>div');
             document.getElementById('close').addEventListener('click', function (e) {
                 chatWindow.style.display = 'none';
-                //port.postMessage({cmd: 'receivestop', people: people});
                 port.disconnect();
                 port = null;
                 e.stopPropagation();
             }, false);
             textbox.addEventListener('keyup', send, false);
-            msgList.addEventListener('scroll', function () {
-                this.scrollTop = this.scrollHeight;
-            }, false);
 
             people = location.href.match(/\/([^\/]+)\/?$/)[1];
         }
@@ -41,29 +37,15 @@
         port.onMessage.addListener(function (msg) {
             if (msg.cmd === 'sended') {
                 if (!msg.result) {
-                    var tokenstring = document.getElementById('tokenstring');console.log(msg.msg.captcha.string)
-                    if (tokenstring) {
-                        tokenstring.find('img').src = msg.msg.captcha.string;
-                        msgList.querySelector('div:last-of-type').appendChild(tokenstring);
-                    }
-                    else {
-                        msgList.querySelector('div:last-of-type').appendChild(createCaptcha(msg.msg.captcha.string));
-                    }
+                    var captcha = addContent('<p>发送太快了亲，输入验证码</p><img src="' + msg.msg.captcha.string + '">');console.log(msg.msg.captcha.string)
+                    msgRequreToken = msg.msg;
+					msgRequreToken.captcha.dom = captcha;
                     lock = false;
-                    textbox.bak = msg.msg;
-                }
-                else {
-                    if (textbox.bak) {
-                        delete textbox.bak;
-                        console.log(msgList.removeChild(document.getElementById('tokenstring')));
-                    }
                 }
             }
             else if (msg.cmd === 'received') {
-                if (+new Date(msg.timestamp) > lastTime && people === msg.people) {
-                    var item = document.createElement('div');
-                    item.innerHTML = '<strong>' + document.querySelector('title').innerHTML.trim() + '说</strong>: ' + msg.content;
-                    msgList.appendChild(item);
+                if (people === msg.people) {//+new Date(msg.timestamp) > lastTime && 
+                    addContent('<strong>' + document.querySelector('title').innerHTML.trim() + '说</strong>: ' + msg.content);
                     lock = false;
                 }
             }
@@ -74,7 +56,6 @@
         var aside = document.createElement('aside');
         aside.id = 'dchat';
         aside.innerHTML = '<header><h1></h1><div><img id="min" /><img id="close" /></div></header><section><div></div><div><form> <textarea id="" name="" rows="10" cols="30"></textarea></form></div></section>';
-        //aside.style.top = window.innerHeight - 255 + 'px';
         document.body.appendChild(aside);
         document.getElementById('min').src = drawMin();
         document.getElementById('close').src = drawClose();
@@ -91,35 +72,34 @@
         return aside;
     }
 
-    function createCaptcha(url) {
-        var div = document.createElement('div'), p, img;
-        p = document.createElement('p');
-        p.appendChild(document.createTextNode('发送太快了亲，输入验证码'));
-        img = document.createElement('img');
-        img.src = url;
-        div.appendChild(p);
-        div.appendChild(img);
-        div.id = 'tokenstring';
-        return div;
-    }
+	function addContent(html) {
+		var div = document.createElement('div');
+		div.innerHTML = html;
+		msgList.appendChild(div);
+		msgList.scrollTop = msgList.scrollHeight;
+		return div;
+	}
 
     function send(e) {
         if (e.keyCode !== 13) {return;}
         if (lock) {
-            var log = document.createElement('p');
-            log.innerHTML = '别着急, 先等回复啊亲';
-            msgList.querySelector('div:last-of-type').appendChild(log);
+            var log = addContent('<p>先等回复啊亲</p>');
+			log.addEventListener('webkitTransitionEnd', function (e) {
+				msgList.removeChild(log);
+			}, false);
+			log.style.opacity = 0;
         }
         else {
             lock = true;
-            if (this.bak) {
-                var bak = this.bak, self = this;
-                port.postMessage({cmd: 'send', content: bak.content, people: bak.people, captcha: {token: bak.captcha.token, string: self.value}});
+            if (msgRequreToken) {
+                var self = this;
+				console.log(msgRequreToken);
+                port.postMessage({cmd: 'send', content: msgRequreToken.content, people: msgRequreToken.people, captcha: {token: msgRequreToken.captcha.token, string: self.value}});
+				msgList.removeChild(msgRequreToken.captcha.dom);
+				msgRequreToken = null;
             }
             else {
-                var item = document.createElement('div');
-                item.innerHTML = '<strong>我说</strong>: ' + this.value;
-                msgList.appendChild(item);
+                addContent('<strong>我说</strong>: ' + this.value);
                 port.postMessage({cmd: 'send', content: this.value, people: people});
             }
 

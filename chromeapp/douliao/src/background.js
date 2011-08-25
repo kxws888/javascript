@@ -82,8 +82,8 @@ function Mail(args) {
     var self = this;
 
     this.people = [];
-    this.filterRegTest = /说:[\r\n]+\|/m;
-    this.filterRegFront = /^([\s\S]+?[\r\n])?[^\r\n]+?说:[\r\n]+\|/m;
+    this.filterRegTest = /:[\r\n]+\|/m;
+    this.filterRegFront = /^([\s\S]+?[\r\n])?[^\r\n]+?:[\r\n]+\|/m;
     this.filterRegBack = /^[\s\S]+[\r\n]\|.+?[\r\n]+([\s\S]+)$/m;
 
     chrome.extension.onConnect.addListener(function(port) {
@@ -116,18 +116,19 @@ function Mail(args) {
                     break;
                     case 'receivestart':
                         if (self.people.indexOf(msg.people) === -1) {
-                        self.people.push(msg.people);
-                    }
-                    if (self.people.length > -1) {
-                        self.receiveStart(port);
-                    }
-                    break;
+							self.people.push(msg.people);
+						}
+						if (self.people.length > -1) {
+							self.receiveStart(port);
+						}
+						break;
                 }
             });
 
             port.onDisconnect.addListener(function (port) {
                 if (port.name === 'dchat') {
                     self.people.splice(self.people.indexOf(port.tab.url.match(/\/([^\/]+)\/?$/)[1]), 1);
+					console.log(self.people)
                     if (self.people.length === 0) {
                         clearInterval(self.timer);
                     }
@@ -181,7 +182,7 @@ Mail.prototype.receiveStart = function (port) {
     self.timer = setInterval(function () {
         self.receive(function (data, e) {
             var i, len, key, people, mails = [];
-            data = JSON.parse(data).entry;
+            data = JSON.parse(data).entry;console.log(data)
             for (i = 0, len = data.length ; i < len ; i += 1) {
                 people = data[i].author.link[1]['@href'].match(/\/([^\/]+)\/?$/)[1];
                 if (self.people.indexOf(people) > -1) {

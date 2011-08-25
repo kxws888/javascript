@@ -1,18 +1,18 @@
 {
-  "name": "豆聊",
-  "version": "1.0",
-  "description": "豆瓣也有聊天工具啦",
-  "icons": { "16": "assets/icon16.png",
-           "48": "assets/icon48.png",
-          "128": "assets/icon128.png" },
-  "background_page": "pages/background.html",
-  "page_action": {
-    "default_icon": "assets/icon16.png",
-    "default_title": "豆聊"
-  },
-  "permissions": [
-    "tabs",
-    "notifications",
-    "http://*.douban.com/"
-  ]
+	"name": "豆聊",
+	"version": "1.0",
+	"description": "豆瓣也有聊天工具啦",
+	"icons": { "16": "assets/icon16.png",
+		"48": "assets/icon48.png",
+		"128": "assets/icon128.png" },
+	"background_page": "pages/background.html",
+	"page_action": {
+		"default_icon": "assets/icon16.png",
+		"default_title": "豆聊"
+	},
+	"permissions": [
+		"tabs",
+		"notifications",
+		"http://*.douban.com/"
+	]
 }
