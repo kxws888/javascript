@@ -37,16 +37,18 @@
         port.onMessage.addListener(function (msg) {
             if (msg.cmd === 'sended') {
                 if (!msg.result) {
-                    var captcha = addContent('<p>发送太快了亲，输入验证码</p><img src="' + msg.msg.captcha.string + '">');console.log(msg.msg.captcha.string)
+                    var captcha = addContent('<p>发送太快了亲，输入验证码</p><img src="' + msg.msg.captcha.string + '">');
                     msgRequreToken = msg.msg;
 					msgRequreToken.captcha.dom = captcha;
                     lock = false;
+					inputLock(textbox, false);
                 }
             }
             else if (msg.cmd === 'received') {
                 if (people === msg.people) {//+new Date(msg.timestamp) > lastTime && 
                     addContent('<strong>' + document.querySelector('title').innerHTML.trim() + '说</strong>: ' + msg.content);
                     lock = false;
+					inputLock(textbox, false);
                 }
             }
         });
@@ -73,27 +75,27 @@
     }
 
 	function addContent(html) {
-		var div = document.createElement('div');
+		var div = document.createElement('div'), scrollHeight = msgList.scrollHeight;
 		div.innerHTML = html;
 		msgList.appendChild(div);
-		msgList.scrollTop = msgList.scrollHeight;
+		if (div.getElementsByTagName('img').length > 0) {
+			scrollHeight += 41;
+		}
+		msgList.scrollTop = scrollHeight;
 		return div;
 	}
 
+	function inputLock(textbox, status) {
+		textbox.disabled = status;
+		textbox.style.backgroundColor = status ? '#ddd' : '#fff';
+		textbox.value = status ? '先等回复啊亲' : '';
+	}
+
     function send(e) {
-        if (e.keyCode !== 13) {return;}
-        if (lock) {
-            var log = addContent('<p>先等回复啊亲</p>');
-			log.addEventListener('webkitTransitionEnd', function (e) {
-				msgList.removeChild(log);
-			}, false);
-			log.style.opacity = 0;
-        }
-        else {
+        if (e.keyCode === 13 && !lock && this.value.trim() !== '') {
             lock = true;
             if (msgRequreToken) {
                 var self = this;
-				console.log(msgRequreToken);
                 port.postMessage({cmd: 'send', content: msgRequreToken.content, people: msgRequreToken.people, captcha: {token: msgRequreToken.captcha.token, string: self.value}});
 				msgList.removeChild(msgRequreToken.captcha.dom);
 				msgRequreToken = null;
@@ -104,11 +106,11 @@
             }
 
             this.value = '';
+			inputLock(textbox, true);
             lastTime = +new Date();
-
+			e.preventDefault();
+			return false;
         }
-        e.preventDefault();
-        return false;
     }
 
     function drawClose() {
