@@ -88,6 +88,8 @@ function Mail(args) {
     this.filterRegBack = /^[\s\S]+[\r\n]\|.+?[\r\n]+([\s\S]+)$/m;
 
 	this.timer = null;
+    this.sound = document.getElementById('alert');
+    this.unread = [];
 
     chrome.extension.onConnect.addListener(function(port) {console.log(port)
         //port.sender.tab
@@ -134,15 +136,53 @@ function Mail(args) {
             port.onDisconnect.addListener(function (port) {
                 if (port.name === 'dchat') {
                     delete self.peopleInfo[port.tab.url.match(/\/([^\/]+)\/?$/)[1]];
-					self.peopleNum -= 1;
-					console.log(self.peopleInfo, self.peopleNum)
+                    self.peopleNum -= 1;
+                    console.log(self.peopleInfo, self.peopleNum)
                     if (self.peopleNum === 0) {
                         clearInterval(self.timer);
-						self.timer = null;
+                        self.timer = null;
                     }
                 }
             });
         }
+    });
+
+
+    chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
+        if (request.cmd === 'getUnread') {
+            sendResponse({unread: self.unread});
+        }
+        else if (request.cmd === 'showUnread') {
+            var i = 0;
+            while (i < self.unread.length) {
+                if (self.unread.people === request.people) {
+                    self.unread.splice(i, 1);
+                }
+                else {
+                    i += 1;
+                }
+            }
+            self.notifyBadge();
+            chrome.tabs.update(self.peopleInfo[request.people].tab.id, {selected: true});
+        }
+    });
+
+    chrome.tabs.onSelectionChanged.addListener(function (tabId) {
+        if (self.peopleNum === 0) {return;}
+        for (var key in self.peopleInfo) {
+            if (tabId === self.peopleInfo[key].tab.id) {
+                var i = 0;
+                while (i < self.unread.length) {
+                    if (self.unread.people === key) {
+                        self.unread.splice(i, 1);
+                    }
+                    else {
+                        i += 1;
+                    }
+                }
+            }
+        }
+        self.notifyBadge();
     });
 }
 
@@ -217,7 +257,19 @@ Mail.prototype.receiveStart = function () {
                         }
                         response.content = str2;console.log(str1, '++++', str2)
                         self.peopleInfo[response.people].postMessage(response);
-                        self.nofify(str2);
+                        self.sound.play();
+                        chrome.windows.getCurrent(function (win) {
+                            if (win.focused) {
+                                chrome.tabs.getSelected(win.id, function (tab) {
+                                    if (self.peopleInfo[response.people].tab.id !== tab.id) {
+                                        self.nofifyPop(data.author.name['$t'], str2, data.id['$t'], data.author.link[2]['@href']);
+                                    }
+                                });
+                            }
+                            else {
+                                self.nofifyPop(data.author.name['$t'], str2, data.id['$t'], data.author.link[2]['@href']);
+                            }
+                        });
                     }
                 }).request();
             }
@@ -227,20 +279,50 @@ Mail.prototype.receiveStart = function () {
     }, 30000);
 }
 
-Mail.prototype.nofify = function (content) {
-    var notification = webkitNotifications.createNotification('../assets/icon16.png', '来新豆聊了', content);
+Mail.prototype.nofifyPop = function (people, content, id, icon) {
+    var notification = webkitNotifications.createNotification('../assets/icon16.png', people + '说', content);
     notification.show();
     setTimeout(function () {
         notification.cancel();
     }, 3000);
+
+    this.unread[this.unread.length] = {people: people, icon: icon};
+    this.notifyBadge();
+}
+
+Mail.prototype.notifyBadge = function () {
+    var num = this.unread.length;
+    chrome.browserAction.setBadgeText({text: num});
+    chrome.browserAction.setPopup({popup: num > 0 ? '../pages/popup.html' : ''});
+}
+
+
+Mail.prototype.nofifyTitle = function (doc) {
+    var startTime = Date.now(), title = doc.title;
+    title += '来新消息了     ';
+    webkitRequestAnimationFrame(draw);
+
+    function draw(timestamp) {
+        var drawStart = Date.now();
+        diff = drawStart - startTime;
+        if (diff >= 200) {
+            doc.title = title = title.substring(1, title.length) + title.charAt(0);
+            startTime = drawStart;
+        }
+        webkitRequestAnimationFrame(draw);
+    }
 }
 
 
 var doumail = new Mail();
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (tab.status !== 'complete' && tab.url.indexOf('www.douban.com/people/') > -1) {
-        chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
-        chrome.tabs.executeScript(tabId, {file: "src/contentscript.js"});
-        chrome.pageAction.show(tab.id);
+        //chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
+        //chrome.tabs.executeScript(tabId, {file: "src/contentscript.js"});
+        //chrome.pageAction.show(tab.id);
     }
+});
+
+chrome.tabs.onSelectionChanged.addListener(function () {
+
 });

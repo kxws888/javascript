@@ -91,14 +91,30 @@
 		textbox.value = status ? '先等回复啊亲' : '';
 	}
 
+    function titleRemind() {
+        var startTime = Date.now(), title = document.title;
+        title += '来新消息了     ';
+        webkitRequestAnimationFrame(draw);
+
+        function draw(timestamp) {
+            var drawStart = Date.now();
+            diff = drawStart - startTime;
+            if (diff >= 200) {
+                document.title = title = title.substring(1, title.length) + title.charAt(0);
+                startTime = drawStart;
+            }
+            webkitRequestAnimationFrame(draw);
+        }
+    }
+
     function send(e) {
         if (e.keyCode === 13 && !lock && this.value.trim() !== '') {
             lock = true;
             if (msgRequreToken) {
                 var self = this;
                 port.postMessage({cmd: 'send', content: msgRequreToken.content, people: msgRequreToken.people, captcha: {token: msgRequreToken.captcha.token, string: self.value}});
-				msgList.removeChild(msgRequreToken.captcha.dom);
-				msgRequreToken = null;
+                msgList.removeChild(msgRequreToken.captcha.dom);
+                msgRequreToken = null;
             }
             else {
                 addContent('<strong>我说</strong>: ' + this.value);
@@ -106,10 +122,10 @@
             }
 
             this.value = '';
-			inputLock(textbox, true);
+            inputLock(textbox, true);
             lastTime = +new Date();
-			e.preventDefault();
-			return false;
+            e.preventDefault();
+            return false;
         }
     }
 
