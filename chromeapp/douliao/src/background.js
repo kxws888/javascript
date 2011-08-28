@@ -91,8 +91,7 @@ function Mail(args) {
     this.sound = document.getElementById('alert');
     this.unread = [];
 
-    chrome.extension.onConnect.addListener(function(port) {console.log(port)
-        //port.sender.tab
+    chrome.extension.onConnect.addListener(function(port) {
         if (port.name === 'dchat') {
             port.onMessage.addListener(function(msg) {
                 switch (msg.cmd) {
@@ -153,36 +152,29 @@ function Mail(args) {
             sendResponse({unread: self.unread});
         }
         else if (request.cmd === 'showUnread') {
-            var i = 0;
-            while (i < self.unread.length) {
-                if (self.unread.people === request.people) {
-                    self.unread.splice(i, 1);
-                }
-                else {
-                    i += 1;
-                }
-            }
-            self.notifyBadge();
+            self.setUnread(request.people);
             chrome.tabs.update(self.peopleInfo[request.people].tab.id, {selected: true});
         }
     });
 
-    chrome.tabs.onSelectionChanged.addListener(function (tabId) {
+    chrome.tabs.onSelectionChanged.addListener(function (tabId, object) {
         if (self.peopleNum === 0) {return;}
         for (var key in self.peopleInfo) {
             if (tabId === self.peopleInfo[key].tab.id) {
-                var i = 0;
-                while (i < self.unread.length) {
-                    if (self.unread.people === key) {
-                        self.unread.splice(i, 1);
-                    }
-                    else {
-                        i += 1;
-                    }
-                }
+                self.setUnread(key);
             }
         }
-        self.notifyBadge();
+    });
+
+    chrome.windows.onFocusChanged.addListener(function (windowId) {
+        if (windowId === -1) {return;}
+        chrome.tabs.getSelected(windowId, function (tab) {
+            for (var key in self.peopleInfo) {
+                if (tab.id === self.peopleInfo[key].tab.id) {
+                    self.setUnread(key);
+                }
+            }
+        });
     });
 }
 
@@ -220,7 +212,7 @@ Mail.prototype.receive = function (load, error) {
 
 Mail.prototype.receiveStart = function () {
     var self = this;
-    self.timer = setInterval(function () {
+    function receive() {
         self.receive(function (data, e) {
             var i, len, key, people, mails = [];
             data = JSON.parse(data).entry;
@@ -258,16 +250,20 @@ Mail.prototype.receiveStart = function () {
                         response.content = str2;console.log(str1, '++++', str2)
                         self.peopleInfo[response.people].postMessage(response);
                         self.sound.play();
-                        chrome.windows.getCurrent(function (win) {
-                            if (win.focused) {
-                                chrome.tabs.getSelected(win.id, function (tab) {
-                                    if (self.peopleInfo[response.people].tab.id !== tab.id) {
-                                        self.nofifyPop(data.author.name['$t'], str2, data.id['$t'], data.author.link[2]['@href']);
-                                    }
-                                });
-                            }
-                            else {
-                                self.nofifyPop(data.author.name['$t'], str2, data.id['$t'], data.author.link[2]['@href']);
+                        chrome.windows.getAll(function (wins) {
+                            for (var i = 0, len = wins.length ; i < len ; i += 1) {
+                                if (wins[i].focused) {
+                                    chrome.tabs.getSelected(wins[i].id, function (tab) {
+                                        if (self.peopleInfo[response.people].tab.id !== tab.id) {
+                                            self.nofifyPop(data.author.name['$t'], str2);
+                                            self.setUnread(response.people, data.author.link[2]['@href']);
+                                        }
+                                    });
+                                }
+                                else {
+                                    self.nofifyPop(data.author.name['$t'], str2);
+                                    self.setUnread(response.people, data.author.link[2]['@href']);
+                                }
                             }
                         });
                     }
@@ -276,45 +272,49 @@ Mail.prototype.receiveStart = function () {
         }, function (e) {
             console.log(e)
         });
-    }, 30000);
+    }
+
+    receive();
+    self.timer = setInterval(receive, 30000);
 }
 
-Mail.prototype.nofifyPop = function (people, content, id, icon) {
-    var notification = webkitNotifications.createNotification('../assets/icon16.png', people + '说', content);
+Mail.prototype.nofifyPop = function (name, content) {
+    var notification = webkitNotifications.createNotification('../assets/icon16.png', name + '说', content);
     notification.show();
     setTimeout(function () {
         notification.cancel();
     }, 3000);
+}
 
-    this.unread[this.unread.length] = {people: people, icon: icon};
-    this.notifyBadge();
+Mail.prototype.setUnread = function (people, icon) {
+    if (typeof icon === 'undefined') {
+        var i = 0;
+        while (i < this.unread.length) {
+            if (this.unread[i].people === people) {
+                this.unread.splice(i, 1);
+            }
+            else {
+                i += 1;
+            }
+        }
+    }
+    else {
+        this.unread[this.unread.length] = {people: people, icon: icon};
+    }
+    var num = this.unread.length;
+    chrome.browserAction.setBadgeText({text: num > 0 ? num.toString() : ''});
+    chrome.browserAction.setPopup({popup: num > 0 ? '../pages/popup.html' : ''});
 }
 
 Mail.prototype.notifyBadge = function () {
     var num = this.unread.length;
-    chrome.browserAction.setBadgeText({text: num});
+    chrome.browserAction.setBadgeText({text: num > 0 ? num.toString() : ''});
     chrome.browserAction.setPopup({popup: num > 0 ? '../pages/popup.html' : ''});
 }
 
 
-Mail.prototype.nofifyTitle = function (doc) {
-    var startTime = Date.now(), title = doc.title;
-    title += '来新消息了     ';
-    webkitRequestAnimationFrame(draw);
-
-    function draw(timestamp) {
-        var drawStart = Date.now();
-        diff = drawStart - startTime;
-        if (diff >= 200) {
-            doc.title = title = title.substring(1, title.length) + title.charAt(0);
-            startTime = drawStart;
-        }
-        webkitRequestAnimationFrame(draw);
-    }
-}
-
-
 var doumail = new Mail();
+/*
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (tab.status !== 'complete' && tab.url.indexOf('www.douban.com/people/') > -1) {
         //chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
@@ -322,7 +322,4 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
         //chrome.pageAction.show(tab.id);
     }
 });
-
-chrome.tabs.onSelectionChanged.addListener(function () {
-
-});
+*/
