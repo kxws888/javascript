@@ -250,21 +250,18 @@ Mail.prototype.receiveStart = function () {
                         response.content = str2;console.log(str1, '++++', str2)
                         self.peopleInfo[response.people].postMessage(response);
                         self.sound.play();
-                        chrome.windows.getAll(null, function (wins) {console.log(wins)
-                            for (var i = 0, len = wins.length ; i < len ; i += 1) {
-                                if (wins[i].type !== 'normal') {continue;}
-                                if (wins[i].focused) {
-                                    chrome.tabs.getSelected(wins[i].id, function (tab) {
-                                        if (self.peopleInfo[response.people].tab.id !== tab.id) {
-                                            self.nofifyPop(data.author.name['$t'], str2);
-                                            self.setUnread(response.people, data.author.link[2]['@href']);
-                                        }
-                                    });
-                                }
-                                else {
-                                    self.nofifyPop(data.author.name['$t'], str2);
-                                    self.setUnread(response.people, data.author.link[2]['@href']);
-                                }
+                        chrome.windows.getLastFocused(function (win) {
+                            if (win.focused) {
+                                chrome.tabs.getSelected(win.id, function (tab) {
+                                    if (self.peopleInfo[response.people].tab.id !== tab.id) {
+                                        self.nofifyPop(data.author.name['$t'], str2);
+                                        self.setUnread(response.people, data.author.link[2]['@href']);
+                                    }
+                                });
+                            }
+                            else {
+                                self.nofifyPop(data.author.name['$t'], str2);
+                                self.setUnread(response.people, data.author.link[2]['@href']);
                             }
                         });
                     }
