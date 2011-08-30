@@ -97,55 +97,60 @@ function Mail(args) {
         if (port.name === 'dchat') {
             port.onMessage.addListener(function(msg) {
                 switch (msg.cmd) {
-				case 'send':
-					self.send(
-						msg,
-						function (data, e) {
-							if (data === 'ok') {
-								port.postMessage({cmd: 'sended', result: true});
-							}
-						},
-						function (e) {console.log(e)
-							if (e.status === 403) {
-								port.postMessage({
-									cmd: 'sended',
-									result: false,
-									msg:{
-										content: msg.content,
-										people: msg.people,
-										captcha: {
-											token: /=(.+?)&amp;/.exec(e.responseText)[1],
-											string: /captcha_url=(.+)$/.exec(e.responseText)[1]
-										}
-									}
-								});
-							}
-						});
-					break;
-				case 'receivestart':
-					if (typeof self.peopleInfo[msg.people] === 'undefined') {
-						self.peopleNum += 1;
-					}
-					self.peopleInfo[msg.people] = port;
-					if (self.peopleNum > 0 && self.timer === null) {
-						self.receiveStart(port);
-					}
-					break;
-				case 'pop':
-					self.popInfo = {people: msg.people, name: msg.name, history: msg.history};
-					chrome.windows.create({url: '../pages/pop.html'});
-					break;
-				}
+                case 'send':
+                    self.send(
+                        msg,
+                        function (data, e) {
+                            if (data === 'ok') {
+                                port.postMessage({cmd: 'sended', result: true});
+                            }
+                        },
+                        function (e) {console.log(e)
+                            if (e.status === 403) {
+                                port.postMessage({
+                                    cmd: 'sended',
+                                    result: false,
+                                    msg:{
+                                        content: msg.content,
+                                        people: msg.people,
+                                        captcha: {
+                                            token: /=(.+?)&amp;/.exec(e.responseText)[1],
+                                            string: /captcha_url=(.+)$/.exec(e.responseText)[1]
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    break;
+                case 'receivestart':
+                    if (typeof self.peopleInfo[msg.people] === 'undefined') {
+                        self.peopleNum += 1;
+                    }
+                    self.peopleInfo[msg.people] = port;
+                    if (self.peopleNum > 0 && self.timer === null) {
+                        self.receiveStart(port);
+                    }
+                    break;
+                case 'pop':
+                    self.popInfo = {people: msg.people, name: msg.name, history: msg.history};
+                    chrome.windows.create({
+                        url: '../pages/pop.html#' + msg.people + '/',
+                        width: 400,
+                        height: 430,
+                        type: 'popup'
+                    });
+                    break;
+                }
             });
 
             port.onDisconnect.addListener(function (port) {
                 if (port.name === 'dchat') {
-                    delete self.peopleInfo[port.tab.url.match(/\/([^\/]+)\/?$/)[1]];
+                    delete self.peopleInfo[port.tab.url.match(/[\/#]([^\/#]+)\/?$/)[1]];
                     self.peopleNum -= 1;
                     if (self.peopleNum === 0) {
                         clearInterval(self.timer);
                         self.timer = null;
-                    }
+                    }console.log(port.tab.url.match(/[\/#]([^\/#]+)\/?$/)[1], self.peopleInfo, self.peopleNum)
                 }
             });
         }
@@ -154,18 +159,18 @@ function Mail(args) {
 
     chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
         switch (request.cmd) {
-		case 'getUnread':
+        case 'getUnread':
             sendResponse({unread: self.unread});
-			break;
+            break;
         case 'showUnread':
             self.setUnread(request.people);
             chrome.tabs.update(self.peopleInfo[request.people].tab.id, {selected: true});
-			break;
-		case 'getPop':
-			sendResponse(self.pop);
-			self.pop = undefined;
-			break;
-		}
+            break;
+        case 'getPop':
+            sendResponse(self.popInfo);
+            self.popInfo = undefined;
+            break;
+        }
     });
 
     chrome.tabs.onSelectionChanged.addListener(function (tabId, object) {
@@ -327,6 +332,6 @@ var doumail = new Mail();
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (tab.status !== 'complete' && tab.url.indexOf('www.douban.com/people/') > -1) {
         chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
-        chrome.tabs.executeScript(tabId, {file: "src/contentscript.js"});
+        //chrome.tabs.executeScript(tabId, {file: "src/dchat.js"});
     }
 });
