@@ -43,5 +43,6 @@ document.addEventListener('DOMContentLoaded', function () {
             tmp.addEventListener('click', showMessage, false);
             document.body.appendChild(tmp);
         }
+		document.body.style.width = 70 * document.getElementsByTagName('canvas').length + 'px';
     });
 }, false);

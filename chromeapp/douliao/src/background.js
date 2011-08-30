@@ -91,6 +91,8 @@ function Mail(args) {
     this.sound = document.getElementById('alert');
     this.unread = [];
 
+	this.popInfo = undefined;
+
     chrome.extension.onConnect.addListener(function(port) {
         if (port.name === 'dchat') {
             port.onMessage.addListener(function(msg) {
@@ -98,7 +100,7 @@ function Mail(args) {
 				case 'send':
 					self.send(
 						msg,
-						function (data, e) {console.log(data)
+						function (data, e) {
 							if (data === 'ok') {
 								port.postMessage({cmd: 'sended', result: true});
 							}
@@ -129,6 +131,10 @@ function Mail(args) {
 						self.receiveStart(port);
 					}
 					break;
+				case 'pop':
+					self.popInfo = {people: msg.people, name: msg.name, history: msg.history};
+					chrome.windows.create({url: '../pages/pop.html'});
+					break;
 				}
             });
 
@@ -136,7 +142,6 @@ function Mail(args) {
                 if (port.name === 'dchat') {
                     delete self.peopleInfo[port.tab.url.match(/\/([^\/]+)\/?$/)[1]];
                     self.peopleNum -= 1;
-                    console.log(self.peopleInfo, self.peopleNum)
                     if (self.peopleNum === 0) {
                         clearInterval(self.timer);
                         self.timer = null;
@@ -148,13 +153,19 @@ function Mail(args) {
 
 
     chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
-        if (request.cmd === 'getUnread') {
+        switch (request.cmd) {
+		case 'getUnread':
             sendResponse({unread: self.unread});
-        }
-        else if (request.cmd === 'showUnread') {
+			break;
+        case 'showUnread':
             self.setUnread(request.people);
             chrome.tabs.update(self.peopleInfo[request.people].tab.id, {selected: true});
-        }
+			break;
+		case 'getPop':
+			sendResponse(self.pop);
+			self.pop = undefined;
+			break;
+		}
     });
 
     chrome.tabs.onSelectionChanged.addListener(function (tabId, object) {
@@ -312,12 +323,10 @@ Mail.prototype.notifyBadge = function () {
 
 
 var doumail = new Mail();
-/*
+
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (tab.status !== 'complete' && tab.url.indexOf('www.douban.com/people/') > -1) {
-        //chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
-        //chrome.tabs.executeScript(tabId, {file: "src/contentscript.js"});
-        //chrome.pageAction.show(tab.id);
+        chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
+        chrome.tabs.executeScript(tabId, {file: "src/contentscript.js"});
     }
 });
-*/

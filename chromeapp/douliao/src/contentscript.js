@@ -2,14 +2,14 @@
     var container = document.querySelector('#profile .user-opt'), button,
     people, port = null, lock = false, msgRequreToken = null, lastTime = +new Date(),
     chatWindow, textbox, msgList;
+
+	if (container) {
     button = container.querySelector('a.mr5').cloneNode(false);
     button.innerHTML = '豆聊';
     button.style.marginLeft = '5px';
     container.insertBefore(button, document.getElementById('divac'));
-
     button.addEventListener('click', chatStart, false);
-
-
+	}
 
     function chatStart(e) {
         e.preventDefault();
@@ -20,6 +20,13 @@
             msgList = chatWindow.querySelector('section>div');
             document.getElementById('close').addEventListener('click', function (e) {
                 chatWindow.style.display = 'none';
+                port.disconnect();
+                port = null;
+                e.stopPropagation();
+            }, false);
+			document.getElementById('pop').addEventListener('click', function (e) {
+                chatWindow.style.display = 'none';
+				port.postMessage({cmd: 'pop', people: people, name: chatWindow.querySelector('h1').innerHTML, history: msgList.innerHTML});
                 port.disconnect();
                 port = null;
                 e.stopPropagation();
@@ -57,9 +64,10 @@
     function createChatWindow() {
         var aside = document.createElement('aside');
         aside.id = 'dchat';
-        aside.innerHTML = '<header><h1></h1><div><img id="min" /><img id="close" /></div></header><section><div></div><div><form> <textarea id="" name="" rows="10" cols="30"></textarea></form></div></section>';
+        aside.innerHTML = '<header><h1></h1><div><img id="min" /><img id="pop" /><img id="close" /></div></header><section><div></div><div><form> <textarea id="" name="" rows="10" cols="30"></textarea></form></div></section>';
         document.body.appendChild(aside);
         document.getElementById('min').src = drawMin();
+		document.getElementById('pop').src = drawPop();
         document.getElementById('close').src = drawClose();
         aside.querySelector('h1').innerHTML = document.querySelector('title').innerHTML.trim();
         aside.querySelector('header').addEventListener('click', function () {
@@ -108,7 +116,7 @@
     }
 
     function send(e) {
-        if (e.keyCode === 13 && !lock && this.value.trim() !== '') {
+        if (e.keyCode === 13 && !e.shiftKey && !lock && this.value.trim() !== '') {
             lock = true;
             if (msgRequreToken) {
                 var self = this;
@@ -161,4 +169,29 @@
         return canvas.toDataURL();
     }
 
+	function drawPop() {
+		var canvas = document.createElement('canvas'), ctx;
+		canvas.width = 100;
+		canvas.height = 100;
+		canvas.style.backgroundColor = 'rgba(0, 0, 0, 1)';
+		ctx = canvas.getContext('2d');
+		ctx.strokeStyle = '#0C7823';
+		ctx.fillStyle = '#0C7823';
+		ctx.beginPath();
+		ctx.moveTo(95, 5);
+		ctx.lineTo(45, 5);
+		ctx.lineTo(95, 55);
+		ctx.closePath();
+		ctx.fill();
+		ctx.beginPath();
+		ctx.lineWidth = 10;
+		ctx.moveTo(75, 25);
+		ctx.lineTo(5, 95);
+		ctx.stroke();
+		return canvas.toDataURL();
+	};
+
+	window['chatStart'] = chatStart;
+
 })();
+

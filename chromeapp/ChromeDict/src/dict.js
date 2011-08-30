@@ -1,5 +1,3 @@
-(function () {
-    'use strict';
 var Tool = {
     extend: function (childCtor, parentCtor) {
         function tempCtor() {};
@@ -73,9 +71,9 @@ var Tool = {
         return data ? fn( data ) : fn;
       };
     })()
-}
+};
 
-
+(function (window, undefined) {
     /**
     * Dict
     * @version 20110602.4
@@ -177,7 +175,7 @@ var Tool = {
             }
         }
         this.onDrag = false;
-	document.removeEventListener('mouseup', document.dictonmouseup, false);
+		document.removeEventListener('mouseup', document.dictonmouseup, false);
     };
 
     Dict.prototype.hoverTrigger = function (e) {
@@ -440,4 +438,4 @@ var Tool = {
         }
     });
 
-})();
+})(window);
