@@ -106,7 +106,7 @@
         if (this.ui === 'full') {
             html += '<header><h1>' + this.name + '</h1><div><img class="-" /><img class="+" /><img class="x" /></div></header>';
         }
-        html += '<section><div></div><textarea></textarea></section>'
+        html += '<section><div></div><div><textarea></textarea></div></section>'
         aside.innerHTML = html;
         document.body.appendChild(aside);
         if (this.ui === 'full') {

@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>豆聊</title>
+		<link rel="stylesheet" href="http://twitter.github.com/bootstrap/assets/css/bootstrap-1.1.1.min.css">
+		<style type="text/css">
+			* {margin: 0; padding: 0;}
+			body {font: 12px Arial, 'Microsoft Yahei', Simsun, sans-serif;}
+			h2 {text-align: center; font-size: 18px; }
+			.container-fluid, section.alert-message, header.alert-message {padding: 0; margin: 0;}
+			.sidebar input {width: 100%;}
+
+			.container-fluid .content {margin-left: 220px;}
+			.content img {width: 32px; height: 32px; border-radius: 6px}
+			.content .row {overflow: hidden;}
+			.content .right div{float: right;}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="sidebar">
+				<header class="alert-message success">
+					<h2>豆聊</h2>
+				</header>
+				<section class="alert-message block-message success">
+					<input type="text" class="xlarge"/>
+					<div>
+						<h3>小 蒲</h3>
+						<p>一只成精的花椰菜</p>
+					</div>
+					<div>
+						<h3>小 蒲</h3>
+						<p>一只成精的花椰菜</p>
+					</div>
+					<div>
+						<h3>小 蒲</h3>
+						<p>一只成精的花椰菜</p>
+					</div>
+					<div>
+						<h3>小 蒲</h3>
+						<p>一只成精的花椰菜</p>
+					</div>
+					<div>
+						<h3>小 蒲</h3>
+						<p>一只成精的花椰菜</p>
+					</div>
+					<div>
+						<h3>小 蒲</h3>
+						<p>一只成精的花椰菜</p>
+					</div>
+				</section>
+			</div>
+			<div class="content">
+				<header class="alert-message success">
+					<h2>小 蒲</h2>
+				</header>
+				<section class="alert-message block-message success">
+					<div class="row right">
+						<div class="columns span1"><img src="http://img3.douban.com/icon/u49790153-23.jpg" alt="" /></div>
+						<div class="columns span9 alert-message info">可是它本来不用这么早死的~跟了我之后就英年早死~感觉好对不起它</div>
+					</div>
+					<div class="row">
+						<div class="columns span1"><img src="http://img3.douban.com/icon/u49790153-23.jpg" alt="" /></div>
+						<div class="columns span9 alert-message">可是它本来不用这么早死的~跟了我之后就英年早死~感觉好对不起它</div>
+					</div>
+					<div class="row right">
+						<div class="columns span1"><img src="http://img3.douban.com/icon/u49790153-23.jpg" alt="" /></div>
+						<div class="columns span9 alert-message info">可是它本来不用这么早死的~跟了我之后就英年早死~感觉好对不起它</div>
+					</div>
+					<div class="row">
+						<div class="columns span1"><img src="http://img3.douban.com/icon/u49790153-23.jpg" alt="" /></div>
+						<div class="columns span9 alert-message">可是它本来不用这么早死的~跟了我之后就英年早死~感觉好对不起它</div>
+					</div>
+					<div class="row right">
+						<div class="columns span1"><img src="http://img3.douban.com/icon/u49790153-23.jpg" alt="" /></div>
+						<div class="columns span9 alert-message info">可是它本来不用这么早死的~跟了我之后就英年早死~感觉好对不起它</div>
+					</div>
+					<div class="row">
+						<div class="columns span1"><img src="http://img3.douban.com/icon/u49790153-23.jpg" alt="" /></div>
+						<div class="columns span9 alert-message">可是它本来不用这么早死的~跟了我之后就英年早死~感觉好对不起它</div>
+					</div>
+				</section>
+			</div>
+		</div>
+		<script type="text/javascript">
+			var sections = document.querySelectorAll('section'), headerSize;
+			headerSize = document.querySelector('header').getBoundingClientRect().height;
+			sectionSize = sections[0].getBoundingClientRect().height - parseInt(getComputedStyle(sections[0]).height, 10);console.log(headerSize, sectionSize)
+			sections[0].style.height = sections[1].style.height = window.innerHeight - headerSize - sectionSize + 'px';
+		</script>
+	</body>
+</html>

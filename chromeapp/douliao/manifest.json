@@ -1,7 +1,7 @@
 {
     "name": "豆聊",
-    "version": "1.3",
-    "description": "豆瓣也有聊天工具啦",
+    "version": "1.3.1",
+    "description": "用QQ的方式聊豆油",
     "icons": {
         "16": "assets/icon16.png",
         "48": "assets/icon48.png",
@@ -16,12 +16,5 @@
         "tabs",
         "notifications",
         "http://*.douban.com/"
-    ],
-
-"content_scripts": [
-    {
-      "matches": ["http://www.douban.com/*"],
-      "js": ["src/dchat.js"]
-    }
-  ]
+    ]
 }
