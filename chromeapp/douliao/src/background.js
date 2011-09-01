@@ -349,7 +349,7 @@ Mail.prototype.notifyBadge = function () {
 var doumail = new Mail();
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-    if (tab.status !== 'complete' && /^http:\/\/www.douban.com\/people\/[a-z\d]+\/?$/i.test(tab.url)) {
+    if (tab.status !== 'complete' && /^http:\/\/www.douban.com\/people\/[^\/]+?\/?$/i.test(tab.url)) {
         chrome.tabs.insertCSS(tabId, {file: 'pages/style/ui.css'});
         chrome.tabs.executeScript(tabId, {file: "src/dchat.js"});
     }
