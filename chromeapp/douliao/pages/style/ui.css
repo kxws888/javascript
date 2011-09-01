@@ -56,8 +56,8 @@
 #dchat section>div:first-of-type {height: 78%; overflow: auto;}
 #dchat section>div:first-of-type div{margin-bottom: 2px;}
 #dchat section strong {font-weight: bold;}
-#dchat section p {color: #777;}
-#dchat section img{width: 213px; height: 34px;}
+#dchat section div p {color: #777;}
+#dchat section div.captcha img{width: 213px; height: 34px;}
 
 #dchat section>div:last-of-type {height: 20%; margin-top: 2%; padding: 1px; background-color: #A6D098;}
 #dchat section textarea{width: 100%; height: 100%; min-height: 45px; border:none; background-color: #fff;}

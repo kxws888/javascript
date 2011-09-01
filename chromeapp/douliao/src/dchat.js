@@ -3,6 +3,8 @@
     function DChat(args) {
         this.people = args.people;
         this.name = args.name;
+		this.icon = args.icon;
+		this.me = args.me;
         this.ui = args.ui || 'full';
 
         this.chatWindow = null;
@@ -27,7 +29,7 @@
         this.port.onMessage.addListener(function (msg) {
             if (msg.cmd === 'sended') {
                 if (!msg.result) {
-                    var captcha = self.addContent('<p>发送太快了亲，输入验证码</p><img src="' + msg.msg.captcha.string + '">');
+                    var captcha = self.addContent('<p>发送太快了亲，输入验证码</p><img src="' + msg.msg.captcha.string + '">', 'captcha');
                     self.msgRequreToken = msg.msg;
                     self.msgRequreToken.captcha.dom = captcha;
                     self.lock(false);
@@ -35,7 +37,7 @@
             }
             else if (msg.cmd === 'received') {
                 if (self.people === msg.people) {
-                    self.addContent('<strong>' + self.name + '说</strong>: ' + msg.content);
+                    self.addContent(self.me ? '<img src="' + self.icon + '"><p>' + msg.content + '</p>' : '<strong>' + self.name + '说</strong>: ' + msg.content, 'left');
                     self.lock(false);
                 }
             }
@@ -43,9 +45,20 @@
     };
 
     DChat.prototype.stop = function (e) {
-        var self = this;
+        var self = this, list, history = [], i;
         if (e.target.className === '+') {
-            this.port.postMessage({cmd: 'pop', people: self.people, name: self.name, history: self.msgList.innerHTML});
+			list = this.msgList.getElementsByTagName('div');
+			for (i = 0 ; i < list.length ; i += 1) {
+				history[i] = {};
+				history[i].content = list[i].childNodes[1].nodeValue.slice(2);
+				if (list[i].className === 'left') {
+					history[i].people = 'ta';
+				}
+				else {
+					history[i].people = 'me';
+				}
+			}
+            this.port.postMessage({cmd: 'pop', people: self.people, name: self.name, icon: document.querySelector('#db-usr-profile img').src, history: history});
         }
         document.body.removeChild(this.chatWindow);
         this.port.disconnect();
@@ -71,7 +84,7 @@
                 this.msgRequreToken = null;
             }
             else {
-                this.addContent('<strong>我说</strong>: ' + value);
+                this.addContent(this.me ? '<img src="' + this.me.icon + '"><p>' + value + '</p>' : '<strong>我说</strong>: ' + value, 'right');
                 this.port.postMessage({cmd: 'send', content: value, people: self.people});
             }
 
@@ -82,8 +95,11 @@
         }
     };
 
-    DChat.prototype.addContent = function (html) {
+    DChat.prototype.addContent = function (html, className) {
         var div = document.createElement('div'), scrollHeight = this.msgList.scrollHeight;
+		if (className) {
+			div.className = className;
+		}
         div.innerHTML = html;
         this.msgList.appendChild(div);
         if (div.getElementsByTagName('img').length > 0) {

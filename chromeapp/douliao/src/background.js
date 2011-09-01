@@ -81,7 +81,8 @@ function Mail(args) {
 
     var self = this;
 
-    this.peopleInfo = {};
+    this.me = {};
+	this.peopleInfo = {};
 	this.peopleNum = 0;
     this.filterRegTest = /:[\r\n]+\|/m;
     this.filterRegFront = /^([\s\S]+?[\r\n])?[^\r\n]+?:[\r\n]+\|/m;
@@ -92,6 +93,8 @@ function Mail(args) {
     this.unread = [];
 
 	this.popInfo = undefined;
+
+	this.getMe();
 
     chrome.extension.onConnect.addListener(function(port) {
         if (port.name === 'dchat') {
@@ -132,7 +135,7 @@ function Mail(args) {
                     }
                     break;
                 case 'pop':
-                    self.popInfo = {people: msg.people, name: msg.name, history: msg.history};
+                    self.popInfo = {people: msg.people, name: msg.name, icon: msg.icon, history: msg.history, me: self.me};
                     chrome.windows.create({
                         url: '../pages/pop.html#' + msg.people + '/',
                         width: 400,
@@ -150,7 +153,7 @@ function Mail(args) {
                     if (self.peopleNum === 0) {
                         clearInterval(self.timer);
                         self.timer = null;
-                    }console.log(port.tab.url.match(/[\/#]([^\/#]+)\/?$/)[1], self.peopleInfo, self.peopleNum)
+                    }
                 }
             });
         }
@@ -194,6 +197,22 @@ function Mail(args) {
     });
 }
 
+Mail.prototype.getMe = function () {
+	var self = this;
+    new Resource({
+        url: 'http://api.douban.com/people/%40me',
+        method: 'get',
+        data: 'alt=json',
+        load: function (data) {
+            data = JSON.parse(data);
+            self.me = {
+                id: data['db:uid']['$t'],
+                icon: data['link'][2]['@href']
+            };
+        }
+    }).request();
+}
+
 Mail.prototype.send = function (msg, load, error) {
     var entry = '<?xml version="1.0" encoding="UTF-8"?>'
     +'<entry xmlns="http://www.w3.org/2005/Atom" xmlns:db="http://www.douban.com/xmlns/" xmlns:gd="http://schemas.google.com/g/2005" xmlns:opensearch="http://a9.com/-/spec/opensearchrss/1.0/">'
@@ -207,7 +226,7 @@ Mail.prototype.send = function (msg, load, error) {
 
     new Resource({
         url: 'http://api.douban.com/doumails',
-            method: 'post',
+        method: 'post',
         data: entry,
         load: load,
         error: error
@@ -218,7 +237,7 @@ Mail.prototype.receive = function (load, error) {
     var self = this;
     new Resource({
         url: 'http://api.douban.com/doumail/inbox/unread',
-            method: 'get',
+        method: 'get',
         data: 'start-index=1&alt=json',
         load: load,
         error: error
@@ -289,7 +308,7 @@ Mail.prototype.receiveStart = function () {
     }
 
     receive();
-    self.timer = setInterval(receive, 30000);
+    self.timer = setInterval(receive, 10000);
 }
 
 Mail.prototype.nofifyPop = function (name, content) {
