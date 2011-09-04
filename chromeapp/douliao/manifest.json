@@ -1,7 +1,7 @@
 {
     "name": "豆聊",
-    "version": "1.3.3",
-    "description": "用QQ的方式聊豆油",
+    "version": "1.4",
+    "description": "用QQ的方式聊豆邮",
     "icons": {
         "16": "assets/icon16.png",
         "48": "assets/icon48.png",
@@ -10,7 +10,8 @@
     "background_page": "pages/background.html",
     "browser_action": {
         "default_icon": "assets/icon16.png",
-        "default_title": "豆聊"
+        "default_title": "豆聊",
+        "default_popup": "pages/list.html"
     },
     "permissions": [
         "tabs",

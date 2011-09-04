@@ -25,24 +25,23 @@ function draw(image, num) {
 
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    chrome.extension.sendRequest({cmd: 'getUnread'}, function(response) {
-        var unread = response.unread, unreadClear = {}, i, len, tmp;
-        for (i = 0, len = unread.length ; i < len ; i += 1) {
-            tmp = unread[i];
-            if (tmp.people in unreadClear) {
-                unreadClear[tmp.people].counter += 1;
-            }
-            else {
-                unreadClear[tmp.people] = {icon: tmp.icon, counter: 1};
-            }
+
+chrome.extension.sendRequest({cmd: 'getUnread'}, function(response) {
+    var unread = response.unread, unreadClear = {}, i, len, tmp;
+    for (i = 0, len = unread.length ; i < len ; i += 1) {
+        tmp = unread[i];
+        if (tmp.people in unreadClear) {
+            unreadClear[tmp.people].counter += 1;
         }
-        for (i in unreadClear) {
-            tmp = draw(unreadClear[i].icon, unreadClear[i].counter);
-            tmp.id = i;
-            tmp.addEventListener('click', showMessage, false);
-            document.body.appendChild(tmp);
+        else {
+            unreadClear[tmp.people] = {icon: tmp.icon, counter: 1};
         }
-		document.body.style.width = 70 * document.getElementsByTagName('canvas').length + 'px';
-    });
-}, false);
+    }
+    for (i in unreadClear) {
+        tmp = draw(unreadClear[i].icon, unreadClear[i].counter);
+        tmp.id = i;
+        tmp.addEventListener('click', showMessage, false);
+        document.body.appendChild(tmp);
+    }
+    document.body.style.width = 70 * document.getElementsByTagName('canvas').length + 'px';
+});

@@ -94,7 +94,22 @@ function Mail(args) {
 
 	this.popInfo = undefined;
 
-	this.getMe();
+	new Resource({
+        url: 'http://api.douban.com/people/%40me',
+        method: 'get',
+        data: 'alt=json',
+        load: function (data) {
+            data = JSON.parse(data);
+            self.me = {
+                id: data['db:uid']['$t'],
+                name: data.title['$t'],
+                icon: data['link'][2]['@href'],
+                sign: data['db:signature']['$t']
+            };
+        }
+    }).request();
+
+    localStorage.friends || localStorage.setItem('friends', '{}');
 
     chrome.extension.onConnect.addListener(function(port) {
         if (port.name === 'dchat') {
@@ -108,7 +123,7 @@ function Mail(args) {
                                 port.postMessage({cmd: 'sended', result: true});
                             }
                         },
-                        function (e) {console.log(e)
+                        function (e) {
                             if (e.status === 403) {
                                 port.postMessage({
                                     cmd: 'sended',
@@ -132,6 +147,16 @@ function Mail(args) {
                     self.peopleInfo[msg.people] = port;
                     if (self.peopleNum > 0 && self.timer === null) {
                         self.receiveStart(port);
+                    }
+                    port.postMessage({cmd: 'setStatus', status: msg.people in JSON.parse(localStorage.getItem('friends'))});
+                    break;
+                case 'addFriend':
+                    var friends = JSON.parse(localStorage.getItem('friends'));
+                    if (friends[msg.people] === undefined) {
+                        friends[msg.people] = msg;
+                        delete msg.cmd;
+                        delete msg.people;
+                        localStorage.setItem('friends', JSON.stringify(friends));
                     }
                     break;
                 case 'pop':
@@ -166,12 +191,62 @@ function Mail(args) {
             sendResponse({unread: self.unread});
             break;
         case 'showUnread':
-            self.setUnread(request.people);
-            chrome.tabs.update(self.peopleInfo[request.people].tab.id, {selected: true});
+            if (self.peopleInfo[request.people]) {
+                chrome.tabs.update(self.peopleInfo[request.people].tab.id, {selected: true});
+                self.setUnread(request.people);
+            }
+            else {
+                chrome.windows.create({
+                    url: '../pages/pop.html#' + request.people + '/',
+                    width: 400,
+                    height: 430,
+                    type: 'popup'
+                });
+
+                if (request.sign) {
+                    request.me = self.me;
+                    self.popInfo = request;
+                    new Resource({
+                        url: 'http://api.douban.com/people/' + request.people,
+                        method: 'get',
+                        data: 'alt=json',
+                        load: function (data) {
+                            data = JSON.parse(data);
+                            var friends = JSON.parse(localStorage.getItem('friends'));
+                            friends[request.people] = {
+                                name: data.title['$t'],
+                                icon: data['link'][2]['@href'],
+                                sign: data['db:signature']['$t']
+                            };
+                            localStorage.setItem('friends', JSON.stringify(friends));
+                        }
+                    }).request();
+                }
+            }
             break;
         case 'getPop':
-            sendResponse(self.popInfo);
-            self.popInfo = undefined;
+            if (self.popInfo) {
+                sendResponse(self.popInfo);
+                self.popInfo = undefined;
+            }
+            else {
+                var i = 0, history = [], name, icon, sign;
+                while (i < self.unread.length) {
+                    if (self.unread[i].people === request.people) {
+                        history.push({people: 'ta', content: self.unread[i].content});
+                        name = self.unread[i].name;
+                        icon = self.unread[i].icon;
+                        sign = self.unread[i].sign;
+                    }
+                    i += 1;
+                }
+                sendResponse({people: request.people, name: name, icon: icon, sign: sign, history: history, me: self.me});
+                self.setUnread(request.people);
+            }
+            break;
+        case 'getList':
+            self.receive();
+            sendResponse({me: self.me, friends: JSON.parse(localStorage.getItem('friends'))});
             break;
         }
     });
@@ -197,21 +272,11 @@ function Mail(args) {
     });
 }
 
-Mail.prototype.getMe = function () {
-	var self = this;
-    new Resource({
-        url: 'http://api.douban.com/people/%40me',
-        method: 'get',
-        data: 'alt=json',
-        load: function (data) {
-            data = JSON.parse(data);
-            self.me = {
-                id: data['db:uid']['$t'],
-                icon: data['link'][2]['@href']
-            };
-        }
-    }).request();
-}
+Mail.prototype.proxy = function (fn, obj) {
+    return function () {
+        return fn.apply(obj, arguments);
+    }
+};
 
 Mail.prototype.send = function (msg, load, error) {
     var entry = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -233,33 +298,18 @@ Mail.prototype.send = function (msg, load, error) {
     }).request();
 }
 
-Mail.prototype.receive = function (load, error) {
+Mail.prototype.receive = function () {
     var self = this;
     new Resource({
         url: 'http://api.douban.com/doumail/inbox/unread',
         method: 'get',
         data: 'start-index=1&alt=json',
-        load: load,
-        error: error
-    }).request();
-}
-
-
-Mail.prototype.receiveStart = function () {
-    var self = this;
-    function receive() {
-        self.receive(function (data, e) {
+        load: function (data, e) {
             var i, len, key, people, mails = [];
             data = JSON.parse(data).entry;
             for (i = 0, len = data.length ; i < len ; i += 1) {
-                people = data[i].author.link[1]['@href'].match(/\/([^\/]+)\/?$/)[1];
-                if (people in self.peopleInfo) {
-                    mails[mails.length] = data[i].id['$t'];
-                }
-            }
-            for (i = 0, len = mails.length ; i < len ; i += 1) {
                 new Resource({
-                    url: mails[i],
+                    url: data[i].id['$t'],
                     method: 'get',
                     data: 'alt=json',
                     load: function (data) {
@@ -283,32 +333,46 @@ Mail.prototype.receiveStart = function () {
                             str2 = str1;
                         }
                         response.content = str2;console.log(str1, '++++', str2)
-                        self.peopleInfo[response.people].postMessage(response);
+                        if (self.peopleInfo[response.people]) {
+                            self.peopleInfo[response.people].postMessage(response);
+                        }
                         self.sound.play();
                         chrome.windows.getLastFocused(function (win) {
                             if (win.focused) {
                                 chrome.tabs.getSelected(win.id, function (tab) {
-                                    if (self.peopleInfo[response.people].tab.id !== tab.id) {
+                                    if (!self.peopleInfo[response.people] || self.peopleInfo[response.people].tab.id !== tab.id) {
                                         self.nofifyPop(data.author.name['$t'], str2);
-                                        self.setUnread(response.people, data.author.link[2]['@href']);
+                                        self.setUnread(response.people, {
+                                            icon: data.author.link[2]['@href'],
+                                            name: data.author.name['$t'],
+                                            content: str2,
+                                            sign: ''
+                                        });
                                     }
                                 });
                             }
                             else {
                                 self.nofifyPop(data.author.name['$t'], str2);
-                                self.setUnread(response.people, data.author.link[2]['@href']);
+                                self.setUnread(response.people, {
+                                    icon: data.author.link[2]['@href'],
+                                    name: data.author.name['$t'],
+                                    content: str2,
+                                    sign: ''
+                                });
                             }
                         });
                     }
                 }).request();
             }
-        }, function (e) {
-            console.log(e)
-        });
-    }
+        }
+    }).request();
+}
 
-    receive();
-    self.timer = setInterval(receive, 10000);
+
+Mail.prototype.receiveStart = function () {
+    var self = this;
+    this.receive();
+    self.timer = setInterval(this.proxy(this.receive, this), 10000);
 }
 
 Mail.prototype.nofifyPop = function (name, content) {
@@ -332,11 +396,13 @@ Mail.prototype.setUnread = function (people, icon) {
         }
     }
     else {
-        this.unread[this.unread.length] = {people: people, icon: icon};
+        var obj = icon;
+        obj.people = people;
+        this.unread[this.unread.length] = obj;
     }
     var num = this.unread.length;
     chrome.browserAction.setBadgeText({text: num > 0 ? num.toString() : ''});
-    chrome.browserAction.setPopup({popup: num > 0 ? '../pages/popup.html' : ''});
+    chrome.browserAction.setPopup({popup: num > 0 ? '../pages/popup.html' : '../pages/list.html'});
 }
 
 Mail.prototype.notifyBadge = function () {
