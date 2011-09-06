@@ -241,12 +241,6 @@ Mail.prototype.requestHandler = function (request, sender, sendResponse) {
 
                 if (request.sign) {
                     request.me = self.me;
-					var i = 0, history = [], name, icon, sign, res;
-					res = self.setUnread(request.people);
-					while (i < res.length) {
-						history.push({people: 'ta', content: res[i].content});
-						i += 1;
-					}
                     self.popInfo = request;
                     new Resource({
                         url: 'http://api.douban.com/people/' + request.people,
@@ -267,23 +261,18 @@ Mail.prototype.requestHandler = function (request, sender, sendResponse) {
             }
             break;
         case 'getPop':
+			var i = 0, res, history = [];
+			res = self.setUnread(request.people);
+			for (; i < res.length ; i += 1) {
+				history.push({people: 'ta', content: res[i].content});
+			}
             if (self.popInfo) {
+				self.popInfo.history = self.popInfo.history.concat(history);
                 sendResponse(self.popInfo);
                 self.popInfo = undefined;
             }
             else {
-                var i = 0, history = [], name, icon, sign, res;
-				res = self.setUnread(request.people);
-                while (i < res.length) {
-                    history.push({people: 'ta', content: res[i].content});
-					if (i === 0) {
-						name = res[i].name;
-						icon = res[i].icon;
-						sign = res[i].sign;
-					}
-                    i += 1;
-                }
-                sendResponse({people: request.people, name: name, icon: icon, sign: sign, history: history, me: self.me});
+                sendResponse({people: request.people, name: res[0].name, icon: res[0].icon, sign: res[0].sign, history: history, me: self.me});
             }
             break;
         case 'getList':
@@ -397,7 +386,7 @@ Mail.prototype.setUnread = function (people, info) {
         var i = 0;
         while (i < this.unread.length) {
             if (this.unread[i].people === people) {
-                res.concat(this.unread.splice(i, 1));
+                res = res.concat(this.unread.splice(i, 1));
             }
             else {
                 i += 1;
