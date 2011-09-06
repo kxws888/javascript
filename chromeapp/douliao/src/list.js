@@ -7,6 +7,8 @@ function openPanel(e) {
         response.icon = this.querySelector('img').src;
         response.history = [];
         chrome.extension.sendRequest(response);
+        e.preventDefault();
+        return false;
     }
 }
 
