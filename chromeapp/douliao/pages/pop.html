@@ -6,7 +6,11 @@
         <link rel="stylesheet" href="style/ui.css" />
         <style type="text/css">
             body {margin: 0; font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif}
-            #dchat {width: 100%; border: none; position: static;}
+			#dchat {width: 100%; border: none; position: static;}
+
+			#dchat header {display: -webkit-box; -webkit-box-orient: horizontal;}
+			#dchat header img:first-of-type {margin-right: 5px; margin-left: 0;}
+			#dchat header p{max-width: 90%;overflow: hidden;white-space: nowrap;}
 
 			#dchat section div {position: relative; overflow: hidden;}
 			#dchat section div.left * {float: left}

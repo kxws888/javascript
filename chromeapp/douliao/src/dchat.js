@@ -28,32 +28,37 @@
         this.port = chrome.extension.connect({name: 'dchat'});
         this.port.postMessage({cmd: 'receivestart', people: self.people});
         this.port.onMessage.addListener(function (msg) {
-            if (msg.cmd === 'sended') {
+			switch (msg.cmd) {
+            case 'sended':
                 if (!msg.result) {
                     var captcha = self.addContent('<p>发送太快了亲，输入验证码</p><img src="' + msg.msg.captcha.string + '">', 'captcha');
                     self.msgRequreToken = msg.msg;
                     self.msgRequreToken.captcha.dom = captcha;
                     self.lock(false);
                 }
-            }
-            else if (msg.cmd === 'received') {
+				break;
+            case 'received':
                 if (self.people === msg.people) {
-                    self.addContent(self.me ? '<img src="' + self.icon + '"><p>' + msg.content + '</p>' : '<strong>' + self.name + '说</strong>: ' + msg.content, 'left');
+                    self.addContent(self.ui === 'simple' ? '<img src="' + self.icon + '"><p>' + msg.content + '</p>' : '<strong>' + self.name + '说</strong>: ' + msg.content, 'left');
                     self.lock(false);
                 }
-            }
-            else if (msg.cmd === 'setStatus') {
+				break;
+            case 'setStatus':
                 var img = self.chatWindow.querySelector('header img');
                 img.src = self.drawStatus(msg.status);
                 img.className = msg.status;
                 img.style.display = '';
-            }
+				break;
+			case 'close':
+				self.stop();
+				break;
+			}
         });
     };
 
     DChat.prototype.stop = function (e) {
         var self = this, list, history = [], i;
-        if (e.target.className === '+') {
+        if (e && e.target.className === '+') {
 			list = this.msgList.getElementsByTagName('div');
 			for (i = 0 ; i < list.length ; i += 1) {
 				history[i] = {};
@@ -70,7 +75,6 @@
         document.body.removeChild(this.chatWindow);
         this.port.disconnect();
         this.port = null;
-        e.stopPropagation();
     };
 
     DChat.prototype.send = function (e) {
@@ -104,9 +108,7 @@
 
     DChat.prototype.addContent = function (html, className) {
         var div = document.createElement('div'), scrollHeight = this.msgList.scrollHeight;
-		if (className) {
-			div.className = className;
-		}
+		div.className = className;
         div.innerHTML = html;
         this.msgList.appendChild(div);
         if (div.getElementsByTagName('img').length > 0) {
@@ -130,9 +132,9 @@
             html += '<header><h1><img style="display: none" />' + this.name + '</h1><div><img class="-" /><img class="+" /><img class="x" /></div></header>';
         }
         else {
-            html += '<header><img style="display: none" /><p></p></header>';
+            html += '<header><img style="display: none" /><p>' + (this.sign ? this.sign : '') + '</p></header>';
         }
-        html += '<section><div></div><div><textarea></textarea></div></section>'
+        html += '<section><div></div><div><textarea></textarea></div></section>';
         aside.innerHTML = html;
         document.body.appendChild(aside);
         if (this.ui === 'full') {
