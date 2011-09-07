@@ -279,6 +279,11 @@ Mail.prototype.requestHandler = function (request, sender, sendResponse) {
             self.receive();
             sendResponse({me: self.me, friends: JSON.parse(localStorage.getItem('friends'))});
             break;
+		case 'deleteFriend':
+			var friends = JSON.parse(localStorage.getItem('friends'));
+			delete friends[request.people];
+			localStorage.setItem('friends', JSON.stringify(friends));
+			break;
         }
     };
 
