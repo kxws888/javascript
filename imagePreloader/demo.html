@@ -37,7 +37,7 @@ for (var i = 0, len = images.length ; i < len ; i += 1) {
     document.body.appendChild(div);
 }
 
-new ImagePreloader(images, function (image, images, nload) {
+new ImagePreloader(images, 5000, function(){}, function (image, images, nload) {
     if (image.bLoaded) {
         var img = document.createElement('img'), div;
         img.src = image.src;
