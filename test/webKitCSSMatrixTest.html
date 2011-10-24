@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title></title>
+<script type="text/javascript" src="jquery.js"></script>
+<style type="text/css">
+	p {
+		width: 100px;
+		height: 100px;
+		background-color: red;
+		-webkit-transition: all 1s;
+		font-size: 32px;
+	}
+</style>
+</head>
+<body>
+	<p id="p1">1</p>
+	<code>
+		var p = document.querySelector('#p1'), matrix;<br>
+		matrix = new WebKitCSSMatrix(window.getComputedStyle(p).webkitTransform);<br>
+		p.style.webkitTransform = matrix.translate(200, 0);
+	</code>
+	<script type="text/javascript">console.log("onorientationchange" in window)
+		var p = document.querySelector('#p1'), matrix;
+		matrix = new WebKitCSSMatrix(window.getComputedStyle(p).webkitTransform);
+		p.style.webkitTransform = matrix.translate(200, 0);
+	</script>
+
+	<hr>
+
+	
+	<p id="p2">2</p>
+	<code>
+		var p = document.querySelector('#p2'), matrix;<br>
+		p.style.webkitTransform = 'matrix(1, 0, 0, 1, 200, 0)';
+	</code>
+	<script type="text/javascript">
+		var p = document.querySelector('#p2'), matrix;
+		p.style.webkitTransform = 'matrix(1, 0, 0, 1, 200, 0)';
+	</script>
+
+	<hr>
+
+	<p id="p3">3</p>
+	<code>
+		var p = document.querySelector('#p3');<br>
+		p.style.webkitTransform = 'translate(200px, 0)';
+	</code>
+	<script type="text/javascript">
+		var p = document.querySelector('#p3');
+		p.style.webkitTransform = 'translate(200px, 0)';
+	</script>
+
+</body>
+</html>
