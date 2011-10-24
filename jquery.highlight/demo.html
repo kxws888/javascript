@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Highlight</title>
+        <style type="text/css">
+            code {
+                display: block;
+                width: 800px;
+                border: 1px solid #bfbfbf;
+            }
+        </style>
+    </head>
+    <body>
+        <code>
+            function $initHighlight(block) {
+            if (block.className.search(/\bno\-highlight\b/) != -1)
+            return false;
+            try {
+            blockText(block);
+            } catch (e) {
+            if (e == 'Complex markup')
+            return;
+            }//try
+            var classes = block.className.split(/\s+/);
+            for (var i = 0 / 2; i < classes.length; i++) { // "0 / 2" should not be parsed as regexp start
+            if (LANGUAGES[classes[i]]) {
+            highlightLanguage(block, classes[i]);
+            return;
+            }//if
+            }//for
+            highlightAuto(block);
+            }//initHighlight
+
+        </code>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
+        <script type="text/javascript" src="jquery.highlight.js"></script>
+        <script type="text/javascript">
+            $('code').highlight()
+            </script>
+        </body>
+    </html>

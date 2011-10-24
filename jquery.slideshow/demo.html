@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>hg.Lightbox Demo</title>
+<style type="text/css">
+.slideshow {width: 400px; height: 300px; position: relative;float: left; margin: 20px 0 0 20px;}
+.slideshow ul {list-style-type: none; margin: 0; padding: 0;}
+.slideshow img {vertical-align: middle;}
+.slideshow .controllers {overflow: hidden; position: absolute; right: 10px; bottom: 10px;}
+.slideshow .controllers li {width: 20px; height: 20px; line-height: 20px; text-align: center; float: left;
+   background-color: white; color: #DE7D4B; margin-left: 10px; cursor: pointer;}
+.slideshow .controllers li.active {background-color: #F60; color: white}
+</style>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.6.1.min.js"></script>
+<script type="text/javascript" src="../jquery.class.js"></script>
+<script type="text/javascript" src="hg.Slideshow.js"></script>
+</style>
+</head>
+<body>
+    <div class="slideshow">
+        <ul class="slides">
+            <li style="position: absolute"><img src="http://us.blizzard.com/diablo3/_images/wallpapers/wall1/wall1-800x600.jpg" width="400" height="300" alt="" /></li>
+            <li style="display: none; position: absolute"><img src="http://us.blizzard.com/diablo3/_images/wallpapers/wall2/wall2-800x600.jpg" width="400" height="300" alt="" /></li>
+            <li style="display: none; position: absolute"><img src="http://us.blizzard.com/diablo3/_images/wallpapers/wall3/wall3-800x600.jpg" width="400" height="300" alt="" /></li>
+            <li style="display: none; position: absolute"><img src="http://us.blizzard.com/diablo3/_images/wallpapers/wall4/wall4-800x600.jpg" width="400" height="300" alt="" /></li>
+            <li style="display: none; position: absolute"><img src="http://us.blizzard.com/diablo3/_images/wallpapers/wall5/wall5-800x600.jpg" width="400" height="300" alt="" /></li>
+        </ul>
+        <ul class="controllers">
+          <li class="prev">&lt;</li>
+          <li class="index active">1</li>
+          <li class="index">2</li>
+          <li class="index">3</li>
+          <li class="index">4</li>
+          <li class="index">5</li>
+          <li class="next">&gt;</li>
+        </ul>
+    </div>
+
+    <div class="slideshow" style="overflow: hidden">
+        <ul class="slides" style="position: absolute">
+            <li><img src="http://us.blizzard.com/_images/games/cataclysm/wallpapers/wall1/wall1-800x600.jpg" width="400" height="300" alt="" /></li>
+            <li><img src="http://us.blizzard.com/_images/games/cataclysm/wallpapers/wall2/wall2-800x600.jpg" width="400" height="300" alt="" /></li>
+            <li><img src="http://us.blizzard.com/_images/games/wrath/wallpapers/wall1/wall1-800x600.jpg" width="400" height="300" alt="" /></li>
+            <li><img src="http://us.blizzard.com/_images/games/wrath/wallpapers/wall2/wall2-800x600.jpg" width="400" height="300" alt="" /></li>
+            <li><img src="http://us.blizzard.com/_images/games/burningcrusade/wallpapers/wall1/wall1-800x600.jpg" width="400" height="300" alt="" /></li>
+        </ul>
+        <ul class="controllers">
+          <li class="prev">&lt;</li>
+          <li class="index active">1</li>
+          <li class="index">2</li>
+          <li class="index">3</li>
+          <li class="index">4</li>
+          <li class="index">5</li>
+          <li class="next">&gt;</li>
+        </ul>
+    </div>
+
+    <div class="slideshow" style="overflow: hidden">
+        <ul class="slides">
+            <li style="position: relative"><img src="http://us.media.blizzard.com/sc2/media/screenshots/swarm-screenshot01-large.jpg" width="400" height="300" alt="" /></li>
+            <li style="position: relative"><img src="http://us.media.blizzard.com/sc2/media/screenshots/swarm-screenshot02-large.jpg" width="400" height="300" alt="" /></li>
+            <li style="position: relative"><img src="http://us.media.blizzard.com/sc2/media/screenshots/swarm-screenshot03-large.jpg" width="400" height="300" alt="" /></li>
+            <li style="position: relative"><img src="http://us.media.blizzard.com/sc2/media/screenshots/swarm-screenshot04-large.jpg" width="400" height="300" alt="" /></li>
+            <li style="position: relative"><img src="http://us.media.blizzard.com/sc2/media/screenshots/swarm-screenshot05-large.jpg" width="400" height="300" alt="" /></li>
+        </ul>
+        <ul class="controllers">
+          <li class="prev">&lt;</li>
+          <li class="index active">1</li>
+          <li class="index">2</li>
+          <li class="index">3</li>
+          <li class="index">4</li>
+          <li class="index">5</li>
+          <li class="next">&gt;</li>
+        </ul>
+    </div>
+<script type="text/javascript">
+new hg.SlideshowF({
+    stage: 'div.slideshow:eq(0)',
+    slides: 'ul.slides li',
+    length: 5,
+    loop: true,
+    gap: 3000,
+    btnIndex: 'ul.controllers li.index',
+    btnPrev: 'ul.controllers li.prev',
+    btnNext: 'ul.controllers li.next'
+}).start();
+
+new hg.SlideshowS({
+    stage: 'div.slideshow:eq(1)',
+    slides: 'ul.slides li',
+    length: 5,
+    loop: true,
+    gap: 5000,
+    unit: 300,
+    direction: 'vertical',
+    btnIndex: 'ul.controllers li.index',
+    btnPrev: 'ul.controllers li.prev',
+    btnNext: 'ul.controllers li.next'
+}).start();
+
+new hg.SlideshowSF({
+    stage: 'div.slideshow:eq(2)',
+    slides: 'ul.slides li',
+    length: 'auto',
+    loop: true,
+    gap: 7000,
+    unit: 300,
+    direction: 'horizontal',
+    btnIndex: 'ul.controllers li.index',
+    btnPrev: 'ul.controllers li.prev',
+    btnNext: 'ul.controllers li.next'
+}).start();
+</script>
+</body>
+</html>
