@@ -4,11 +4,11 @@ String.prototype.times = function(n) {
 
 jQuery.fn.highlight = (function ($) {
     function javascript() {
-        var self = $(this), code = self.text(), depth = 0, i, len, tmp,
+        var self = $(this), code = self.html(), depth = 0, i, len, tmp,
                     indent = '    ';
         //code = code.replace(/\n/, ' ').replace(/(;|{|})/gm, '$1\n').replace(/(\([^)]*?);\n|;\n([^(]*?\))/gm, '$1;$2');//format newline
         code = code.replace(/^\s+?(\S+?)/gm, '$1');//trim leading blank
-        code = code.split('\n');
+        code = code.split(/(?:\n)|(?:<br>)/);
         //format indent
         for (i = 0, len = code.length ; i < len ; i += 1) {
             tmp = code[i];
