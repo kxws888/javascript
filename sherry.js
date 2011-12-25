@@ -1,4 +1,8 @@
-var Sherry = {
+/**
+ * @version 1215
+ **/
+var Sherry, S;
+Sherry = S = {
 
     extend: function (childCtor, parentCtor) {
         var fnTest = /\bsuperclass\b/, parent = parentCtor.prototype
@@ -36,7 +40,79 @@ var Sherry = {
             destination[key] = source[key];
         }
         return destination;
+    },
+
+    ajax: function (url, options) {
+        if (typeof options === 'function') {
+            options = {
+                load: options
+            };
+        }
+        else if (typeof options === 'undefined') {
+            options = {};
+        }
+
+        var client = new XMLHttpRequest(),
+            method = options.method ? options.method.toLowerCase() : 'get',
+            data = options.data,
+            timeout = options.timeout,
+            before = options.before || function () {},
+            load = options.load || function () {},
+            error = options.error || function () {},
+            isTimeout = false,
+            isComplete = false;
+
+        if (method === 'get' && data) {
+            url += '?' + data;
+            data = null;
+        }
+
+        client.onload = function () {
+            if (!isComplete) {
+                if (!isTimeout && ((client.status >= 200 && client.status < 300) || client.status == 304)) {
+                    load(client);
+                }
+                else {
+                    error(client);
+                }
+                isComplete = true;
+            }
+        };
+
+        client.onerror = function () {
+            if (!isComplete) {
+                error(client);
+                isComplete = true;
+            }
+        };
+
+        client.open(method, url, true);
+        if (method === 'post') {client.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');}
+        client.setRequestHeader('ajax', 'true');
+        before(client);
+        if (timeout) {
+            setTimeout(function () {
+                isTimeout = true;
+                if (!isComplete) {
+                    client.timeout = true;
+                    error(client);
+                    isComplete = true;
+                }
+            }, timeout);
+        }
+        client.send(data);
+    },
+
+    jsonp: function (url, callback) {
+        var script = document.createElement('script'), callbackName;
+        script.type = 'text/javascript';
+        callbackName = /&([\w.]+)=$/.exec(url)[1];
+        script.src = url + callbackName;
+        window[callbackName] = function (data) {
+            callback(data);
+            document.head.removeChild(script);
+        };
+        document.head.appendChild(script);
     }
 };
 
-var S = Sherry;
