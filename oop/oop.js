@@ -72,26 +72,31 @@
  */
 (function (exports, undefined) {
 
+    var MODULES_URL = 'http://localhost:8080/combo';
+
     var modules = {};
 
     var loadScript = function (url, callback) {
-        var script = document.createElement('script');
+        var head = document.getElementsByTagName('head')[0],
+            script = document.createElement('script');
         script.type = 'text/javascript';
         if (script.readyState) {
             script.onreadystatechange = function () {
                 if (script.readyState == 'loaded' || script.readyState == 'complete') {
                     script.onreadystatechange = null;
+                    head.removeChild(script);
                     callback();
                 }
             };
         }
         else {
             script.onload = function () {
+                head.removeChild(script);
                 callback();
             };
         }
         script.src = url;
-        document.getElementsByTagName('head')[0].appendChild(script);
+        head.appendChild(script);
     };
 
     var require = function (name) {
@@ -99,10 +104,28 @@
     };
 
     exports.define = function (name, dependence, callback) {
-        if (name === 'main'){
-            loadScript('getModules?modules=' + dependence.toString(), function () {
+        if (arguments.length === 1) {
+            callback = name;
+            dependence = [];
+            name = 'main';
+        }
+        else if (arguments.length === 2) {
+            if (typeof name === 'string') {
+                callback = dependence;
+                dependence = [];
+                name = name;
+            }
+            else {
+                callback = dependence;
+                dependence = name;
+                name = 'main';
+            }
+        }
+
+        if (name === 'main' && dependence.length > 0) {
+            loadScript(MODULES_URL + '?' + dependence.toString().replace(/,/g, '&'), function () {
                 callback(require);
-            };)
+            });
         }
         else {
             callback(require, modules[name] = {});
@@ -111,21 +134,8 @@
 
 })(window);
 
-// maths.js
-define("maths", function(require, exports){
-    exports.per = function(value, total) {
-        return( (value / total) * 100 );
-    };
-});
-// application.js
-define("application", function(require, exports){
-    var per = require("./maths").per;
-    assertEqual( per(50, 100), 50 );
-}, ["./maths"]); // List dependencies (maths.js)
 
-
-
-    exports.PubSub = {
+    var PubSub = {
 
         callbacks: {},
 

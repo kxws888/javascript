@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+    <input id="textbox" type="text" />
+    <input id="btn" type="button" value="clear">
+<script type="text/javascript" src="oop.js"></script>
+<script type="text/javascript">
+    define(['event', 'dom'], function (require) {
+            var event = require('event');
+            var dom = require('dom');
+            console.log(dom.query('#btn'))
+            event.add(dom.query('#btn')[0], 'click', function (e) {
+                dom.query('#textbox')[0].value = '';
+            })
+    })
+</script>
+</body>
+</html>
