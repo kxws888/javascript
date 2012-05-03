@@ -91,7 +91,7 @@
         }
         else {
             script.onload = function () {
-                head.removeChild(script);
+                //head.removeChild(script);
                 callback();
             };
         }
@@ -134,7 +134,7 @@
 
 })(window);
 
-
+/*
     var PubSub = {
 
         callbacks: {},
@@ -160,4 +160,4 @@
         }
 
     };
-
+*/
