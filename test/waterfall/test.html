@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <title>Waterfall</title>
+        <style type="text/css">
+            *{margin:0;padding:0}
+            .item img{width:100%;}
+            .item {-webkit-transition:top 0.5s, left 0.5s;position:absolute;width:200px}
+        </style>
+    </head>
+    <body>
+        <div></div>
+        <script type="text/javascript" src="../../oop/oop.js"></script>
+        <script type="text/javascript" src="../../modules/core/jquery.js"></script>
+        <script type="text/javascript" src="../../modules/core/tmpl.js"></script>
+        <script type="text/javascript" src="../../modules/core/es5.js"></script>
+        <script type="text/javascript" src="../../modules/ui/waterfall.js"></script>
+    <script type="text/javascript">
+        define(function (require) {
+            var Waterfall = require('waterfall').Waterfall;
+            var wall = new Waterfall({
+                container: 'div',
+                template: '<div class="item"><img height="<%=data.height%>" src="<%=data.url%>"></div>',
+                colWidth: 200,
+                autoExpand: false
+            });
+            (function (start) {
+             fn = arguments.callee;
+            $.ajax({
+                url:'https://ajax.googleapis.com/ajax/services/search/images',
+                data:'v=1.0&as_sitesearch=163.com&q=ac米兰&rsz=8&start='+start+'&callback=?',
+                dataType:"jsonp",
+                jsonp:"processResults",
+                success:function(data){
+                    wall.push(data.responseData.results);
+                    if (data.responseData.cursor.currentPageIndex < 7) {
+                        fn(data.responseData.cursor.pages[data.responseData.cursor.currentPageIndex + 1].start);
+                    }
+                }
+            });
+            })(0);
+        });
+    </script>
+    </body>
+</html>

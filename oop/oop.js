@@ -72,7 +72,9 @@
  */
 (function (exports, undefined) {
 
-    var MODULES_URL = 'http://localhost:8080/combo';
+    var MODULES_URL = 'http://www.viclm.com/combo';
+    var MODULES_URL = 'http://www.viclm.com/loader';
+
 
     var modules = {};
 
@@ -84,14 +86,12 @@
             script.onreadystatechange = function () {
                 if (script.readyState == 'loaded' || script.readyState == 'complete') {
                     script.onreadystatechange = null;
-                    head.removeChild(script);
                     callback();
                 }
             };
         }
         else {
             script.onload = function () {
-                //head.removeChild(script);
                 callback();
             };
         }
@@ -100,6 +100,7 @@
     };
 
     var require = function (name) {
+        if (!modules[name]) {throw new Error('module [' + name + '] does not exist.');}
         return modules[name];
     };
 
@@ -123,7 +124,7 @@
         }
 
         if (name === 'main' && dependence.length > 0) {
-            loadScript(MODULES_URL + '?' + dependence.toString().replace(/,/g, '&'), function () {
+            loadScript(MODULES_URL + '?' + dependence.toString().replace(/^\s+|\s+$/, '').replace(/\s*,\s*/g, '&'), function () {
                 callback(require);
             });
         }
