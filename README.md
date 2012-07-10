@@ -4,15 +4,41 @@
 oop.js
 --------------------------------------
 
-* extend.js
+* extend extend(childctr, parentctr)
+
   继承
-* mixin.js
+  ```
+  function A() {
+    this.a = 'a';
+  }
+  function B() {}
+  extend(B, A)
+  ```
+* mixin mixin(childctr, interface*)
+
   聚合
-* class.js
+  ```
+  var A = {
+    a: 'a'
+  }
+  function B() {}
+  mixin(B, A)
+  ```
+* class class([parentctr], [interface*], prop)
+  
   Class-style继承
+  ```
+  function A() {
+    this.a = 'a';
+  }
+  class(A, {
+    init: function () {}
+  })
+  ```
 
 waterfall.js
 --------------------------------------
+瀑布流实现，参数支持CSS3 Column
 
 参数说明
 * colWidth<'auto'>:列宽度
