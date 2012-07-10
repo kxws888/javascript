@@ -1,6 +1,90 @@
-/**
- * Class
- */
+(function (exports, undefined) {
+
+    var MODULES_URL = 'http://www.viclm.com/combo';
+    var MODULES_URL = 'http://www.viclm.com/loader';
+
+
+    var modules = {},
+
+        modulesQuene = [],
+
+        loadScript = function (url, callback) {
+            var script = document.createElement('script');
+            script.type = 'text/javascript';
+            if (script.readyState) {
+                script.onreadystatechange = function () {
+                    if (script.readyState == 'loaded' || script.readyState == 'complete') {
+                        script.onreadystatechange = null;
+                        callback();
+                    }
+                };
+            }
+            else {
+                script.onload = function () {
+                    callback();
+                };
+            }
+            script.src = url;
+            document.getElementsByTagName('head')[0].appendChild(script);
+        },
+
+        getModules = function (url, callback) {
+        
+        },
+
+        require = function (name) {
+            if (!modules[name]) {throw 'module [' + name + '] does not exist.';}
+            return modules[name].exports;
+        };
+
+    exports.define = function (name, dependence, callback) {
+        if (arguments.length === 1) {
+            callback = name;
+            dependence = [];
+            name = 'main';
+        }
+        else if (arguments.length === 2) {
+            if (typeof name === 'string') {
+                callback = dependence;
+                dependence = [];
+                name = name;
+            }
+            else {
+                callback = dependence;
+                dependence = name;
+                name = 'main';
+            }
+        }
+
+        modules[name] = {
+            id: name,
+            uri: name,
+            exports: {},
+            callback: callback
+        };
+
+        modulesQuene.push(name);
+
+        if (name === 'main') {
+            loadScript(MODULES_URL + '?' + dependence.toString().replace(/^\s+|\s+$/, '').replace(/\s*,\s*/g, '&'), function () {
+                for (var i = 0, len = modulesQuene.length ; i < len ; i += 1) {
+                    modules[modulesQuene[i]].callback(require, modules[modulesQuene[i]].exports, modules[modulesQuene[i]]);
+                }
+                callback(require, modules[name].exports, modules[name]);
+            });
+        }
+        else if (name === 'dev') {
+            loadScript(MODULES_URL + '?' + dependence, function () {
+                
+            });
+        }
+        else {
+            //callback(require, modules[name].exports, modules[name]);
+        }
+    };
+
+})(window);
+
 (function (exports, undefined) {
 
     exports.extend = function (childCtor, parentCtor) {
@@ -64,77 +148,7 @@
         Class.prototype.constructor = Class;
         return Class;
     };
-
 })(window);
-
-/**
- * Module
- */
-(function (exports, undefined) {
-
-    var MODULES_URL = 'http://www.viclm.com/combo';
-    var MODULES_URL = 'http://www.viclm.com/loader';
-
-
-    var modules = {};
-
-    var loadScript = function (url, callback) {
-        var head = document.getElementsByTagName('head')[0],
-            script = document.createElement('script');
-        script.type = 'text/javascript';
-        if (script.readyState) {
-            script.onreadystatechange = function () {
-                if (script.readyState == 'loaded' || script.readyState == 'complete') {
-                    script.onreadystatechange = null;
-                    callback();
-                }
-            };
-        }
-        else {
-            script.onload = function () {
-                callback();
-            };
-        }
-        script.src = url;
-        head.appendChild(script);
-    };
-
-    var require = function (name) {
-        if (!modules[name]) {throw new Error('module [' + name + '] does not exist.');}
-        return modules[name];
-    };
-
-    exports.define = function (name, dependence, callback) {
-        if (arguments.length === 1) {
-            callback = name;
-            dependence = [];
-            name = 'main';
-        }
-        else if (arguments.length === 2) {
-            if (typeof name === 'string') {
-                callback = dependence;
-                dependence = [];
-                name = name;
-            }
-            else {
-                callback = dependence;
-                dependence = name;
-                name = 'main';
-            }
-        }
-
-        if (name === 'main' && dependence.length > 0) {
-            loadScript(MODULES_URL + '?' + dependence.toString().replace(/^\s+|\s+$/, '').replace(/\s*,\s*/g, '&'), function () {
-                callback(require);
-            });
-        }
-        else {
-            callback(require, modules[name] = {});
-        }
-    };
-
-})(window);
-
 /*
     var PubSub = {
 

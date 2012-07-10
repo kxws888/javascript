@@ -43,7 +43,11 @@ function compress(modules, debug) {
 
 http.createServer(function (request, response) {
     var uri = url.parse(request.url);
-    if (uri.pathname === '/combo') {
+    if (uri.pathname.indexOf('/scripts') === 0) {
+        response.writeHead(200, {'Content-Type': 'text/javascript'});
+        response.end(fs.readFileSync('..' + uri.pathname.replace('scripts', 'modules'), 'utf-8'));
+    }
+    else if (uri.pathname === '/combo') {
         var modules = uri.query.split('&');
         response.writeHead(200, {'Content-Type': 'text/javascript'});
         response.write(compress(modules));

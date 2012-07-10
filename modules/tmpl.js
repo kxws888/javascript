@@ -1,6 +1,6 @@
 // Simple JavaScript Templating
 // John Resig - http://ejohn.org/ - MIT Licensed
-define('tmpl', function (require, exports) {
+define(function (require, exports, module) {
   var cache = {};
   
   exports.tmpl = function tmpl(str, data){
@@ -8,7 +8,7 @@ define('tmpl', function (require, exports) {
     // load the template - and be sure to cache the result.
     var fn = !/\W/.test(str) ?
       cache[str] = cache[str] ||
-        tmpl(document.getElementById(str).innerHTML) :
+        tmpl(str) :
       
       // Generate a reusable function that will serve as a template
       // generator (and which will be cached).
